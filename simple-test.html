@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Apps Script Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .result {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Simple Apps Script Test</h1>
+    
+    <button onclick="testWithFetch()">Test with Fetch (CORS)</button>
+    <button onclick="testWithForm()">Test with Form (No CORS)</button>
+    <button onclick="testWithJsonp()">Test with JSONP</button>
+    
+    <div id="result" class="result">Click a button to test...</div>
+
+    <script>
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxrQGsWCFTWqgqfRYsRlE0JuXuzcMdMep1hlW7GWyEjeEipGeT_0tl1XCoyTrVwqvdRdw/exec';
+        
+        function log(message) {
+            document.getElementById('result').textContent = message;
+        }
+        
+        // Test 1: Regular fetch (might fail due to CORS)
+        async function testWithFetch() {
+            log('Testing with fetch...\n');
+            
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({action: 'test'}),
+                    mode: 'cors'
+                });
+                
+                const result = await response.json();
+                log('✅ Fetch SUCCESS:\n' + JSON.stringify(result, null, 2));
+                
+            } catch (error) {
+                log('❌ Fetch FAILED:\n' + error.name + ': ' + error.message);
+            }
+        }
+        
+        // Test 2: Form submission (bypasses CORS)
+        function testWithForm() {
+            log('Testing with form submission...\n');
+            
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = APPS_SCRIPT_URL;
+            form.target = '_blank';
+            
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'action';
+            input.value = 'test';
+            
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+            
+            log('✅ Form submitted! Check the new tab for results.');
+        }
+        
+        // Test 3: JSONP (if supported)
+        function testWithJsonp() {
+            log('Testing with JSONP...\n');
+            
+            window.jsonpCallback = function(data) {
+                log('✅ JSONP SUCCESS:\n' + JSON.stringify(data, null, 2));
+            };
+            
+            const script = document.createElement('script');
+            script.src = APPS_SCRIPT_URL + '?action=test&callback=jsonpCallback';
+            script.onerror = function() {
+                log('❌ JSONP FAILED: Script could not load');
+            };
+            
+            document.head.appendChild(script);
+            
+            // Clean up after 5 seconds
+            setTimeout(() => {
+                document.head.removeChild(script);
+            }, 5000);
+        }
+    </script>
+</body>
+</html> 

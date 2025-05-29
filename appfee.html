@@ -1,0 +1,2560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Fee - UniApp</title>
+    <link href="./dist/output.css" rel="stylesheet">
+    <link href="./dark-mode-styles.css" rel="stylesheet">
+    <link href="./sizing-fixes.css" rel="stylesheet">
+    <script src="./dark-mode.js"></script>
+    <script src="./auth.js"></script>
+    <script src="./audit-logger.js"></script>
+    <script src="./apps-script-integration.js"></script>
+    <style>
+        .table-container {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            border: 1px solid #f2f2f7;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table-header {
+            background-color: #f9f9fb;
+            border-bottom: 1px solid #f2f2f7;
+        }
+
+        .table-header th {
+            padding: 10px 8px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #86868b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table-body tr {
+            border-bottom: 1px solid #f2f2f7;
+            transition: all 0.2s ease;
+            background-color: #ffffff;
+        }
+
+        .table-body tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .table-body tr:last-child {
+            border-bottom: none;
+        }
+
+        .table-body tr:hover {
+            background-color: #e3f2fd !important;
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Dark mode table rows */
+        .dark .table-body tr {
+            background-color: #1e293b !important;
+        }
+
+        .dark .table-body tr:nth-child(even) {
+            background-color: #334155 !important;
+        }
+
+        .dark .table-body tr:hover {
+            background-color: #1e40af !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .table-body td {
+            padding: 8px 8px;
+            font-size: 14px;
+            color: #1d1d1f;
+            white-space: nowrap;
+        }
+
+        .student-id {
+            font-weight: 600;
+            color: #007aff;
+            width: 80px;
+            max-width: 80px;
+        }
+
+        .fullname {
+            color: #1d1d1f;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 200px;
+            max-width: 300px;
+            width: 25%;
+        }
+
+        .tariff {
+            color: #86868b;
+            font-size: 14px;
+            width: 80px;
+            max-width: 80px;
+        }
+
+        .university-col {
+            width: 140px;
+            max-width: 140px;
+            padding: 8px 4px;
+        }
+
+        .fee-display {
+            width: 100px;
+            max-width: 100px;
+            padding: 8px 4px;
+            font-weight: 500;
+            color: #34c759;
+            text-align: right;
+        }
+
+        .total-fee {
+            width: 120px;
+            max-width: 120px;
+            padding: 8px 4px;
+            font-weight: 600;
+            color: #007aff;
+            text-align: right;
+            background-color: rgba(0, 122, 255, 0.05);
+        }
+
+        .fee-input-col {
+            width: 100px;
+            max-width: 100px;
+            padding: 8px 4px;
+        }
+
+        .action-col {
+            width: 80px;
+            max-width: 80px;
+            text-align: center;
+        }
+
+        .fee-input {
+            width: 85px;
+            padding: 4px 6px;
+            font-size: 11px;
+            border: 1px solid #d2d2d7;
+            border-radius: 4px;
+            background-color: #ffffff;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .fee-input:focus {
+            border-color: #007aff;
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+        }
+
+        .save-btn {
+            padding: 4px 8px;
+            background: linear-gradient(135deg, #34c759 0%, #28a745 100%);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(52, 199, 89, 0.3);
+        }
+
+        .save-btn:active {
+            transform: translateY(0px);
+        }
+
+        .save-btn.loading {
+            background: linear-gradient(135deg, #86868b 0%, #6d6d70 100%);
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .save-btn.loading::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border: 1px solid #ffffff;
+            border-top: 1px solid transparent;
+            border-radius: 50%;
+            display: inline-block;
+            animation: spin 0.8s linear infinite;
+            margin-left: 4px;
+        }
+
+        .save-btn.success {
+            background: linear-gradient(135deg, #30d158 0%, #28a745 100%);
+            animation: successPulse 0.6s ease-out;
+        }
+
+        .save-btn.success::after {
+            content: '✓';
+            margin-left: 4px;
+            font-weight: bold;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .search-container {
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .search-bar {
+            width: 100%;
+            max-width: 500px;
+            padding: 12px 16px;
+            font-size: 15px;
+            border: 1px solid #d2d2d7;
+            border-radius: 12px;
+            background-color: #ffffff;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-bar:focus {
+            border-color: #007aff;
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+        }
+
+        .search-bar::placeholder {
+            color: #86868b;
+        }
+
+        .pay-button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #007aff 0%, #0056cc 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2);
+        }
+
+        .pay-button:hover {
+            background: linear-gradient(135deg, #0056cc 0%, #004099 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        }
+
+        .pay-button:active {
+            transform: translateY(0);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            z-index: 1000;
+            padding: 40px 20px 20px 20px;
+            padding-top: 5vh;
+        }
+
+        .dark .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.8) !important;
+        }
+
+        .modal-overlay.hidden {
+            display: none;
+        }
+
+        .modal-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 1000px;
+            max-height: 95vh;
+            min-height: 70vh;
+            overflow: visible;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        .dark .modal-container {
+            background: #1e293b !important;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
+            border: 1px solid #334155 !important;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            padding: 24px 24px 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #f2f2f7;
+            margin-bottom: 24px;
+        }
+
+        .dark .modal-header {
+            border-bottom: 1px solid #475569 !important;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin: 0;
+        }
+
+        .dark .modal-title {
+            color: #f1f5f9 !important;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #86868b;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: #1d1d1f;
+            background-color: #f2f2f7;
+        }
+
+        .dark .modal-close {
+            color: #94a3b8 !important;
+        }
+
+        .dark .modal-close:hover {
+            color: #f1f5f9 !important;
+            background-color: #475569 !important;
+        }
+
+        .modal-body {
+            padding: 0 24px 24px 24px;
+            overflow: visible;
+            position: relative;
+        }
+
+        .dark .modal-body {
+            background-color: #1e293b !important;
+        }
+
+        .payment-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .modal-grid {
+            display: grid;
+            grid-template-columns: 1fr 35fr 6fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .modal-column {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 20px;
+            background: #f9f9fb;
+            border-radius: 16px;
+            border: 1px solid #f2f2f7;
+        }
+
+        .dark .modal-column {
+            background: #334155 !important;
+            border: 1px solid #475569 !important;
+        }
+
+        .column-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin: 0 0 8px 0;
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e5e5ea;
+        }
+
+        .dark .column-title {
+            color: #f1f5f9 !important;
+            border-bottom: 2px solid #64748b !important;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin: 0;
+        }
+
+        .dark .form-label {
+            color: #f1f5f9 !important;
+        }
+
+        .form-input,
+        .form-select {
+            padding: 12px 16px;
+            font-size: 15px;
+            border: 1px solid #d2d2d7;
+            border-radius: 12px;
+            background-color: #ffffff;
+            outline: none;
+            transition: all 0.2s ease;
+            appearance: none;
+            color: #1d1d1f;
+        }
+
+        .dark .form-input,
+        .dark .form-select {
+            background-color: #0f172a !important;
+            border: 1px solid #475569 !important;
+            color: #f1f5f9 !important;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            border-color: #007aff;
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+        }
+
+        .dark .form-input:focus,
+        .dark .form-select:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2) !important;
+        }
+
+        .dark .form-input::placeholder {
+            color: #64748b !important;
+        }
+
+        .form-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            padding-right: 40px;
+            cursor: pointer;
+        }
+
+        .dark .form-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e") !important;
+        }
+
+        .form-select[multiple] {
+            background-image: none;
+            padding-right: 16px;
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .dark .form-select option {
+            background-color: #0f172a !important;
+            color: #f1f5f9 !important;
+        }
+
+        .selected-students-display {
+            margin-top: 8px;
+            padding: 8px 12px;
+            background-color: #f9f9fb;
+            border-radius: 8px;
+            border: 1px solid #e5e5ea;
+            min-height: 40px;
+            font-size: 13px;
+            color: #1d1d1f;
+        }
+
+        .dark .selected-students-display {
+            background-color: #475569 !important;
+            border: 1px solid #64748b !important;
+            color: #f1f5f9 !important;
+        }
+
+        .selected-students-display:empty::before {
+            content: "No students selected";
+            color: #86868b;
+            font-style: italic;
+        }
+
+        .dark .selected-students-display:empty::before {
+            color: #94a3b8 !important;
+        }
+
+        .student-tag {
+            display: inline-block;
+            background: linear-gradient(135deg, #007aff 0%, #0056cc 100%);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            margin: 2px 4px 2px 0;
+            box-shadow: 0 1px 3px rgba(0, 122, 255, 0.2);
+        }
+
+        .dark .student-tag {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+            box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3) !important;
+        }
+
+        /* Custom Dropdown Styles */
+        .custom-dropdown {
+            position: relative;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .dropdown-header {
+            padding: 12px 16px;
+            font-size: 15px;
+            border: 1px solid #d2d2d7;
+            border-radius: 12px;
+            background-color: #ffffff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+            min-height: 48px;
+            color: #1d1d1f;
+        }
+
+        .dark .dropdown-header {
+            background-color: #0f172a !important;
+            border: 1px solid #475569 !important;
+            color: #f1f5f9 !important;
+        }
+
+        .dropdown-header:hover {
+            border-color: #007aff;
+        }
+
+        .dark .dropdown-header:hover {
+            border-color: #3b82f6 !important;
+        }
+
+        .dropdown-header.active {
+            border-color: #007aff;
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+        }
+
+        .dark .dropdown-header.active {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2) !important;
+        }
+
+        .dropdown-arrow {
+            width: 16px;
+            height: 16px;
+            color: #86868b;
+            transition: transform 0.2s ease;
+        }
+
+        .dark .dropdown-arrow {
+            color: #94a3b8 !important;
+        }
+
+        .dropdown-header.active .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-content {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #d2d2d7;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            z-index: 9999;
+            max-height: 600px;
+            min-height: 400px;
+            display: none;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .dark .dropdown-content {
+            background: #1e293b !important;
+            border: 1px solid #475569 !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .dropdown-content.show {
+            display: block;
+            animation: dropdownSlideIn 0.2s ease-out;
+        }
+
+        @keyframes dropdownSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-search {
+            padding: 12px;
+            border-bottom: 1px solid #f2f2f7;
+        }
+
+        .dark .dropdown-search {
+            border-bottom: 1px solid #475569 !important;
+        }
+
+        .dropdown-search input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+            color: #1d1d1f;
+            background-color: #ffffff;
+        }
+
+        .dark .dropdown-search input {
+            background-color: #0f172a !important;
+            border: 1px solid #475569 !important;
+            color: #f1f5f9 !important;
+        }
+
+        .dropdown-search input:focus {
+            border-color: #007aff;
+        }
+
+        .dark .dropdown-search input:focus {
+            border-color: #3b82f6 !important;
+        }
+
+        .dark .dropdown-search input::placeholder {
+            color: #64748b !important;
+        }
+
+        .dropdown-options {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .dropdown-option {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border-bottom: 1px solid #f9f9fb;
+        }
+
+        .dark .dropdown-option {
+            border-bottom: 1px solid #334155 !important;
+        }
+
+        .dropdown-option:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-option:hover {
+            background-color: #f9f9fb;
+        }
+
+        .dark .dropdown-option:hover {
+            background-color: #334155 !important;
+        }
+
+        .dropdown-option.selected {
+            background-color: rgba(0, 122, 255, 0.05);
+        }
+
+        .dark .dropdown-option.selected {
+            background-color: rgba(59, 130, 246, 0.1) !important;
+        }
+
+        .option-checkbox {
+            position: relative;
+            width: 18px;
+            height: 18px;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+
+        .option-checkbox input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .checkbox-checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 18px;
+            width: 18px;
+            background-color: #ffffff;
+            border: 2px solid #d2d2d7;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .dark .checkbox-checkmark {
+            background-color: #1e293b !important;
+            border: 2px solid #475569 !important;
+        }
+
+        .option-checkbox:hover .checkbox-checkmark {
+            border-color: #007aff;
+        }
+
+        .dark .option-checkbox:hover .checkbox-checkmark {
+            border-color: #3b82f6 !important;
+        }
+
+        .option-checkbox input:checked ~ .checkbox-checkmark {
+            background-color: #007aff;
+            border-color: #007aff;
+        }
+
+        .dark .option-checkbox input:checked ~ .checkbox-checkmark {
+            background-color: #3b82f6 !important;
+            border-color: #3b82f6 !important;
+        }
+
+        .checkbox-checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+            left: 5px;
+            top: 2px;
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .option-checkbox input:checked ~ .checkbox-checkmark:after {
+            display: block;
+        }
+
+        .option-label {
+            flex: 1;
+            font-size: 14px;
+            color: #1d1d1f;
+            cursor: pointer;
+        }
+
+        .dark .option-label {
+            color: #f1f5f9 !important;
+        }
+
+        .option-student-id {
+            font-weight: 600;
+            color: #007aff;
+            margin-right: 8px;
+        }
+
+        .dark .option-student-id {
+            color: #60a5fa !important;
+        }
+
+        .option-student-name {
+            color: #1d1d1f;
+        }
+
+        .dark .option-student-name {
+            color: #f1f5f9 !important;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .btn-cancel {
+            flex: 1;
+            padding: 12px 24px;
+            background-color: #f2f2f7;
+            color: #86868b;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-cancel:hover {
+            background-color: #e5e5ea;
+            color: #1d1d1f;
+        }
+
+        .dark .btn-cancel {
+            background-color: #475569 !important;
+            color: #94a3b8 !important;
+        }
+
+        .dark .btn-cancel:hover {
+            background-color: #64748b !important;
+            color: #f1f5f9 !important;
+        }
+
+        .btn-send {
+            flex: 2;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #34c759 0%, #28a745 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-send:hover:not(:disabled) {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+        }
+
+        .btn-send:disabled {
+            background: linear-gradient(135deg, #86868b 0%, #6d6d70 100%);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .dark .btn-send:disabled {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%) !important;
+        }
+
+        .btn-spinner {
+            display: none;
+        }
+
+        .btn-send:disabled .btn-spinner {
+            display: block;
+        }
+
+        .btn-send:disabled .btn-text {
+            display: none;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        /* Dark mode scrollbar styles */
+        .dark .dropdown-options::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .dark .dropdown-options::-webkit-scrollbar-track {
+            background: #334155;
+        }
+
+        .dark .dropdown-options::-webkit-scrollbar-thumb {
+            background: #64748b;
+            border-radius: 4px;
+        }
+
+        .dark .dropdown-options::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Dark mode for success/error messages */
+        #success-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #10b981;
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            z-index: 10000;
+            max-width: 400px;
+        }
+
+        .dark #success-message {
+            background-color: #059669 !important;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4) !important;
+        }
+
+        #error-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #ef4444;
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+            z-index: 10000;
+            max-width: 400px;
+        }
+
+        .dark #error-message {
+            background-color: #dc2626 !important;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4) !important;
+        }
+
+        /* Responsive modal */
+        @media (max-width: 1024px) {
+            .modal-container {
+                max-width: 800px;
+            }
+            
+            .modal-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .modal-column {
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .modal-container {
+                margin: 10px;
+                border-radius: 16px;
+                max-width: 95%;
+            }
+            
+            .modal-header,
+            .modal-body {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .modal-grid {
+                gap: 12px;
+            }
+            
+            .modal-column {
+                padding: 12px;
+            }
+            
+            .column-title {
+                font-size: 14px;
+            }
+        }
+
+        .university-select {
+            width: 100%;
+            max-width: 135px;
+            padding: 4px 6px;
+            font-size: 11px;
+            border: 1px solid #d2d2d7;
+            border-radius: 4px;
+            background-color: #ffffff;
+            outline: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .university-select:focus {
+            border-color: #007aff;
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+        }
+
+        .university-select:hover {
+            border-color: #007aff;
+        }
+
+        /* Pagination styles */
+        .pagination-container {
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: #86868b;
+            font-weight: 400;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .pagination-btn {
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1d1d1f;
+            background-color: #ffffff;
+            border: 1px solid #d2d2d7;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background-color: #f9f9fb;
+            border-color: #007aff;
+            color: #007aff;
+            transform: translateY(-1px);
+        }
+
+        .pagination-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .pagination-btn:disabled {
+            color: #c6c6c8;
+            background-color: #f2f2f7;
+            border-color: #e5e5ea;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Modern Loading Spinner from payments.html */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #86868b;
+        }
+
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #f2f2f7;
+            border-top: 2px solid #007aff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            text-align: center;
+            padding: 60px 20px;
+            color: #ff3b30;
+        }
+
+        .error-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #86868b;
+        }
+
+        .no-results-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .retry-button {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background-color: #007aff;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .retry-button:hover {
+            background-color: #0056cc;
+        }
+
+        /* Modern Sidebar Styles */
+        .modern-sidebar {
+            width: 70px;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modern-sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        }
+
+        .sidebar-header {
+            padding: 20px 0;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-logo:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .sidebar-nav {
+            padding: 0 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 46px;
+            height: 46px;
+            margin: 0 auto 12px;
+            border-radius: 14px;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-item:hover::before {
+            opacity: 1;
+        }
+
+        .nav-item:hover {
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .nav-item.active::before {
+            opacity: 0;
+        }
+
+        .nav-item.active:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .nav-icon {
+            width: 22px;
+            height: 22px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item:hover .nav-icon {
+            transform: scale(1.1);
+        }
+
+        /* Tooltip styles */
+        .nav-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 60px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .nav-item:hover::after {
+            opacity: 1;
+            visibility: visible;
+            left: 65px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .modern-sidebar {
+                width: 60px;
+            }
+            
+            .sidebar-logo {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            
+            .nav-item {
+                width: 42px;
+                height: 42px;
+            }
+            
+            .nav-icon {
+                width: 20px;
+                height: 20px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <div class="flex h-screen">
+        <!-- Modern Sidebar -->
+        <div class="modern-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">UA</div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="index.html" class="nav-item" data-tooltip="Dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                    </svg>
+                </a>
+                <a href="register.html" class="nav-item" data-tooltip="Register Student">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+                <a href="studentlist.html" class="nav-item" data-tooltip="Student List">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                    </svg>
+                </a>
+                <a href="payments.html" class="nav-item" data-tooltip="Payments">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                        <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+                <a href="appfee.html" class="nav-item active" data-tooltip="Application Fee">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <div class="p-4">
+                <div class="max-w-7xl mx-auto">
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 transition-colors duration-300">
+                        <h1 class="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4 transition-colors duration-300">Application Fee</h1>
+                        
+                        <!-- Search Bar and Pay Button -->
+                        <div class="search-container">
+                            <input 
+                                type="text" 
+                                id="searchInput" 
+                                class="search-bar"
+                                placeholder="Search by Student ID, Name, or University..."
+                                autocomplete="off"
+                            >
+                            <button 
+                                id="payButton" 
+                                class="pay-button"
+                                onclick="openPaymentModal()"
+                            >
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                Pay
+                            </button>
+                        </div>
+                        
+                        <!-- Table Section -->
+                        <div class="mt-1">
+                            <!-- Table Container -->
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead class="table-header">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Full Name</th>
+                                            <th>Tariff</th>
+                                            <th>University 1</th>
+                                            <th>Fee 1</th>
+                                            <th>University 2</th>
+                                            <th>Fee 2</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="appFeeTableBody" class="table-body">
+                                        <!-- Loading state -->
+                                        <tr>
+                                            <td colspan="7" class="loading">
+                                                <div class="loading-spinner"></div>
+                                                <p>Loading application fee data...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Pagination -->
+                            <div class="pagination-container">
+                                <div class="pagination-info">
+                                    Showing <span id="startCount">0</span> to <span id="endCount">0</span> of <span id="totalCount">0</span> students
+                                </div>
+                                <div class="pagination-controls">
+                                    <button id="prevPage" class="pagination-btn">Previous</button>
+                                    <button id="nextPage" class="pagination-btn">Next</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Empty State -->
+                            <div id="emptyState" class="hidden text-center py-6">
+                                <svg class="mx-auto h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <h3 class="mt-1 text-sm font-medium text-gray-900">No students found</h3>
+                                <p class="mt-1 text-xs text-gray-500">No student application fee data available.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="modal-overlay hidden">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Payment</h3>
+                <button class="modal-close" onclick="closePaymentModal()">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="paymentForm" class="payment-form">
+                    <!-- Three Column Layout -->
+                    <div class="modal-grid">
+                        <!-- Column 1: University and Receiver -->
+                        <div class="modal-column">
+                            <h4 class="column-title">University & Receiver</h4>
+                            
+                            <!-- University Selection -->
+                            <div class="form-group">
+                                <label for="modalUniversitySelect" class="form-label">University</label>
+                                <select id="modalUniversitySelect" class="form-select" required>
+                                    <option value="">Select University</option>
+                                </select>
+                            </div>
+
+                            <!-- Receiver Input -->
+                            <div class="form-group">
+                                <label for="modalReceiver" class="form-label">Receiver</label>
+                                <input 
+                                    type="text" 
+                                    id="modalReceiver" 
+                                    class="form-input" 
+                                    placeholder="Enter receiver name"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Column 2: Student Selection -->
+                        <div class="modal-column">
+                            <h4 class="column-title">Students Selection</h4>
+                            
+                            <div class="form-group">
+                                <label for="modalStudentSelect" class="form-label">Students (Multiple Selection)</label>
+                                <div class="custom-dropdown" id="studentDropdown">
+                                    <div class="dropdown-header" onclick="toggleStudentDropdown()">
+                                        <span id="dropdownPlaceholder">Select Students</span>
+                                        <svg class="dropdown-arrow" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div class="dropdown-content" id="studentDropdownContent">
+                                        <div class="dropdown-search">
+                                            <input type="text" id="studentSearchInput" placeholder="Search students..." autocomplete="off">
+                                        </div>
+                                        <div class="dropdown-options" id="studentOptions">
+                                            <!-- Options will be populated dynamically -->
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="selectedStudentsDisplay" class="selected-students-display"></div>
+                            </div>
+                        </div>
+
+                        <!-- Column 3: Payment Details -->
+                        <div class="modal-column">
+                            <h4 class="column-title">Payment Details</h4>
+                            
+                            <!-- Payment Amount -->
+                            <div class="form-group">
+                                <label for="modalAmount" class="form-label">Payment Amount</label>
+                                <input 
+                                    type="text" 
+                                    id="modalAmount" 
+                                    class="form-input" 
+                                    placeholder="Enter amount"
+                                    oninput="formatModalInputValue(this)"
+                                    required
+                                >
+                            </div>
+
+                            <!-- Payment Method -->
+                            <div class="form-group">
+                                <label for="modalPaymentMethod" class="form-label">Payment Method</label>
+                                <select id="modalPaymentMethod" class="form-select" required>
+                                    <option value="">Select Payment Method</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Card M.A">Card M.A</option>
+                                    <option value="Card J.A">Card J.A</option>
+                                </select>
+                            </div>
+
+                            <!-- Responsible Person -->
+                            <div class="form-group">
+                                <label for="modalResponsible" class="form-label">Responsible</label>
+                                <select id="modalResponsible" class="form-select" required>
+                                    <option value="">Select Responsible Person</option>
+                                    <option value="Azizbek">Azizbek</option>
+                                    <option value="Jasur">Jasur</option>
+                                    <option value="M.Ali">M.Ali</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="form-actions">
+                        <button type="button" class="btn-cancel" onclick="closePaymentModal()">Cancel</button>
+                        <button type="submit" class="btn-send" id="sendPaymentBtn">
+                            <span class="btn-text">Send</span>
+                            <span class="btn-spinner hidden">
+                                <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+            <!-- Firebase Configuration -->
+                <script type="module" src="./firebase.js"></script>
+        <script type="module" src="./scripts.js"></script>
+    
+    <!-- Application Fee Specific Scripts -->
+    <script type="module">
+        import { FirebaseService, initializeFirebase } from './firebase.js';
+        
+        // Global variables for search functionality
+        let allStudentsData = [];
+        let filteredStudentsData = [];
+        
+        // Pagination variables
+        let currentPage = 1;
+        const itemsPerPage = 30;
+        
+        // Pagination event listeners
+        function setupPagination() {
+            document.getElementById('prevPage').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    populateTable(filteredStudentsData);
+                }
+            });
+
+            document.getElementById('nextPage').addEventListener('click', () => {
+                const totalPages = Math.ceil(filteredStudentsData.length / itemsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    populateTable(filteredStudentsData);
+                }
+            });
+        }
+
+        // Initialize Firebase when page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await initializeFirebase();
+                
+                // Initialize audit logger
+                if (window.auditLogger) {
+                    const { db } = await import('./firebase.js');
+                    await window.auditLogger.initialize(db);
+                    window.auditLogger.setCurrentUser('admin');
+                    console.log('✅ Audit Logger initialized in appfee.html');
+                }
+                
+                await loadAppFeeData();
+                setupSearch();
+                setupPagination();
+                setupModalEvents();
+            } catch (error) {
+                console.error('Failed to initialize:', error);
+                showErrorMessage('Failed to initialize application. Please refresh the page.');
+            }
+        });
+
+        // Setup modal event listeners
+        function setupModalEvents() {
+            const paymentForm = document.getElementById('paymentForm');
+            const modal = document.getElementById('paymentModal');
+            
+            // Handle form submission
+            paymentForm.addEventListener('submit', handlePaymentSubmission);
+            
+            // Close modal when clicking outside
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closePaymentModal();
+                }
+            });
+            
+            // Close modal with Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                    closePaymentModal();
+                }
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                const dropdown = document.getElementById('studentDropdown');
+                const content = document.getElementById('studentDropdownContent');
+                const header = dropdown.querySelector('.dropdown-header');
+                
+                if (!dropdown.contains(e.target) && content.classList.contains('show')) {
+                    content.classList.remove('show');
+                    header.classList.remove('active');
+                }
+            });
+        }
+        
+        // Global functions for the page
+        window.loadAppFeeData = loadAppFeeData;
+        window.openPaymentModal = openPaymentModal;
+        window.closePaymentModal = closePaymentModal;
+        window.formatModalInputValue = formatModalInputValue;
+        window.toggleStudentDropdown = toggleStudentDropdown;
+        window.selectStudent = selectStudent;
+        
+        // University options from register.html
+        const universityOptions = {
+            COLLEGE: ["SeoJeong", "Daewon", "Kunjang", "DIST", "SeoYeong", "Chungbuk", "Jangan", "Other"],
+            MASTERS: [
+                "Kangwon - E VISA", "SunMoon - E VISA", "Joon Bu - E VISA", "AnYang - E VISA",
+                "SMIT - E VISA", "Woosuk - E VISA", "Dong eui E VISA", "Sejong", "Gachon", "BUFS",
+                "Won Kwan - E VISA (Sertifikatsiz)", "Youngsan - E VISA (Sertifikatsiz)"
+            ],
+            BACHELOR: [
+                "BUFS", "Chonnam National University", "Chung-Ang University", "Chungnam National University", 
+                "DGIST", "Daegu University", "Daejin University", "Dong-A University", 
+                "Dong-Eui University", "Ewha Womans University", "Far East University", "Gachon University", "Hankuk University of Foreign Studies", 
+                "Hanyang University", "Incheon National University", "Inha University", "Jeonbuk National University", 
+                "Kangwon National University", "Keimyung University", "Konkuk University", "KAIST", 
+                "Korea University", "Kookmin University", "Kyung Hee University", "Kyungpook National University", 
+                "POSTECH", "Sejong University", "Seoul National University (SNU)", 
+                "Semyung University", "Sogang University", "SunMoon University", "Sungkyunkwan University (SKKU)", "Sungshin Women's University", 
+                "TongMyong University", "UNIST", "University of Seoul", "Yeungnam University", 
+                "Yonsei University", "Other"
+            ]
+        };
+        
+        // Get all universities for dropdown
+        function getAllUniversities() {
+            const allUniversities = [];
+            Object.values(universityOptions).forEach(universities => {
+                universities.forEach(uni => {
+                    if (!allUniversities.includes(uni)) {
+                        allUniversities.push(uni);
+                    }
+                });
+            });
+            return allUniversities.sort();
+        }
+        
+        // Update university selection and save to database
+        async function updateUniversitySelection(studentId, universityField, newValue) {
+            try {
+                const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                const { db } = await import('./firebase.js');
+                
+                const registerDocId = studentId + 'reg';
+                const registerDocRef = doc(db, 'register', registerDocId);
+                
+                const updateData = {};
+                updateData[universityField] = newValue;
+                updateData.lastUpdated = new Date().toISOString();
+                
+                // Update only the specific fields without overwriting the document
+                await updateDoc(registerDocRef, updateData);
+                
+                showSuccessMessage(`${universityField} updated for student ${studentId}`);
+                
+            } catch (error) {
+                console.error('Error updating university selection:', error);
+                showErrorMessage('Failed to update university selection: ' + error.message);
+            }
+        }
+        
+        // Format number with thousand separators for display
+        function formatInputValue(input) {
+            let value = input.value.replace(/,/g, ''); // Remove existing commas
+            
+            // Only allow numbers and handle empty values
+            if (value === '') {
+                return;
+            }
+            
+            // Remove any non-numeric characters except decimal point
+            value = value.replace(/[^\d.]/g, '');
+            
+            if (value && !isNaN(value)) {
+                // Format with thousand separators (no decimals for fees)
+                const numValue = parseInt(value);
+                if (!isNaN(numValue)) {
+                    input.value = new Intl.NumberFormat('en-US').format(numValue);
+                }
+            }
+        }
+        
+        // Parse formatted value back to number
+        function parseInputValue(value) {
+            return value.replace(/,/g, '');
+        }
+
+        // Modal functions
+        function openPaymentModal() {
+            const modal = document.getElementById('paymentModal');
+            modal.classList.remove('hidden');
+            populateStudentDropdown();
+            populateUniversityDropdown();
+            document.body.style.overflow = 'hidden'; // Prevent background scroll
+        }
+
+        function closePaymentModal() {
+            const modal = document.getElementById('paymentModal');
+            modal.classList.add('hidden');
+            resetPaymentForm();
+            document.body.style.overflow = ''; // Restore background scroll
+        }
+
+        // Store selected students globally
+        let selectedStudents = [];
+
+        function populateStudentDropdown() {
+            const studentOptions = document.getElementById('studentOptions');
+            const searchInput = document.getElementById('studentSearchInput');
+            
+            if (!allStudentsData || allStudentsData.length === 0) {
+                studentOptions.innerHTML = '<div class="dropdown-option">No students available</div>';
+                return;
+            }
+            
+            // Clear previous options
+            studentOptions.innerHTML = '';
+            
+            // Create checkboxes for each student
+            allStudentsData.forEach(({ student }) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'dropdown-option';
+                optionDiv.innerHTML = `
+                    <label class="option-checkbox">
+                        <input type="checkbox" value="${student.studentId}" data-fullname="${student.fullname}" onchange="selectStudent(this)">
+                        <span class="checkbox-checkmark"></span>
+                    </label>
+                    <div class="option-label">
+                        <span class="option-student-id">${student.studentId}</span>
+                        <span class="option-student-name">${student.fullname}</span>
+                    </div>
+                `;
+                studentOptions.appendChild(optionDiv);
+            });
+            
+            // Add search functionality
+            searchInput.addEventListener('input', filterStudentOptions);
+        }
+
+        function toggleStudentDropdown() {
+            const dropdown = document.getElementById('studentDropdown');
+            const content = document.getElementById('studentDropdownContent');
+            const header = dropdown.querySelector('.dropdown-header');
+            
+            if (content.classList.contains('show')) {
+                content.classList.remove('show');
+                header.classList.remove('active');
+            } else {
+                content.classList.add('show');
+                header.classList.add('active');
+                // Focus search input when opened
+                setTimeout(() => {
+                    document.getElementById('studentSearchInput').focus();
+                }, 100);
+            }
+        }
+
+        function selectStudent(checkbox) {
+            const studentId = checkbox.value;
+            const fullname = checkbox.getAttribute('data-fullname');
+            
+            if (checkbox.checked) {
+                // Add to selected students
+                selectedStudents.push({ studentId, fullname });
+            } else {
+                // Remove from selected students
+                selectedStudents = selectedStudents.filter(s => s.studentId !== studentId);
+            }
+            
+            updateSelectedStudentsDisplay();
+            updateDropdownPlaceholder();
+        }
+
+        function updateSelectedStudentsDisplay() {
+            const displayDiv = document.getElementById('selectedStudentsDisplay');
+            
+            if (selectedStudents.length === 0) {
+                displayDiv.innerHTML = '';
+                return;
+            }
+            
+            const studentTags = selectedStudents.map(student => {
+                return `<span class="student-tag">${student.studentId} - ${student.fullname}</span>`;
+            }).join('');
+            
+            displayDiv.innerHTML = studentTags;
+        }
+
+        function updateDropdownPlaceholder() {
+            const placeholder = document.getElementById('dropdownPlaceholder');
+            
+            if (selectedStudents.length === 0) {
+                placeholder.textContent = 'Select Students';
+            } else if (selectedStudents.length === 1) {
+                placeholder.textContent = `${selectedStudents[0].studentId} - ${selectedStudents[0].fullname}`;
+            } else {
+                placeholder.textContent = `${selectedStudents.length} students selected`;
+            }
+        }
+
+        function filterStudentOptions() {
+            const searchTerm = document.getElementById('studentSearchInput').value.toLowerCase();
+            const options = document.querySelectorAll('.dropdown-option');
+            
+            options.forEach(option => {
+                const text = option.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    option.style.display = 'flex';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+        }
+
+        function populateUniversityDropdown() {
+            const universitySelect = document.getElementById('modalUniversitySelect');
+            universitySelect.innerHTML = '<option value="">Select University</option>';
+            
+            const allUniversities = getAllUniversities();
+            allUniversities.forEach(university => {
+                const option = document.createElement('option');
+                option.value = university;
+                option.textContent = university;
+                universitySelect.appendChild(option);
+            });
+        }
+
+        function formatModalInputValue(input) {
+            let value = input.value.replace(/,/g, ''); // Remove existing commas
+            
+            // Only allow numbers and handle empty values
+            if (value === '') {
+                return;
+            }
+            
+            // Remove any non-numeric characters except decimal point
+            value = value.replace(/[^\d.]/g, '');
+            
+            if (value && !isNaN(value)) {
+                // Format with thousand separators (no decimals for fees)
+                const numValue = parseInt(value);
+                if (!isNaN(numValue)) {
+                    input.value = new Intl.NumberFormat('en-US').format(numValue);
+                }
+            }
+        }
+
+        function resetPaymentForm() {
+            const form = document.getElementById('paymentForm');
+            form.reset();
+            
+            // Reset selected students
+            selectedStudents = [];
+            
+            // Reset checkboxes
+            const checkboxes = document.querySelectorAll('#studentOptions input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            // Reset displays
+            document.getElementById('selectedStudentsDisplay').innerHTML = '';
+            document.getElementById('dropdownPlaceholder').textContent = 'Select Students';
+            
+            // Close dropdown
+            const content = document.getElementById('studentDropdownContent');
+            const header = document.querySelector('.dropdown-header');
+            content.classList.remove('show');
+            header.classList.remove('active');
+            
+            // Reset search
+            document.getElementById('studentSearchInput').value = '';
+            filterStudentOptions();
+            
+            // Reset button state
+            const sendBtn = document.getElementById('sendPaymentBtn');
+            sendBtn.disabled = false;
+            sendBtn.querySelector('.btn-text').textContent = 'Send';
+            sendBtn.querySelector('.btn-spinner').classList.add('hidden');
+        }
+
+      
+
+        // Handle payment form submission
+        async function handlePaymentSubmission(event) {
+            event.preventDefault();
+            
+            const sendBtn = document.getElementById('sendPaymentBtn');
+            const btnText = sendBtn.querySelector('.btn-text');
+            const btnSpinner = sendBtn.querySelector('.btn-spinner');
+            
+            // Get form data
+            const university = document.getElementById('modalUniversitySelect').value;
+            const receiver = document.getElementById('modalReceiver').value.trim();
+            const amount = parseInputValue(document.getElementById('modalAmount').value.trim());
+            const paymentMethod = document.getElementById('modalPaymentMethod').value;
+            const responsible = document.getElementById('modalResponsible').value;
+            
+            // Validate form
+            if (selectedStudents.length === 0 || !university || !receiver || !amount || !paymentMethod || !responsible) {
+                showErrorMessage('Please fill in all fields and select at least one student');
+                return;
+            }
+            
+            if (isNaN(parseFloat(amount))) {
+                showErrorMessage('Please enter a valid amount');
+                return;
+            }
+            
+            // Show loading state
+            sendBtn.disabled = true;
+            btnText.style.display = 'none';
+            btnSpinner.classList.remove('hidden');
+            
+            try {
+                // Generate payment ID
+                const paymentId = `APPFEE${Date.now()}${Math.random().toString(36).substr(2, 4)}`;
+                
+                // Prepare students data
+                const studentsData = selectedStudents.map(student => ({
+                    studentId: student.studentId,
+                    fullname: student.fullname
+                }));
+                
+                // Prepare payment data
+                const paymentData = {
+                    paymentId: paymentId,
+                    students: studentsData,
+                    studentIds: studentsData.map(s => s.studentId),
+                    university: university,
+                    receiver: receiver,
+                    amount: parseFloat(amount),
+                    paymentMethod: paymentMethod,
+                    responsible: responsible,
+                    type: 'Application Fee',
+                    timestamp: new Date().toISOString(),
+                    createdBy: 'Admin',
+                    status: 'Completed'
+                };
+                
+                // Save each student's fee to givenfee collection with specific document ID format
+                for (const student of studentsData) {
+                    const givenfeeDocId = `${student.studentId}givenfee`;
+                    const givenfeeData = {
+                        studentId: student.studentId,
+                        fullname: student.fullname,
+                        university: university,
+                        receiver: receiver,
+                        amount: parseFloat(amount),
+                        paymentMethod: paymentMethod,
+                        responsible: responsible,
+                        paymentId: paymentId,
+                        type: 'Bulk Application Fee Payment',
+                        timestamp: new Date().toISOString(),
+                        createdBy: 'Admin',
+                        status: 'Completed'
+                    };
+                    
+                    try {
+                        await FirebaseService.setDocument('givenfee', givenfeeDocId, givenfeeData);
+                        console.log(`✅ Application fee saved to givenfee collection for student: ${student.studentId}`);
+                    } catch (error) {
+                        console.error(`❌ Error saving application fee for student ${student.studentId}:`, error);
+                        // Continue with other students even if one fails
+                    }
+                }
+                
+                // Log bulk application fee payment activity
+                if (window.auditLogger) {
+                    try {
+                        const studentsNames = studentsData.map(s => s.fullname).join(', ');
+                        const studentsIds = studentsData.map(s => s.studentId).join(', ');
+                        
+                        await window.auditLogger.logBulkOperation(
+                            'Application Fee Payment',
+                            studentsData.length,
+                            `Bulk application fee payment of ${window.auditLogger.formatCurrency(parseFloat(amount))} recorded for ${studentsData.length} students`,
+                            {
+                                paymentId: paymentId,
+                                university: university,
+                                receiver: receiver,
+                                amount: parseFloat(amount),
+                                paymentMethod: paymentMethod,
+                                responsible: responsible,
+                                studentsCount: studentsData.length,
+                                studentsNames: studentsNames,
+                                studentsIds: studentsIds,
+                                paymentType: 'bulk_application_fee'
+                            }
+                        );
+                        
+                        console.log('📝 Bulk application fee activity logged for:', studentsData.length, 'students');
+                    } catch (error) {
+                        console.error('❌ Error logging bulk application fee activity:', error);
+                        // Don't fail the save if logging fails
+                    }
+                }
+                
+                // Save to Google Sheets Given sheet
+                if (window.appsScriptGoogleSheets) {
+                    try {
+                        console.log('💾 Attempting to save bulk payment to Google Sheets Given sheet...');
+                        
+                        const studentIds = studentsData.map(s => s.studentId);
+                        const studentNames = studentsData.map(s => s.fullname);
+                        
+                        const givenSheetData = {
+                            amount: parseFloat(amount),
+                            receiver: receiver,
+                            paymentMethod: paymentMethod,
+                            responsible: responsible,
+                            university: university
+                        };
+                        
+                        console.log('📊 Given sheet data prepared:', givenSheetData);
+                        console.log('👥 Student IDs:', studentIds);
+                        console.log('👥 Student Names:', studentNames);
+                        
+                        const result = await window.appsScriptGoogleSheets.writeGivenSheetData(studentIds, studentNames, givenSheetData);
+                        console.log('✅ Google Sheets Given sheet result:', result);
+                        console.log('✅ Bulk payment data saved to Google Sheets Given sheet');
+                    } catch (error) {
+                        console.error('❌ Error saving to Google Sheets Given sheet:', error);
+                        console.error('❌ Error details:', error.message);
+                        console.error('❌ Error stack:', error.stack);
+                        // Don't fail the main operation if Google Sheets fails
+                        showErrorMessage('Google Sheets Given sheet save failed: ' + error.message);
+                    }
+                } else {
+                    console.warn('⚠️ window.appsScriptGoogleSheets not available for Given sheet');
+                }
+            
+                showSuccessMessage(`Application fee payment of ${new Intl.NumberFormat('en-US').format(amount)} UZS recorded for ${studentsData.length} student(s)`);
+                closePaymentModal();
+                
+            } catch (error) {
+                console.error('Error saving payment:', error);
+                showErrorMessage('Failed to save payment: ' + error.message);
+            } finally {
+                // Reset button state
+                sendBtn.disabled = false;
+                btnText.style.display = 'inline';
+                btnSpinner.classList.add('hidden');
+            }
+        }
+        
+        async function loadAppFeeData() {
+            const tbody = document.getElementById('appFeeTableBody');
+            const emptyState = document.getElementById('emptyState');
+            
+            // Show loading state in table
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>Loading application fee data...</p>
+                    </td>
+                </tr>
+            `;
+            emptyState.classList.add('hidden');
+            
+            try {
+                // Get all documents from appfee collection directly
+                const { collection, getDocs } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                const { db } = await import('./firebase.js');
+                
+                const appFeeRef = collection(db, "appfee");
+                const appFeeSnapshot = await getDocs(appFeeRef);
+                
+                if (appFeeSnapshot.size === 0) {
+                    allStudentsData = [];
+                    filteredStudentsData = [];
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+                
+                // Process appfee documents and get corresponding student data from register collection
+                const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                const appFeePromises = [];
+                
+                appFeeSnapshot.forEach((appFeeDoc) => {
+                    const appFeeData = appFeeDoc.data();
+                    const docId = appFeeDoc.id;
+                    
+                    // Extract student document ID from appfee document ID (remove 'appfee' suffix)
+                    const studentId = docId.replace('appfee', '');
+                    // The register document ID is studentId + 'reg' (e.g., BS1 -> BS1reg)
+                    const registerDocId = studentId + 'reg';
+                    
+                    console.log(`Processing appfee document: ${docId} -> student ID: ${studentId} -> register doc: ${registerDocId}`);
+                    console.log('AppFee data:', appFeeData);
+                    
+                    appFeePromises.push(
+                        getDoc(doc(db, "register", registerDocId)).then(studentDoc => {
+                            if (studentDoc.exists()) {
+                                const studentData = studentDoc.data();
+                                console.log(`Found student data for ${studentId} in ${registerDocId}:`, studentData);
+                                return {
+                                    student: {
+                                        id: studentId,
+                                        studentId: studentId,
+                                        fullname: studentData.fullname || 'N/A',
+                                        tariff: studentData.tariff || 'N/A',
+                                        university1: studentData.university1 || 'N/A',
+                                        university2: studentData.university2 || 'N/A'
+                                    },
+                                    appFeeData: appFeeData
+                                };
+                            } else {
+                                console.warn(`Student document ${registerDocId} not found in register collection`);
+                                // Fallback to appfee document data if available
+                                return {
+                                    student: {
+                                        id: studentId,
+                                        studentId: studentId,
+                                        fullname: appFeeData.fullname || 'N/A',
+                                        tariff: appFeeData.tariff || 'N/A',
+                                        university1: appFeeData.university1 || 'N/A',
+                                        university2: appFeeData.university2 || 'N/A'
+                                    },
+                                    appFeeData: appFeeData
+                                };
+                            }
+                        }).catch(error => {
+                            console.error(`Error fetching student data for ${studentId} from ${registerDocId}:`, error);
+                            // Fallback to appfee document data
+                            return {
+                                student: {
+                                    id: studentId,
+                                    studentId: studentId,
+                                    fullname: appFeeData.fullname || 'N/A',
+                                    tariff: appFeeData.tariff || 'N/A',
+                                    university1: appFeeData.university1 || 'N/A',
+                                    university2: appFeeData.university2 || 'N/A'
+                                },
+                                appFeeData: appFeeData
+                            };
+                        })
+                    );
+                });
+                
+                const appFeeResults = await Promise.all(appFeePromises);
+                
+                // Debug: Log the fetched data
+                console.log('Fetched app fee data:', appFeeResults);
+                
+                // Store data globally for search functionality
+                allStudentsData = appFeeResults;
+                filteredStudentsData = [...allStudentsData];
+                
+                // Reset to first page
+                currentPage = 1;
+                
+                // Populate table
+                populateTable(filteredStudentsData);
+                
+            } catch (error) {
+                console.error('Error loading app fee data:', error);
+                showErrorInTable('Failed to load student data: ' + error.message);
+                emptyState.classList.remove('hidden');
+            }
+        }
+        
+        function populateTable(data) {
+            const tableBody = document.getElementById('appFeeTableBody');
+            const emptyState = document.getElementById('emptyState');
+            
+            console.log('Populating table with data:', data);
+            
+            if (data.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="no-results">
+                            <div class="no-results-icon">📋</div>
+                            <p>No application fee data found</p>
+                        </td>
+                    </tr>
+                `;
+                updatePagination();
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            // Calculate pagination
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const currentData = data.slice(startIndex, endIndex);
+            
+            const allUniversities = getAllUniversities();
+            
+            tableBody.innerHTML = currentData.map(({ student, appFeeData }) => {
+                // Calculate total fee
+                const fee1 = appFeeData.pay1 || 0;
+                const fee2 = appFeeData.pay2 || 0;
+                const totalFee = fee1 + fee2;
+                
+                return `
+                    <tr>
+                        <td class="student-id">${student.studentId || 'N/A'}</td>
+                        <td class="fullname" title="${student.fullname || 'N/A'}">${student.fullname || 'N/A'}</td>
+                        <td class="tariff">${student.tariff || 'N/A'}</td>
+                        <td class="university-col">${student.university1 || 'N/A'}</td>
+                        <td class="fee-display">${fee1 > 0 ? new Intl.NumberFormat('en-US').format(fee1) + ' UZS' : 'N/A'}</td>
+                        <td class="university-col">${student.university2 || 'N/A'}</td>
+                        <td class="fee-display">${fee2 > 0 ? new Intl.NumberFormat('en-US').format(fee2) + ' UZS' : 'N/A'}</td>
+                    </tr>
+                `;
+            }).join('');
+            
+            // Update pagination info
+            updatePagination();
+        }
+        
+        // Function to update pagination information
+        function updatePagination() {
+            const totalStudents = filteredStudentsData.length;
+            const startCount = totalStudents === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+            const endCount = Math.min(currentPage * itemsPerPage, totalStudents);
+            
+            document.getElementById('startCount').textContent = startCount;
+            document.getElementById('endCount').textContent = endCount;
+            document.getElementById('totalCount').textContent = totalStudents;
+            
+            // Update button states
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = endCount >= totalStudents;
+        }
+        
+        function setupSearch() {
+            const searchInput = document.getElementById('searchInput');
+            let searchTimeout;
+            
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase().trim();
+                
+                // Clear previous timeout for debouncing
+                clearTimeout(searchTimeout);
+                
+                // Debounce search for smoother performance
+                searchTimeout = setTimeout(() => {
+                    if (searchTerm === '') {
+                        filteredStudentsData = [...allStudentsData];
+                    } else {
+                        filteredStudentsData = allStudentsData.filter(({ student }) => {
+                            const studentId = (student.studentId || '').toLowerCase();
+                            const fullname = (student.fullname || '').toLowerCase();
+                            const university1 = (student.university1 || '').toLowerCase();
+                            const university2 = (student.university2 || '').toLowerCase();
+                            const tariff = (student.tariff || '').toLowerCase();
+                            
+                            return studentId.includes(searchTerm) ||
+                                   fullname.includes(searchTerm) ||
+                                   university1.includes(searchTerm) ||
+                                   university2.includes(searchTerm) ||
+                                   tariff.includes(searchTerm);
+                        });
+                    }
+                    
+                    // Reset to first page when searching
+                    currentPage = 1;
+                    
+                    // Update table with filtered results
+                    populateTable(filteredStudentsData);
+                }, 150); // 150ms debounce delay for smooth typing
+            });
+        }
+        
+        async function savePaymentAmounts(studentId) {
+            const pay1Input = document.getElementById(`pay1_${studentId}`);
+            const pay2Input = document.getElementById(`pay2_${studentId}`);
+            const saveButton = document.querySelector(`button[onclick="savePaymentAmounts('${studentId}')"]`);
+            
+            if (!pay1Input || !pay2Input || !saveButton) {
+                showErrorMessage('Input fields or save button not found');
+                return;
+            }
+            
+            // Start loading animation
+            saveButton.classList.add('loading');
+            saveButton.textContent = 'Saving';
+            
+            const pay1Value = parseInputValue(pay1Input.value.trim());
+            const pay2Value = parseInputValue(pay2Input.value.trim());
+            
+            // Validate inputs
+            if (pay1Value && isNaN(parseFloat(pay1Value))) {
+                showErrorMessage('Fee 1 must be a valid number');
+                resetSaveButton(saveButton);
+                return;
+            }
+            
+            if (pay2Value && isNaN(parseFloat(pay2Value))) {
+                showErrorMessage('Fee 2 must be a valid number');
+                resetSaveButton(saveButton);
+                return;
+            }
+            
+            try {
+                const appFeeDocId = studentId + 'appfee';
+                const updateData = {};
+                
+                if (pay1Value) {
+                    updateData.pay1 = parseFloat(pay1Value);
+                }
+                
+                if (pay2Value) {
+                    updateData.pay2 = parseFloat(pay2Value);
+                }
+                
+                // Add timestamp
+                updateData.lastUpdated = new Date().toISOString();
+                updateData.studentId = studentId;
+                
+                // Save to Firestore
+                await FirebaseService.setDocument('appfee', appFeeDocId, updateData);
+                
+                // Save to Google Sheets AppFee
+                if (window.appsScriptGoogleSheets) {
+                    try {
+                        console.log('💾 Attempting to save to Google Sheets...');
+                        
+                        // Get student info for Google Sheets
+                        const studentData = allStudentsData.find(item => item.student.studentId === studentId);
+                        const studentName = studentData ? studentData.student.fullname : 'Unknown Student';
+                        
+                        console.log('👤 Student data found:', studentData ? 'Yes' : 'No');
+                        console.log('📝 Student name:', studentName);
+                        
+                        const appFeeSheetData = {
+                            amount: parseFloat(pay1Value) || 0,      // pay1
+                            university1: studentData?.student?.university1 || '',
+                            amount2: parseFloat(pay2Value) || 0,     // pay2  
+                            university2: studentData?.student?.university2 || '',
+                            tariff: studentData?.student?.tariff || '',
+                            paymentMethod: 'Application Fee',
+                            receivedBy: 'Admin'
+                        };
+                        
+                        console.log('📊 AppFee sheet data prepared:', appFeeSheetData);
+                        
+                        const result = await window.appsScriptGoogleSheets.writeAppFeeData(studentId, studentName, appFeeSheetData);
+                        console.log('✅ Google Sheets result:', result);
+                        console.log('✅ Application fee data saved to Google Sheets for student:', studentId);
+                    } catch (error) {
+                        console.error('❌ Error saving to Google Sheets:', error);
+                        console.error('❌ Error details:', error.message);
+                        console.error('❌ Error stack:', error.stack);
+                        // Don't fail the main operation if Google Sheets fails
+                        showErrorMessage('Google Sheets save failed: ' + error.message);
+                    }
+                } else {
+                    console.warn('⚠️ window.appsScriptGoogleSheets not available');
+                }
+
+                // Log application fee payment activity
+                if (window.auditLogger) {
+                    try {
+                        // Get student info for logging
+                        const studentData = allStudentsData.find(item => item.student.studentId === studentId);
+                        const studentName = studentData ? studentData.student.fullname : 'Unknown Student';
+                        
+                        // Calculate total amount and create breakdown
+                        const fee1Amount = parseFloat(pay1Value) || 0;
+                        const fee2Amount = parseFloat(pay2Value) || 0;
+                        const totalAmount = fee1Amount + fee2Amount;
+                        
+                        // Create fee breakdown description
+                        let feeBreakdown = '';
+                        if (fee1Amount > 0 && fee2Amount > 0) {
+                            feeBreakdown = `Fee 1: ${window.auditLogger.formatCurrency(fee1Amount)}, Fee 2: ${window.auditLogger.formatCurrency(fee2Amount)}`;
+                        } else if (fee1Amount > 0) {
+                            feeBreakdown = `Fee 1: ${window.auditLogger.formatCurrency(fee1Amount)}`;
+                        } else if (fee2Amount > 0) {
+                            feeBreakdown = `Fee 2: ${window.auditLogger.formatCurrency(fee2Amount)}`;
+                        } else {
+                            feeBreakdown = 'No fees recorded';
+                        }
+                        
+                        await window.auditLogger.logApplicationFee(studentId, studentName, {
+                            totalAmount: totalAmount,
+                            fee1: fee1Amount,
+                            fee2: fee2Amount,
+                            feeBreakdown: feeBreakdown
+                        });
+                        
+                        console.log('📝 Application fee activity logged for:', studentId);
+                    } catch (error) {
+                        console.error('❌ Error logging application fee activity:', error);
+                        // Don't fail the save if logging fails
+                    }
+                }
+                
+                          
+                
+                // Show success animation
+                saveButton.classList.remove('loading');
+                saveButton.classList.add('success');
+                saveButton.textContent = 'Saved';
+                
+                // Show success message
+                showSuccessMessage(`Payment amounts saved for student ${studentId}`);
+                
+                // Reset button after 2 seconds
+                setTimeout(() => {
+                    resetSaveButton(saveButton);
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Error saving payment amounts:', error);
+                showErrorMessage('Failed to save payment amounts: ' + error.message);
+                resetSaveButton(saveButton);
+            }
+        }
+        
+        function resetSaveButton(button) {
+            button.classList.remove('loading', 'success');
+            button.textContent = 'Save';
+        }
+        
+        function showSuccessMessage(message) {
+            // Create or update success display
+            let successDiv = document.getElementById('success-message');
+            if (!successDiv) {
+                successDiv = document.createElement('div');
+                successDiv.id = 'success-message';
+                successDiv.className = 'fixed top-4 right-4 bg-green-600 text-white p-4 rounded-lg shadow-lg z-50 max-w-md';
+                document.body.appendChild(successDiv);
+            }
+            
+            successDiv.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-200">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+            `;
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                if (successDiv && successDiv.parentNode) {
+                    successDiv.remove();
+                }
+            }, 3000);
+        }
+        
+        function showErrorInTable(message) {
+            const tbody = document.getElementById('appFeeTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="error">
+                        <div class="error-icon">⚠️</div>
+                        <p>${message}</p>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function showErrorMessage(message) {
+            // Create or update error display
+            let errorDiv = document.getElementById('error-message');
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.id = 'error-message';
+                errorDiv.className = 'fixed top-4 right-4 bg-red-600 text-white p-4 rounded-lg shadow-lg z-50 max-w-md';
+                document.body.appendChild(errorDiv);
+            }
+            
+            errorDiv.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-200">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+            `;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                if (errorDiv && errorDiv.parentNode) {
+                    errorDiv.remove();
+                }
+            }, 5000);
+        }
+    </script>
+   
+</body>
+</html>

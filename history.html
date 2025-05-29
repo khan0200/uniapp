@@ -1,0 +1,1873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity History - UniApp</title>
+    <link href="./dist/output.css" rel="stylesheet">
+    <link href="./dark-mode-styles.css" rel="stylesheet">
+    <link href="./sizing-fixes.css" rel="stylesheet">
+    <script src="./dark-mode.js"></script>
+    <script src="./audit-logger.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f7fa;
+            color: #1d1d1f;
+            line-height: 1.47059;
+            font-weight: 400;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .title {
+            font-size: 36px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #86868b;
+            font-weight: 400;
+        }
+
+        /* Filters and Search */
+        .filters-container {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f2f2f7;
+        }
+
+        .dark .filters-container {
+            background: #1e293b !important;
+            border: 1px solid #475569 !important;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto;
+            gap: 16px;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .dark .filter-label {
+            color: #f1f5f9 !important;
+        }
+
+        .filter-input, .filter-select {
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            font-size: 16px;
+            background: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .dark .filter-input, .dark .filter-select {
+            background: #0f172a !important;
+            border: 1px solid #475569 !important;
+            color: #f1f5f9 !important;
+        }
+
+        .filter-input:focus, .filter-select:focus {
+            outline: none;
+            border-color: #007aff;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+
+        .dark .filter-input:focus, .dark .filter-select:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+        }
+
+        .clear-filters-btn {
+            padding: 12px 20px;
+            background: #f3f4f6;
+            color: #6b7280;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            height: fit-content;
+        }
+
+        .dark .clear-filters-btn {
+            background: #475569 !important;
+            color: #94a3b8 !important;
+        }
+
+        .clear-filters-btn:hover {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .dark .clear-filters-btn:hover {
+            background: #64748b !important;
+            color: #f1f5f9 !important;
+        }
+
+        /* Activity Timeline */
+        .timeline-container {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            border: 1px solid #f2f2f7;
+        }
+
+        .dark .timeline-container {
+            background: #1e293b !important;
+            border: 1px solid #475569 !important;
+        }
+
+        .timeline-header {
+            padding: 24px 30px;
+            border-bottom: 1px solid #f2f2f7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dark .timeline-header {
+            border-bottom: 1px solid #475569 !important;
+        }
+
+        .timeline-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+
+        .dark .timeline-title {
+            color: #f1f5f9 !important;
+        }
+
+        .activity-count {
+            font-size: 14px;
+            color: #86868b;
+            background: #f3f4f6;
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+
+        .dark .activity-count {
+            color: #94a3b8 !important;
+            background: #475569 !important;
+        }
+
+        .timeline-body {
+            padding: 0;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        /* Activity Items */
+        .activity-item {
+            padding: 20px 30px;
+            border-bottom: 1px solid #f2f2f7;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .dark .activity-item {
+            border-bottom: 1px solid #475569 !important;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-item:hover {
+            background: #f9f9fb;
+        }
+
+        .dark .activity-item:hover {
+            background: #334155 !important;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        /* Activity type specific colors */
+        .activity-icon.registration {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .activity-icon.payment {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+
+        .activity-icon.appfee {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .activity-icon.edit {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        .activity-icon.system {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        }
+
+        .activity-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .activity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .activity-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .dark .activity-title {
+            color: #f9fafb;
+        }
+
+        .activity-description {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .dark .activity-description {
+            color: #9ca3af;
+        }
+
+        .activity-metadata {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: #9ca3af;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .dark .activity-metadata {
+            color: #6b7280;
+        }
+
+        .activity-timestamp {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .activity-user {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .activity-student {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #3b82f6;
+        }
+
+        .activity-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .activity-badge.registration {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+        }
+
+        .dark .activity-badge.registration {
+            background: rgba(16, 185, 129, 0.2) !important;
+            color: #34d399 !important;
+        }
+
+        .activity-badge.payment {
+            background: rgba(59, 130, 246, 0.1);
+            color: #1d4ed8;
+        }
+
+        .dark .activity-badge.payment {
+            background: rgba(59, 130, 246, 0.2) !important;
+            color: #60a5fa !important;
+        }
+
+        .activity-badge.appfee {
+            background: rgba(249, 115, 22, 0.1);
+            color: #ea580c;
+        }
+
+        .dark .activity-badge.appfee {
+            background: rgba(249, 115, 22, 0.2) !important;
+            color: #fb923c !important;
+        }
+
+        .activity-badge.edit {
+            background: rgba(245, 158, 11, 0.1);
+            color: #d97706;
+        }
+
+        .dark .activity-badge.edit {
+            background: rgba(245, 158, 11, 0.2) !important;
+            color: #fbbf24 !important;
+        }
+
+        .activity-badge.system {
+            background: rgba(139, 92, 246, 0.1);
+            color: #7c3aed;
+        }
+
+        .dark .activity-badge.system {
+            background: rgba(139, 92, 246, 0.2) !important;
+            color: #a78bfa !important;
+        }
+
+        /* Loading and Empty States */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #86868b;
+        }
+
+        .dark .loading {
+            color: #94a3b8 !important;
+        }
+
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #f2f2f7;
+            border-top: 3px solid #007aff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        .dark .loading-spinner {
+            border: 3px solid #475569 !important;
+            border-top: 3px solid #3b82f6 !important;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #86868b;
+        }
+
+        .dark .empty-state {
+            color: #94a3b8 !important;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .dark .empty-title {
+            color: #f1f5f9 !important;
+        }
+
+        .empty-description {
+            font-size: 16px;
+            color: #6b7280;
+        }
+
+        .dark .empty-description {
+            color: #94a3b8 !important;
+        }
+
+        /* Pagination */
+        .pagination-container {
+            padding: 24px 30px;
+            border-top: 1px solid #f2f2f7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dark .pagination-container {
+            border-top: 1px solid #475569 !important;
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .dark .pagination-info {
+            color: #94a3b8 !important;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .pagination-btn {
+            padding: 8px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .dark .pagination-btn {
+            border: 1px solid #475569 !important;
+            background: #334155 !important;
+            color: #f1f5f9 !important;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #f3f4f6;
+            border-color: #007aff;
+        }
+
+        .dark .pagination-btn:hover:not(:disabled) {
+            background: #475569 !important;
+            border-color: #3b82f6 !important;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Modern Sidebar Styles */
+        .modern-sidebar {
+            width: 70px;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            overflow: visible;
+        }
+
+        .modern-sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        }
+
+        .sidebar-header {
+            padding: 20px 0;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-logo:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .sidebar-nav {
+            padding: 0 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 46px;
+            height: 46px;
+            margin: 0 auto 12px;
+            border-radius: 14px;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: visible;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-item:hover::before {
+            opacity: 1;
+        }
+
+        .nav-item:hover {
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .nav-item.active::before {
+            opacity: 0;
+        }
+
+        .nav-item.active:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .nav-icon {
+            width: 22px;
+            height: 22px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item:hover .nav-icon {
+            transform: scale(1.1);
+        }
+
+        /* Tooltip styles - Clean and Simple */
+        .modern-sidebar .nav-item {
+            position: relative;
+            overflow: visible;
+        }
+
+        .modern-sidebar .nav-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 70px;
+            top: 50%;
+            transform: translateY(-50%) translateX(-8px) scale(0.8);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 999999;
+            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .modern-sidebar .nav-item:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(-50%) translateX(0) scale(1);
+        }
+
+        /* Activity Detail Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .dark .modal-overlay {
+            background: rgba(0, 0, 0, 0.8) !important;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 0;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            transform: scale(0.9);
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .dark .modal-content {
+            background: #1e293b !important;
+        }
+
+        .modal-header {
+            padding: 24px 30px;
+            border-bottom: 1px solid #f2f2f7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dark .modal-header {
+            border-bottom: 1px solid #475569 !important;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+
+        .dark .modal-title {
+            color: #f1f5f9 !important;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #f3f4f6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .dark .modal-close {
+            background: #475569 !important;
+            color: #f1f5f9 !important;
+        }
+
+        .modal-close:hover {
+            background: #e5e7eb;
+        }
+
+        .dark .modal-close:hover {
+            background: #64748b !important;
+        }
+
+        .modal-body {
+            padding: 30px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .detail-section {
+            margin-bottom: 24px;
+        }
+
+        .detail-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .dark .detail-label {
+            color: #94a3b8 !important;
+        }
+
+        .detail-value {
+            font-size: 16px;
+            color: #1d1d1f;
+            line-height: 1.5;
+        }
+
+        .dark .detail-value {
+            color: #f1f5f9 !important;
+        }
+
+        .changes-list {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 8px;
+        }
+
+        .dark .changes-list {
+            background: #334155 !important;
+        }
+
+        .change-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .dark .change-item {
+            border-bottom: 1px solid #475569 !important;
+        }
+
+        .change-item:last-child {
+            border-bottom: none;
+        }
+
+        .change-field {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .dark .change-field {
+            color: #f1f5f9 !important;
+        }
+
+        .change-values {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .dark .change-values {
+            color: #94a3b8 !important;
+        }
+
+        .change-arrow {
+            margin: 0 8px;
+            color: #3b82f6;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .filters-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .clear-filters-btn {
+                width: 100%;
+            }
+
+            .modal-content {
+                width: 95%;
+                max-height: 90vh;
+            }
+
+            .modal-body {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .modern-sidebar {
+                width: 60px;
+            }
+            
+            .sidebar-logo {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            
+            .nav-item {
+                width: 42px;
+                height: 42px;
+            }
+            
+            .nav-icon {
+                width: 20px;
+                height: 20px;
+            }
+
+            .container {
+                padding: 20px 16px;
+            }
+
+            .title {
+                font-size: 28px;
+            }
+
+            .activity-item {
+                padding: 16px 20px;
+                gap: 12px;
+            }
+
+            .activity-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+
+            .pagination-container {
+                padding: 20px;
+                flex-direction: column;
+                gap: 16px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <div class="flex h-screen">
+        <!-- Modern Sidebar -->
+        <div class="modern-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">UA</div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="index.html" class="nav-item" data-tooltip="Dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                    </svg>
+                </a>
+                <a href="register.html" class="nav-item" data-tooltip="Register Student">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+                <a href="studentlist.html" class="nav-item" data-tooltip="Student List">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                    </svg>
+                </a>
+                <a href="payments.html" class="nav-item" data-tooltip="Payments">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                        <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+                <a href="appfee.html" class="nav-item" data-tooltip="Application Fee">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+                <a href="history.html" class="nav-item active" data-tooltip="Activity History">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <div class="container">
+                <div class="header">
+                    <h1 class="title">Activity History</h1>
+                    <p class="subtitle">Track all actions and changes in your UniApp system</p>
+                </div>
+
+                <!-- Filters and Search -->
+                <div class="filters-container">
+                    <div class="filters-grid">
+                        <div class="filter-group">
+                            <label class="filter-label">Search Activities</label>
+                            <input type="text" id="searchInput" class="filter-input" placeholder="Search by student name, ID, or action...">
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Activity Type</label>
+                            <select id="typeFilter" class="filter-select">
+                                <option value="">All Types</option>
+                                <option value="registration">Registration</option>
+                                <option value="payment">Payment</option>
+                                <option value="appfee">Application Fee</option>
+                                <option value="edit">Edit</option>
+                                <option value="system">System</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Date Range</label>
+                            <select id="dateFilter" class="filter-select">
+                                <option value="">All Time</option>
+                                <option value="today">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">User</label>
+                            <select id="userFilter" class="filter-select">
+                                <option value="">All Users</option>
+                                <option value="system">System</option>
+                                <option value="admin">Admin</option>
+                                <option value="M.Ali">M.Ali</option>
+                                <option value="Azizbek">Azizbek</option>
+                                <option value="Khayitxon">Khayitxon</option>
+                                <option value="Jasurbek">Jasurbek</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <button id="clearFilters" class="clear-filters-btn">Clear Filters</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Timeline -->
+                <div class="timeline-container">
+                    <div class="timeline-header">
+                        <h2 class="timeline-title">Recent Activities</h2>
+                        <div class="activity-count" id="activityCount">Loading...</div>
+                    </div>
+                    <div class="timeline-body" id="timelineBody">
+                        <!-- Loading state -->
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            <p>Loading activity history...</p>
+                        </div>
+                    </div>
+                    <div class="pagination-container">
+                        <div class="pagination-info">
+                            Showing <span id="startCount">0</span> to <span id="endCount">0</span> of <span id="totalCount">0</span> activities
+                        </div>
+                        <div class="pagination-controls">
+                            <button id="prevPage" class="pagination-btn">Previous</button>
+                            <button id="nextPage" class="pagination-btn">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Detail Modal -->
+    <div class="modal-overlay" id="activityModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Activity Details</h3>
+                <button class="modal-close" onclick="closeActivityModal()">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M12.854 4.854a.5.5 0 0 0-.708-.708L8 8.293 3.854 4.146a.5.5 0 1 0-.708.708L7.293 9l-4.147 4.146a.5.5 0 0 0 .708.708L8 9.707l4.146 4.147a.5.5 0 0 0 .708-.708L8.707 9l4.147-4.146z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Activity details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let allActivities = [];
+        let filteredActivities = [];
+        let currentPage = 1;
+        const itemsPerPage = 20;
+        let db = null;
+
+        // Activity type configurations
+        const activityConfig = {
+            registration: {
+                icon: '👤',
+                color: 'registration',
+                title: 'Student Registration'
+            },
+            payment: {
+                icon: '💳',
+                color: 'payment',
+                title: 'Payment Made'
+            },
+            appfee: {
+                icon: '📄',
+                color: 'appfee',
+                title: 'Application Fee'
+            },
+            edit: {
+                icon: '✏️',
+                color: 'edit',
+                title: 'Data Updated'
+            },
+            system: {
+                icon: '⚙️',
+                color: 'system',
+                title: 'System Action'
+            }
+        };
+
+        // Initialize the application
+        async function initializeApp() {
+            console.log('🔄 Initializing Activity History System...');
+            
+            try {
+                // Import Firebase
+                const { initializeApp } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js');
+                const { getFirestore } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                
+                // Firebase config
+                const firebaseConfig = {
+                    apiKey: "AIzaSyDtc3StzPcG7oivivYlXnKrR6S0c0xelJg",
+                    authDomain: "uniuni-dd4af.firebaseapp.com",
+                    projectId: "uniuni-dd4af",
+                    storageBucket: "uniuni-dd4af.firebasestorage.app",
+                    messagingSenderId: "583982319464",
+                    appId: "1:583982319464:web:ed3021724ef42f196df8dd"
+                };
+                
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                
+                console.log('✅ Firebase initialized successfully');
+                
+                // Initialize audit logger
+                if (window.auditLogger) {
+                    await window.auditLogger.initialize(db);
+                }
+                
+                // Load activity data
+                await loadActivityData();
+                
+                // Set up event listeners
+                setupEventListeners();
+                
+            } catch (error) {
+                console.error('❌ Error initializing app:', error);
+                displayError('Failed to initialize Firebase: ' + error.message);
+            }
+        }
+
+        // Load activity data from multiple sources
+        async function loadActivityData() {
+            console.log('🔄 Loading activity data...');
+            
+            try {
+                const { collection, getDocs, query, orderBy, limit } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                
+                allActivities = [];
+                
+                // Load from audit log first (primary source)
+                await loadEditActivities();
+                
+                // Load application fee activities from givenfee collection
+                await loadGivenFeeActivities();
+                
+                // If no audit log data, load from legacy sources
+                if (allActivities.length === 0) {
+                    console.log('📝 No audit log data found, loading from legacy sources...');
+                    
+                    // Load registration activities
+                    await loadRegistrationActivities();
+                    
+                    // Load payment activities
+                    await loadPaymentActivities();
+                }
+                
+                // Sort all activities by timestamp (newest first)
+                allActivities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
+                // Initialize filtered activities
+                filteredActivities = [...allActivities];
+                
+                // Reset to first page
+                currentPage = 1;
+                
+                // Update display
+                updateTimeline();
+                
+                console.log(`✅ Loaded ${allActivities.length} activities`);
+                
+            } catch (error) {
+                console.error('❌ Error loading activity data:', error);
+                displayError('Failed to load activity data: ' + error.message);
+            }
+        }
+
+        // Load registration activities
+        async function loadRegistrationActivities() {
+            try {
+                const { collection, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                
+                const registrationsRef = collection(db, "register");
+                const q = query(registrationsRef, orderBy("timestamp", "desc"));
+                const snapshot = await getDocs(q);
+                
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    allActivities.push({
+                        id: `reg_${doc.id}`,
+                        type: 'registration',
+                        title: 'New Student Registered',
+                        description: `${data.fullname || 'Unknown Student'} (ID: ${data.studentId || 'N/A'}) registered for ${data.educationLevel || 'Unknown'} program`,
+                        studentId: data.studentId,
+                        studentName: data.fullname,
+                        timestamp: data.timestamp?.toDate() || new Date(),
+                        user: 'system',
+                        metadata: {
+                            educationLevel: data.educationLevel,
+                            tariff: data.tariff,
+                            university1: data.university1
+                        }
+                    });
+                });
+                
+                console.log(`✅ Loaded ${snapshot.size} registration activities`);
+                
+            } catch (error) {
+                console.error('❌ Error loading registration activities:', error);
+            }
+        }
+
+        // Load payment activities
+        async function loadPaymentActivities() {
+            try {
+                const { collection, getDocs, query, orderBy, collectionGroup } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                
+                // Get all payment history from subcollections
+                const paymentHistoryRef = collectionGroup(db, "paymentHistory");
+                const q = query(paymentHistoryRef, orderBy("timestamp", "desc"));
+                const snapshot = await getDocs(q);
+                
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const parentPath = doc.ref.parent.parent.path;
+                    const studentId = parentPath.split('/').pop().replace('payments', '');
+                    
+                    allActivities.push({
+                        id: `pay_${doc.id}`,
+                        type: 'payment',
+                        title: 'Payment Received',
+                        description: `Payment of ${formatCurrency(data.amount || 0)} received via ${data.paymentMethod || 'Unknown'} for student ${studentId}`,
+                        studentId: studentId,
+                        timestamp: data.timestamp?.toDate() || new Date(),
+                        user: data.receivedBy || 'Unknown',
+                        metadata: {
+                            amount: data.amount,
+                            paymentMethod: data.paymentMethod,
+                            receivedBy: data.receivedBy
+                        }
+                    });
+                });
+                
+                console.log(`✅ Loaded ${snapshot.size} payment activities`);
+                
+            } catch (error) {
+                console.error('❌ Error loading payment activities:', error);
+            }
+        }
+
+        // Load application fee activities from givenfee collection
+        async function loadGivenFeeActivities() {
+            try {
+                const { collection, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                
+                const givenfeeRef = collection(db, "givenfee");
+                const q = query(givenfeeRef, orderBy("timestamp", "desc"));
+                const snapshot = await getDocs(q);
+                
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    
+                    // Create timestamp from ISO string or use current date as fallback
+                    let timestamp;
+                    if (data.timestamp) {
+                        if (typeof data.timestamp === 'string') {
+                            timestamp = new Date(data.timestamp);
+                        } else if (data.timestamp.toDate) {
+                            timestamp = data.timestamp.toDate();
+                        } else {
+                            timestamp = new Date(data.timestamp);
+                        }
+                    } else {
+                        timestamp = new Date();
+                    }
+                    
+                    // For bulk application fee payments, create a formatted description with line breaks
+                    let description;
+                    if (data.type === 'Bulk Application Fee Payment') {
+                        // This is a bulk payment, so format it properly
+                        description = `Application fee payment of ${formatCurrency(data.amount || 0)} for:\n${data.fullname || 'Unknown Student'} (ID: ${data.studentId || 'N/A'})`;
+                    } else {
+                        // Individual payment
+                        description = `Application fee payment of ${formatCurrency(data.amount || 0)} received for ${data.fullname || 'Unknown Student'} (ID: ${data.studentId || 'N/A'}) via ${data.paymentMethod || 'Unknown'} - University: ${data.university || 'N/A'}, Receiver: ${data.receiver || 'N/A'}`;
+                    }
+
+                    allActivities.push({
+                        id: `givenfee_${doc.id}`,
+                        type: 'appfee',
+                        title: 'Application Fee Payment',
+                        description: description,
+                        studentId: data.studentId,
+                        studentName: data.fullname,
+                        timestamp: timestamp,
+                        user: data.responsible || data.createdBy || 'Unknown',
+                        metadata: {
+                            amount: data.amount,
+                            paymentMethod: data.paymentMethod,
+                            university: data.university,
+                            receiver: data.receiver,
+                            responsible: data.responsible,
+                            paymentId: data.paymentId,
+                            paymentType: 'bulk_application_fee',
+                            type: data.type
+                        }
+                    });
+                });
+                
+                console.log(`✅ Loaded ${snapshot.size} application fee activities from givenfee collection`);
+                
+            } catch (error) {
+                console.error('❌ Error loading givenfee activities:', error);
+            }
+        }
+
+        // Load edit activities from audit log collection
+        async function loadEditActivities() {
+            try {
+                const { collection, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                
+                // Load from audit log collection
+                const auditLogRef = collection(db, "auditLog");
+                const q = query(auditLogRef, orderBy("timestamp", "desc"));
+                const snapshot = await getDocs(q);
+                
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    
+                    let description = '';
+                    let title = '';
+                    let activityType = 'edit'; // default type
+                    
+                    switch (data.action) {
+                        case 'student_registration':
+                            activityType = 'registration';
+                            title = 'New Student Registered';
+                            description = `${data.studentName || 'Unknown Student'} (ID: ${data.studentId || 'N/A'}) registered for ${data.metadata?.educationLevel || 'Unknown'} program`;
+                            break;
+                        case 'payment_received':
+                            activityType = 'payment';
+                            title = 'Payment Received';
+                            description = `Payment of ${data.metadata?.amount ? formatCurrency(data.metadata.amount) : 'Unknown amount'} received via ${data.metadata?.paymentMethod || 'Unknown method'} for ${data.studentName || 'Unknown Student'} (ID: ${data.studentId || 'N/A'})`;
+                            break;
+                        case 'application_fee_payment':
+                            activityType = 'appfee';
+                            title = 'Application Fee Payment';
+                            description = `Application fee payment of ${data.metadata?.totalAmount ? formatCurrency(data.metadata.totalAmount) : 'Unknown amount'} updated for ${data.studentName || 'Unknown Student'} (ID: ${data.studentId || 'N/A'}) - ${data.metadata?.feeBreakdown || 'No breakdown available'}`;
+                            break;
+                        case 'student_edit':
+                            activityType = 'edit';
+                            title = 'Student Data Updated';
+                            if (data.changes && data.changes.length > 0) {
+                                const changesList = data.changes.map(change => 
+                                    `${change.field}: "${change.oldValue}" → "${change.newValue}"`
+                                ).join(', ');
+                                description = `${data.studentName || 'Unknown Student'} (ID: ${data.studentId || 'N/A'}) - Updated: ${changesList}`;
+                            } else {
+                                description = `Student information updated for ${data.studentName || 'Unknown Student'} (ID: ${data.studentId || 'N/A'})`;
+                            }
+                            break;
+                        case 'payment_update':
+                            activityType = 'payment';
+                            title = 'Payment Status Updated';
+                            description = `Payment status updated for ${data.studentName || 'Unknown Student'} (ID: ${data.studentId || 'N/A'}) - ${data.description || 'Payment information changed'}`;
+                            break;
+                        case 'system_action':
+                            activityType = 'system';
+                            title = data.title || 'System Action';
+                            description = data.description || 'System performed an automated action';
+                            break;
+                        case 'bulk_operation':
+                            // Check if it's an application fee bulk operation
+                            if (data.metadata?.paymentType === 'bulk_application_fee') {
+                                activityType = 'appfee';
+                                title = 'Bulk Application Fee Payment';
+                                // Create description with numbered student list
+                                const studentNames = data.metadata?.studentsNames || '';
+                                const amount = data.metadata?.amount ? formatCurrency(data.metadata.amount) : 'Unknown amount';
+                                
+                                description = `Application fee payment of ${amount}:`;
+                                if (studentNames && studentNames.trim() !== '') {
+                                    const studentsList = studentNames.split(', ').map((name, index) => 
+                                        `${index + 1}) ${name.trim()}`
+                                    ).join('\n');
+                                    description += `\n${studentsList}`;
+                                }
+                            } else {
+                                activityType = 'system';
+                                title = `Bulk ${data.metadata?.operation || 'Operation'}`;
+                                description = data.description || `Bulk operation performed`;
+                            }
+                            break;
+                        default:
+                            activityType = 'system';
+                            title = data.title || 'System Action';
+                            description = data.description || `Action performed: ${data.action}`;
+                    }
+                    
+                    allActivities.push({
+                        id: `audit_${doc.id}`,
+                        type: activityType,
+                        title: title,
+                        description: description,
+                        studentId: data.studentId,
+                        studentName: data.studentName,
+                        timestamp: data.timestamp?.toDate() || new Date(),
+                        user: data.user || 'admin',
+                        metadata: {
+                            action: data.action,
+                            changes: data.changes,
+                            originalData: data.originalData,
+                            newData: data.newData,
+                            amount: data.metadata?.amount,
+                            paymentMethod: data.metadata?.paymentMethod,
+                            receivedBy: data.metadata?.receivedBy,
+                            paymentType: data.metadata?.paymentType,
+                            educationLevel: data.metadata?.educationLevel,
+                            tariff: data.metadata?.tariff,
+                            university1: data.metadata?.university1
+                        }
+                    });
+                });
+                
+                console.log(`✅ Loaded ${snapshot.size} audit log activities`);
+                
+            } catch (error) {
+                console.error('❌ Error loading audit log activities:', error);
+                
+                // Fallback: Check for students with lastModified field
+                try {
+                    const { collection, getDocs } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                    const studentsRef = collection(db, "register");
+                    const snapshot = await getDocs(studentsRef);
+                    
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        if (data.lastModified) {
+                            allActivities.push({
+                                id: `edit_${doc.id}_${Date.now()}`,
+                                type: 'edit',
+                                title: 'Student Data Updated',
+                                description: `Student information updated for ${data.fullname || 'Unknown Student'} (ID: ${data.studentId || 'N/A'})`,
+                                studentId: data.studentId,
+                                studentName: data.fullname,
+                                timestamp: data.lastModified.toDate ? data.lastModified.toDate() : new Date(data.lastModified),
+                                user: 'admin',
+                                metadata: {
+                                    action: 'data_update'
+                                }
+                            });
+                        }
+                    });
+                    
+                    console.log(`✅ Loaded fallback edit activities`);
+                } catch (fallbackError) {
+                    console.error('❌ Error loading fallback edit activities:', fallbackError);
+                }
+            }
+        }
+
+        // Format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount || 0);
+        }
+
+        // Format timestamp
+        function formatTimestamp(timestamp) {
+            const now = new Date();
+            const date = new Date(timestamp);
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+            
+            return new Intl.DateTimeFormat('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(date);
+        }
+
+        // Update timeline display
+        function updateTimeline() {
+            const timelineBody = document.getElementById('timelineBody');
+            const activityCount = document.getElementById('activityCount');
+            
+            if (filteredActivities.length === 0) {
+                displayEmptyState();
+                updatePagination();
+                activityCount.textContent = '0 activities';
+                return;
+            }
+            
+            // Calculate pagination
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const currentActivities = filteredActivities.slice(startIndex, endIndex);
+            
+            // Update activity count
+            activityCount.textContent = `${filteredActivities.length} activities`;
+            
+            // Generate timeline HTML
+            const timelineHTML = currentActivities.map(activity => {
+                const config = activityConfig[activity.type] || activityConfig.system;
+                
+                return `
+                    <div class="activity-item" onclick="showActivityDetails('${activity.id}')">
+                        <div class="activity-icon ${config.color}">
+                            ${config.icon}
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-header">
+                                <div>
+                                    <div class="activity-title">${activity.title}</div>
+                                    <div class="activity-description">${activity.description.replace(/\n/g, '<br>')}</div>
+                                </div>
+                                <div class="activity-meta">
+                                    <div class="activity-time">${formatTimestamp(activity.timestamp)}</div>
+                                    <div class="activity-badge ${config.color}">${activity.type}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            timelineBody.innerHTML = timelineHTML;
+            
+            // Update pagination
+            updatePagination();
+        }
+
+        // Update pagination information
+        function updatePagination() {
+            const totalActivities = filteredActivities.length;
+            const startCount = totalActivities === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+            const endCount = Math.min(currentPage * itemsPerPage, totalActivities);
+            const totalPages = Math.ceil(totalActivities / itemsPerPage);
+            
+            document.getElementById('startCount').textContent = startCount;
+            document.getElementById('endCount').textContent = endCount;
+            document.getElementById('totalCount').textContent = totalActivities;
+            
+            // Update button states
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = currentPage >= totalPages || totalActivities <= itemsPerPage;
+        }
+
+        // Display empty state
+        function displayEmptyState() {
+            const timelineBody = document.getElementById('timelineBody');
+            timelineBody.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📋</div>
+                    <div class="empty-title">No Activities Found</div>
+                    <div class="empty-description">No activities match your current filters</div>
+                </div>
+            `;
+        }
+
+        // Display error state
+        function displayError(message) {
+            const timelineBody = document.getElementById('timelineBody');
+            timelineBody.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">⚠️</div>
+                    <div class="empty-title">Error Loading Activities</div>
+                    <div class="empty-description">${message}</div>
+                </div>
+            `;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Search input
+            document.getElementById('searchInput').addEventListener('input', performFilter);
+            
+            // Filter selects
+            document.getElementById('typeFilter').addEventListener('change', performFilter);
+            document.getElementById('dateFilter').addEventListener('change', performFilter);
+            document.getElementById('userFilter').addEventListener('change', performFilter);
+            
+            // Clear filters button
+            document.getElementById('clearFilters').addEventListener('click', clearFilters);
+            
+            // Pagination buttons
+            document.getElementById('prevPage').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    updateTimeline();
+                }
+            });
+            
+            document.getElementById('nextPage').addEventListener('click', () => {
+                const totalPages = Math.ceil(filteredActivities.length / itemsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    updateTimeline();
+                }
+            });
+            
+            // Modal event listeners
+            document.getElementById('activityModal').addEventListener('click', (e) => {
+                if (e.target.id === 'activityModal') {
+                    closeActivityModal();
+                }
+            });
+            
+            // Keyboard event listener for modal
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeActivityModal();
+                }
+            });
+        }
+
+        // Perform filtering
+        function performFilter() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            const typeFilter = document.getElementById('typeFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            const userFilter = document.getElementById('userFilter').value;
+            
+            filteredActivities = allActivities.filter(activity => {
+                // Search filter
+                const matchesSearch = !searchTerm || 
+                    activity.title.toLowerCase().includes(searchTerm) ||
+                    activity.description.toLowerCase().includes(searchTerm) ||
+                    (activity.studentName && activity.studentName.toLowerCase().includes(searchTerm)) ||
+                    (activity.studentId && activity.studentId.toLowerCase().includes(searchTerm));
+                
+                // Type filter
+                const matchesType = !typeFilter || activity.type === typeFilter;
+                
+                // User filter
+                const matchesUser = !userFilter || activity.user === userFilter;
+                
+                // Date filter
+                let matchesDate = true;
+                if (dateFilter) {
+                    const activityDate = new Date(activity.timestamp);
+                    const now = new Date();
+                    
+                    switch (dateFilter) {
+                        case 'today':
+                            matchesDate = activityDate.toDateString() === now.toDateString();
+                            break;
+                        case 'week':
+                            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                            matchesDate = activityDate >= weekAgo;
+                            break;
+                        case 'month':
+                            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                            matchesDate = activityDate >= monthAgo;
+                            break;
+                    }
+                }
+                
+                return matchesSearch && matchesType && matchesUser && matchesDate;
+            });
+            
+            // Reset to first page
+            currentPage = 1;
+            updateTimeline();
+        }
+
+        // Clear all filters
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('typeFilter').value = '';
+            document.getElementById('dateFilter').value = '';
+            document.getElementById('userFilter').value = '';
+            
+            filteredActivities = [...allActivities];
+            currentPage = 1;
+            updateTimeline();
+        }
+
+        // Show activity details in modal
+        function showActivityDetails(activityId) {
+            const activity = allActivities.find(a => a.id === activityId);
+            if (!activity) return;
+            
+            const modal = document.getElementById('activityModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalTitle.textContent = activity.title;
+            
+            let modalContent = `
+                <div class="detail-section">
+                    <div class="detail-label">Description</div>
+                    <div class="detail-value">${activity.description}</div>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-label">Timestamp</div>
+                    <div class="detail-value">${formatFullTimestamp(activity.timestamp)}</div>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-label">User</div>
+                    <div class="detail-value">${activity.user || 'Unknown'}</div>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-label">Activity Type</div>
+                    <div class="detail-value">${activity.type.charAt(0).toUpperCase() + activity.type.slice(1)}</div>
+                </div>
+            `;
+            
+            // Add student information if available
+            if (activity.studentId || activity.studentName) {
+                modalContent += `
+                    <div class="detail-section">
+                        <div class="detail-label">Student Information</div>
+                        <div class="detail-value">
+                            ${activity.studentName ? `Name: ${activity.studentName}<br>` : ''}
+                            ${activity.studentId ? `ID: ${activity.studentId}` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Add changes information for edit activities
+            if (activity.metadata && activity.metadata.changes && activity.metadata.changes.length > 0) {
+                modalContent += `
+                    <div class="detail-section">
+                        <div class="detail-label">Changes Made</div>
+                        <div class="changes-list">
+                `;
+                
+                activity.metadata.changes.forEach(change => {
+                    modalContent += `
+                        <div class="change-item">
+                            <div class="change-field">${formatFieldName(change.field)}</div>
+                            <div class="change-values">
+                                "${change.oldValue || 'Empty'}"<span class="change-arrow">→</span>"${change.newValue || 'Empty'}"
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                modalContent += `
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Add payment information for payment activities
+            if (activity.metadata && activity.type === 'payment') {
+                modalContent += `
+                    <div class="detail-section">
+                        <div class="detail-label">Payment Details</div>
+                        <div class="detail-value">
+                            ${activity.metadata.amount ? `Amount: ${formatCurrency(activity.metadata.amount)}<br>` : ''}
+                            ${activity.metadata.paymentMethod ? `Method: ${activity.metadata.paymentMethod}<br>` : ''}
+                            ${activity.metadata.receivedBy ? `Received By: ${activity.metadata.receivedBy}<br>` : ''}
+                            ${activity.metadata.paymentType ? `Type: ${activity.metadata.paymentType}` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Add application fee information for appfee activities
+            if (activity.metadata && activity.type === 'appfee') {
+                if (activity.metadata.paymentType === 'bulk_application_fee') {
+                    // Show bulk application fee payment details
+                    modalContent += `
+                        <div class="detail-section">
+                            <div class="detail-label">Bulk Application Fee Payment</div>
+                            <div class="detail-value">
+                                ${activity.metadata.studentsNames ? `Students: ${activity.metadata.studentsNames}<br>` : ''}
+                                ${activity.metadata.university ? `University: ${activity.metadata.university}<br>` : ''}
+                                ${activity.metadata.receiver ? `Receiver: ${activity.metadata.receiver}<br>` : ''}
+                                ${activity.metadata.amount ? `Amount: ${formatCurrency(activity.metadata.amount)} UZS<br>` : ''}
+                                ${activity.metadata.paymentMethod ? `Method: ${activity.metadata.paymentMethod}<br>` : ''}
+                                ${activity.metadata.responsible ? `Responsible: ${activity.metadata.responsible}` : ''}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Individual application fee payment
+                    modalContent += `
+                        <div class="detail-section">
+                            <div class="detail-label">Application Fee Details</div>
+                            <div class="detail-value">
+                                ${activity.metadata.totalAmount ? `Total Amount: ${formatCurrency(activity.metadata.totalAmount)}<br>` : ''}
+                                ${activity.metadata.fee1 ? `Fee 1: ${formatCurrency(activity.metadata.fee1)}<br>` : ''}
+                                ${activity.metadata.fee2 ? `Fee 2: ${formatCurrency(activity.metadata.fee2)}<br>` : ''}
+                                ${activity.metadata.feeBreakdown ? `Breakdown: ${activity.metadata.feeBreakdown}` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            // Add metadata information
+            if (activity.metadata && Object.keys(activity.metadata).length > 0) {
+                // Only show additional metadata that's not already displayed
+                const metadataKeys = Object.keys(activity.metadata).filter(key => 
+                    !['changes', 'amount', 'paymentMethod', 'receivedBy', 'paymentType', 'totalAmount', 'fee1', 'fee2', 'feeBreakdown', 'studentsCount', 'studentsNames', 'studentsIds', 'university', 'receiver', 'responsible', 'paymentId', 'operation', 'affectedCount'].includes(key)
+                );
+                
+                if (metadataKeys.length > 0) {
+                    modalContent += `
+                        <div class="detail-section">
+                            <div class="detail-label">Additional Information</div>
+                            <div class="detail-value">
+                    `;
+                    
+                    metadataKeys.forEach(key => {
+                        const value = activity.metadata[key];
+                        if (value !== null && value !== undefined && value !== '') {
+                            modalContent += `${formatFieldName(key)}: ${value}<br>`;
+                        }
+                    });
+                    
+                    modalContent += `
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            modalBody.innerHTML = modalContent;
+            modal.classList.add('active');
+        }
+        
+        // Close activity modal
+        function closeActivityModal() {
+            const modal = document.getElementById('activityModal');
+            modal.classList.remove('active');
+        }
+        
+        // Format field names for display
+        function formatFieldName(fieldName) {
+            return fieldName
+                .replace(/([A-Z])/g, ' $1')
+                .replace(/^./, str => str.toUpperCase())
+                .replace(/Id$/, 'ID');
+        }
+        
+        // Format full timestamp
+        function formatFullTimestamp(timestamp) {
+            return new Intl.DateTimeFormat('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZoneName: 'short'
+            }).format(new Date(timestamp));
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Activity History System Starting...');
+            initializeApp();
+        });
+    </script>
+</body>
+</html>
+

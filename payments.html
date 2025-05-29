@@ -1,0 +1,2477 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payments - UniApp</title>
+    <link href="./dist/output.css" rel="stylesheet">
+    <link href="./dark-mode-styles.css" rel="stylesheet">
+    <link href="./sizing-fixes.css" rel="stylesheet">
+    <script src="./dark-mode.js"></script>
+    <script src="./auth.js"></script>
+    <script src="./audit-logger.js"></script>
+    <script src="./config.js"></script>
+    <script src="./apps-script-integration.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f7fa;
+            color: #1d1d1f;
+            line-height: 1.47059;
+            font-weight: 400;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .title {
+            font-size: 32px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 17px;
+            color: #86868b;
+            font-weight: 400;
+        }
+
+        .search-container {
+            margin-bottom: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 16px;
+            width: 100%;
+            max-width: 1000px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .search-bar {
+            flex: 1;
+            min-width: 300px;
+            padding: 16px 20px;
+            font-size: 17px;
+            border: 1px solid #d2d2d7;
+            border-radius: 16px;
+            background-color: #ffffff;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-bar:focus {
+            border-color: #007aff;
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+        }
+
+        .search-bar::placeholder {
+            color: #86868b;
+        }
+
+        .filter-select {
+            min-width: 150px;
+            padding: 16px 20px;
+            font-size: 17px;
+            border: 1px solid #d2d2d7;
+            border-radius: 16px;
+            background-color: #ffffff;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            border-color: #007aff;
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+        }
+
+        .dark .search-bar,
+        .dark .filter-select {
+            background-color: #1e293b !important;
+            border: 1px solid #475569 !important;
+            color: #f1f5f9 !important;
+        }
+
+        .dark .search-bar:focus,
+        .dark .filter-select:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2) !important;
+        }
+
+        .dark .search-bar::placeholder {
+            color: #94a3b8 !important;
+        }
+
+        .clear-filters-btn {
+            padding: 16px 20px;
+            font-size: 17px;
+            font-weight: 500;
+            color: #6b7280;
+            background-color: #f9fafb;
+            border: 1px solid #d1d5db;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+            white-space: nowrap;
+            min-width: 150px;
+        }
+
+        .clear-filters-btn:hover {
+            background-color: #f3f4f6;
+            border-color: #9ca3af;
+            color: #374151;
+        }
+
+        .dark .clear-filters-btn {
+            background-color: #374151 !important;
+            border: 1px solid #4b5563 !important;
+            color: #d1d5db !important;
+        }
+
+        .dark .clear-filters-btn:hover {
+            background-color: #4b5563 !important;
+            border-color: #6b7280 !important;
+            color: #f9fafb !important;
+        }
+
+        /* Responsive search */
+        @media (max-width: 768px) {
+            .search-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-bar,
+            .filter-select,
+            .clear-filters-btn {
+                width: 100%;
+                min-width: unset;
+            }
+        }
+
+        .table-container {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            border: 1px solid #f2f2f7;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table-header {
+            background-color: #f9f9fb;
+            border-bottom: 1px solid #f2f2f7;
+        }
+
+        .table-header th {
+            padding: 10px 8px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #86868b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table-body tr {
+            cursor: pointer;
+            border-bottom: 1px solid #f2f2f7;
+            transition: all 0.2s ease;
+            background-color: #ffffff;
+        }
+
+        .table-body tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .table-body tr:last-child {
+            border-bottom: none;
+        }
+
+        .table-body tr:hover {
+            background-color: #e3f2fd !important;
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-body tr:active {
+            transform: translateX(2px);
+        }
+
+        /* Dark mode table rows */
+        .dark .table-body tr {
+            background-color: #1e293b !important;
+        }
+
+        .dark .table-body tr:nth-child(even) {
+            background-color: #334155 !important;
+        }
+
+        .dark .table-body tr:hover {
+            background-color: #1e40af !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .table-body td {
+            padding: 8px 8px;
+            font-size: 14px;
+            color: #1d1d1f;
+            white-space: nowrap;
+        }
+
+        .student-id {
+            font-weight: 600;
+            color: #007aff;
+            width: 80px;
+            max-width: 80px;
+        }
+
+        .fullname {
+            color: #1d1d1f;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 150px;
+            max-width: 200px;
+        }
+
+        .tariff {
+            color: #86868b;
+            font-size: 14px;
+        }
+
+        .discount {
+            color: #34c759;
+            font-weight: 500;
+        }
+
+        .amount {
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .amount.paid {
+            color: #34c759;
+        }
+
+        .amount.debt {
+            color: #ff3b30;
+        }
+
+        .amount.no-debt {
+            color: #34c759;
+        }
+
+        .status {
+            font-weight: 600;
+            text-align: center;
+            color: #007aff;
+        }
+
+        /* Status snippets/badges */
+        .status-snippet {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 60px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .status-snippet:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .status-snippet.full {
+            background: #34c759;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-snippet.full:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .status-snippet.partial {
+            background: #ff9500;
+            color: white;
+        }
+
+        .status-snippet.none {
+            background: #ff3b30;
+            color: white;
+        }
+
+        .status-snippet.overpaid {
+            background: #6f42c1;
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #86868b;
+        }
+
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #f2f2f7;
+            border-top: 2px solid #007aff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            text-align: center;
+            padding: 60px 20px;
+            color: #ff3b30;
+        }
+
+        .error-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #86868b;
+        }
+
+        .no-results-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .retry-button {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background-color: #007aff;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .retry-button:hover {
+            background-color: #0056cc;
+        }
+
+        /* Pagination styles */
+        .pagination-container {
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: #86868b;
+            font-weight: 400;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .pagination-btn {
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1d1d1f;
+            background-color: #ffffff;
+            border: 1px solid #d2d2d7;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background-color: #f9f9fb;
+            border-color: #007aff;
+            color: #007aff;
+            transform: translateY(-1px);
+        }
+
+        .pagination-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .pagination-btn:disabled {
+            color: #c6c6c8;
+            background-color: #f2f2f7;
+            border-color: #e5e5ea;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Modern Sidebar Styles */
+        .flex {
+            display: flex;
+        }
+
+        .h-screen {
+            height: 100vh;
+        }
+
+        .modern-sidebar {
+            width: 70px;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modern-sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        }
+
+        .sidebar-header {
+            padding: 20px 0;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-logo:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .sidebar-nav {
+            padding: 0 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 46px;
+            height: 46px;
+            margin: 0 auto 12px;
+            border-radius: 14px;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-item:hover::before {
+            opacity: 1;
+        }
+
+        .nav-item:hover {
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .nav-item.active::before {
+            opacity: 0;
+        }
+
+        .nav-item.active:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .nav-icon {
+            width: 22px;
+            height: 22px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item:hover .nav-icon {
+            transform: scale(1.1);
+        }
+
+        /* Tooltip styles */
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 60px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .nav-item:hover::after {
+            opacity: 1;
+            visibility: visible;
+            left: 65px;
+        }
+
+        .flex-1 {
+            flex: 1 1 0%;
+        }
+
+        .overflow-auto {
+            overflow: auto;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .modern-sidebar {
+                width: 60px;
+            }
+            
+            .sidebar-logo {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            
+            .nav-item {
+                width: 42px;
+                height: 42px;
+            }
+            
+            .nav-icon {
+                width: 20px;
+                height: 20px;
+            }
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .dark .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.8) !important;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            border-radius: 20px;
+            max-width: 900px;
+            width: 95%;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .dark .modal-content {
+            background-color: #1e293b !important;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
+            border: 1px solid #334155 !important;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            padding: 24px 30px 20px;
+            border-bottom: 1px solid #f2f2f7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #007aff 0%, #0056cc 100%);
+            color: white;
+        }
+
+        .dark .modal-header {
+            border-bottom: 1px solid #475569 !important;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+        }
+
+        .dark .modal-title {
+            color: white !important;
+        }
+
+        .student-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 16px;
+            color: white;
+        }
+
+        .dark .student-avatar {
+            background: rgba(255, 255, 255, 0.2) !important;
+            color: white !important;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+
+        .close-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .dark .close-button {
+            color: white !important;
+        }
+
+        .dark .close-button:hover {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .modal-body {
+            padding: 30px;
+            max-height: calc(90vh - 140px);
+            overflow-y: auto;
+            background-color: #ffffff;
+        }
+
+        .dark .modal-body {
+            background-color: #1e293b !important;
+            color: #f1f5f9 !important;
+        }
+
+        .student-summary {
+            background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 30px;
+            border: 1px solid #e8f2ff;
+        }
+
+        .dark .student-summary {
+            background: linear-gradient(135deg, #334155 0%, #475569 100%) !important;
+            border: 1px solid #64748b !important;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-label {
+            font-size: 14px;
+            color: #86868b;
+            font-weight: 500;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .dark .summary-label {
+            color: #94a3b8 !important;
+        }
+
+        .summary-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+
+        .dark .summary-value {
+            color: #f1f5f9 !important;
+        }
+
+        .summary-value.positive {
+            color: #34c759;
+        }
+
+        .dark .summary-value.positive {
+            color: #10b981 !important;
+        }
+
+        .summary-value.negative {
+            color: #ff3b30;
+        }
+
+        .dark .summary-value.negative {
+            color: #f87171 !important;
+        }
+
+        .summary-value.neutral {
+            color: #007aff;
+        }
+
+        .dark .summary-value.neutral {
+            color: #60a5fa !important;
+        }
+
+        /* Payment form styles */
+        .payment-form {
+            background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 30px;
+            border: 1px solid #d4f2e7;
+        }
+
+        .dark .payment-form {
+            background: linear-gradient(135deg, #064e3b 0%, #065f46 100%) !important;
+            border: 1px solid #047857 !important;
+        }
+
+        .form-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dark .form-title {
+            color: #f1f5f9 !important;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .dark .form-label {
+            color: #94a3b8 !important;
+        }
+
+        .form-input {
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            font-size: 16px;
+            background-color: #ffffff;
+            transition: all 0.2s ease;
+            color: #1d1d1f;
+        }
+
+        .dark .form-input {
+            background-color: #0f172a !important;
+            border: 1px solid #475569 !important;
+            color: #f1f5f9 !important;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .dark .form-input:focus {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+        }
+
+        .dark .form-input::placeholder {
+            color: #64748b !important;
+        }
+
+        .form-select {
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            font-size: 16px;
+            background-color: #ffffff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #1d1d1f;
+        }
+
+        .dark .form-select {
+            background-color: #0f172a !important;
+            border: 1px solid #475569 !important;
+            color: #f1f5f9 !important;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .dark .form-select:focus {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+        }
+
+        .dark .form-select option {
+            background-color: #0f172a !important;
+            color: #f1f5f9 !important;
+        }
+
+        .save-payment-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-self: start;
+        }
+
+        .save-payment-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .save-payment-btn:active {
+            transform: translateY(0);
+        }
+
+        .save-payment-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .dark .save-payment-btn:disabled {
+            background: #6b7280 !important;
+        }
+
+        /* Enhanced Button States */
+        .save-payment-btn.loading {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            pointer-events: none;
+        }
+
+        .save-payment-btn.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            animation: successPulse 0.6s ease-out;
+        }
+
+        .save-payment-btn.error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            animation: errorShake 0.5s ease-out;
+        }
+
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Payment History styles */
+        .payment-history {
+            background: linear-gradient(135deg, #fff7ed 0%, #fef3e2 100%);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 30px;
+            border: 1px solid #fed7aa;
+        }
+
+        .dark .payment-history {
+            background: linear-gradient(135deg, #451a03 0%, #78350f 100%) !important;
+            border: 1px solid #a16207 !important;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        .history-table th {
+            background: rgba(251, 146, 60, 0.1);
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 600;
+            color: #ea580c;
+            border-bottom: 2px solid #fed7aa;
+        }
+
+        .dark .history-table th {
+            background: rgba(217, 119, 6, 0.2) !important;
+            color: #fbbf24 !important;
+            border-bottom: 2px solid #a16207 !important;
+        }
+
+        .history-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #fed7aa;
+            font-size: 14px;
+            color: #1d1d1f;
+        }
+
+        .dark .history-table td {
+            border-bottom: 1px solid #a16207 !important;
+            color: #f1f5f9 !important;
+        }
+
+        .history-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .history-table tr:hover {
+            background: rgba(251, 146, 60, 0.05);
+        }
+
+        .dark .history-table tr:hover {
+            background: rgba(217, 119, 6, 0.1) !important;
+        }
+
+        .timestamp {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .dark .timestamp {
+            color: #94a3b8 !important;
+        }
+
+        .history-amount {
+            font-weight: 600;
+            color: #10b981;
+        }
+
+        .dark .history-amount {
+            color: #34d399 !important;
+        }
+
+        .no-history {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        .dark .no-history {
+            color: #6b7280 !important;
+        }
+
+        /* Toast Notification Styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: auto;
+        }
+
+        .dark .toast {
+            background: rgba(30, 41, 59, 0.95) !important;
+            border: 1px solid rgba(51, 65, 85, 0.3) !important;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-left: 4px solid #10b981;
+        }
+
+        .toast.error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .toast.warning {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .toast-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1f2937;
+            margin-bottom: 2px;
+        }
+
+        .dark .toast-title {
+            color: #f1f5f9 !important;
+        }
+
+        .toast-message {
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.4;
+        }
+
+        .dark .toast-message {
+            color: #94a3b8 !important;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toast-close:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: #6b7280;
+        }
+
+        .dark .toast-close {
+            color: #64748b !important;
+        }
+
+        .dark .toast-close:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: #94a3b8 !important;
+        }
+
+        /* Loading Spinner Animation */
+        .btn-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Success Checkmark Animation */
+        .btn-checkmark {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            position: relative;
+            animation: checkmarkBounce 0.6s ease-out;
+        }
+
+        .btn-checkmark::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        @keyframes checkmarkBounce {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* Error X Animation */
+        .btn-error {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            position: relative;
+            animation: errorBounce 0.6s ease-out;
+        }
+
+        .btn-error::after {
+            content: '✕';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        @keyframes errorBounce {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 16px;
+            }
+
+            .title {
+                font-size: 28px;
+            }
+
+            .table-header th,
+            .table-body td {
+                padding: 8px 6px;
+            }
+
+            .search-bar {
+                font-size: 16px;
+            }
+
+            .modal-content {
+                width: 95%;
+                max-height: 95vh;
+            }
+
+            .modal-header {
+                padding: 20px 20px 16px;
+            }
+
+            .modal-title {
+                font-size: 20px;
+            }
+
+            .modal-body {
+                padding: 20px;
+            }
+
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+
+            .summary-value {
+                font-size: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .payment-form {
+                padding: 20px;
+            }
+
+            .pagination-container {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+
+            .pagination-controls {
+                justify-content: center;
+            }
+
+            .pagination-btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+
+            .history-table {
+                font-size: 12px;
+            }
+
+            .history-table th,
+            .history-table td {
+                padding: 8px 12px;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .container {
+                padding: 20px 16px;
+            }
+
+            .title {
+                font-size: 28px;
+            }
+
+            .table-header th,
+            .table-body td {
+                padding: 8px 6px;
+            }
+
+            .search-bar {
+                font-size: 16px;
+            }
+
+            .modal-content {
+                width: 95%;
+                max-height: 95vh;
+            }
+
+            .modal-header {
+                padding: 20px 20px 16px;
+            }
+
+            .modal-title {
+                font-size: 20px;
+            }
+
+            .modal-body {
+                padding: 20px;
+            }
+
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+
+            .summary-value {
+                font-size: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .payment-form {
+                padding: 20px;
+            }
+
+            .pagination-container {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+
+            .pagination-controls {
+                justify-content: center;
+            }
+
+            .pagination-btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+
+            .history-table {
+                font-size: 12px;
+            }
+
+            .history-table th,
+            .history-table td {
+                padding: 8px 12px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-30 dark:bg-gray-900 transition-colors duration-300">
+    <div class="flex h-screen">
+        <!-- Modern Sidebar -->
+        <div class="modern-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">UA</div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="index.html" class="nav-item" data-tooltip="Dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                    </svg>
+                </a>
+                <a href="register.html" class="nav-item" data-tooltip="Register Student">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+                <a href="studentlist.html" class="nav-item" data-tooltip="Student List">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                    </svg>
+                </a>
+                <a href="payments.html" class="nav-item active" data-tooltip="Payments">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                        <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+                <a href="appfee.html" class="nav-item" data-tooltip="Application Fee">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+            </nav>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <div class="container">
+                <div class="header">
+                    <h1 class="title">Payment</h1>
+                </div>
+
+                <div class="search-container">
+                    <div class="search-row">
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            class="search-bar" 
+                            placeholder="Search by ID or Full Name..."
+                            autocomplete="off"
+                        >
+                        <select id="statusFilter" class="filter-select" data-tooltip="Filter by status">
+                            <option value="">All Statuses</option>
+                            <option value="full">Full Payment</option>
+                            <option value="partial">Partial Payment</option>
+                            <option value="unpaid">Unpaid</option>
+                            <option value="overpaid">Overpaid</option>
+                        </select>
+                        <select id="tariffFilter" class="filter-select" data-tooltip="Filter by tariff">
+                            <option value="">All Tariffs</option>
+                            <option value="standard">Standard</option>
+                            <option value="premium">Premium</option>
+                            <option value="vip">VIP</option>
+                        </select>
+                        <button class="clear-filters-btn" onclick="clearFilters()">Clear Filters</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="table">
+                        <thead class="table-header">
+                            <tr>
+                                <th>ID</th>
+                                <th>Full Name</th>
+                                <th>Tariff</th>
+                                <th>Balance</th>
+                                <th>Discount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="table-body">
+                            <!-- Loading state -->
+                            <tr>
+                                <td colspan="6" class="loading">
+                                    <div class="loading-spinner"></div>
+                                    <p>Loading payment records...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        Showing <span id="startCount">0</span> to <span id="endCount">0</span> of <span id="totalCount">0</span> payments
+                    </div>
+                    <div class="pagination-controls">
+                        <button id="prevPage" class="pagination-btn">Previous</button>
+                        <button id="nextPage" class="pagination-btn">Next</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // Global variables
+        let allPayments = [];
+        let filteredPayments = [];
+        let db = null;
+        
+        // Pagination variables
+        let currentPage = 1;
+        const itemsPerPage = 30;
+
+        // Toast notification system
+        function showToast(type, title, message, duration = 5000) {
+            const toastContainer = document.getElementById('toastContainer');
+            const toastId = 'toast-' + Date.now();
+            
+            const icons = {
+                success: 'âœ…',
+                error: 'âŒ',
+                warning: 'âš ï¸',
+                info: 'â„¹ï¸'
+            };
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.id = toastId;
+            toast.innerHTML = `
+                <div class="toast-icon">${icons[type] || icons.info}</div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="removeToast('${toastId}')">&times;</button>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 100);
+            
+            // Auto remove
+            setTimeout(() => {
+                removeToast(toastId);
+            }, duration);
+            
+            return toastId;
+        }
+
+        function removeToast(toastId) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 400);
+            }
+        }
+
+        // Enhanced button state management
+        function setButtonState(button, state, text, icon = null) {
+            // Remove all state classes
+            button.classList.remove('loading', 'success', 'error');
+            
+            // Add new state class
+            if (state !== 'default') {
+                button.classList.add(state);
+            }
+            
+            // Update button content
+            if (icon) {
+                button.innerHTML = `<div class="${icon}"></div> ${text}`;
+            } else {
+                button.innerHTML = text;
+            }
+            
+            // Manage disabled state
+            button.disabled = (state === 'loading');
+        }
+
+        // Initialize the application
+        async function initializeApp() {
+            console.log('Initializing Payment System...');
+            
+            try {
+                // Import Firebase
+                const { initializeApp } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js');
+                const { getFirestore, collection, getDocs } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                
+                // Firebase config
+                const firebaseConfig = {
+                    apiKey: "AIzaSyDtc3StzPcG7oivivYlXnKrR6S0c0xelJg",
+                    authDomain: "uniuni-dd4af.firebaseapp.com",
+                    projectId: "uniuni-dd4af",
+                    storageBucket: "uniuni-dd4af.firebasestorage.app",
+                    messagingSenderId: "583982319464",
+                    appId: "1:583982319464:web:ed3021724ef42f196df8dd"
+                };
+                
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                
+                console.log('Firebase initialized successfully');
+                
+                // Initialize audit logger
+                if (window.auditLogger) {
+                    await window.auditLogger.initialize(db);
+                    window.auditLogger.setCurrentUser('admin'); // Set current user
+                    console.log('Audit Logger initialized in payments.html');
+                }
+                
+                // Initialize Google Sheets integration
+                if (window.googleSheetsIntegration && window.CONFIG) {
+                    const appsScriptUrl = window.CONFIG.GOOGLE_SHEETS.APPS_SCRIPT_URL;
+                    if (appsScriptUrl && appsScriptUrl !== 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
+                        await window.googleSheetsIntegration.initialize(appsScriptUrl);
+                        await window.googleSheetsIntegration.validateSheets();
+                        console.log('Google Sheets integration initialized in payments.html');
+                    } else {
+                        console.warn('Google Sheets Apps Script URL not configured. Please set it in config.js');
+                    }
+                }
+                
+                // Load payment data
+                await loadPaymentData();
+                
+                // Set up search functionality
+                setupSearch();
+                
+                // Update all existing records with correct status calculations (run once)
+                setTimeout(async () => {
+                    await updateAllRecordsStatus();
+                }, 2000); // Wait 2 seconds after initial load
+                
+            } catch (error) {
+                console.error('Error initializing app:', error);
+                displayError('Failed to initialize Firebase: ' + error.message);
+            }
+        }
+
+        // Load payment data from Firestore with real-time updates
+        async function loadPaymentData() {
+            console.log('Setting up real-time payment data listener...');
+            
+            try {
+                // Import Firebase functions locally
+                const { collection, query, onSnapshot, orderBy } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                
+                // Set up real-time listener for payments collection
+                const paymentsRef = collection(db, "payments");
+                const paymentsQuery = query(paymentsRef, orderBy("fullname"));
+                
+                onSnapshot(paymentsQuery, async (snapshot) => {
+                    const newPayments = [];
+                    
+                    // Process each document
+                    for (const doc of snapshot.docs) {
+                        const docId = doc.id;
+                        const data = doc.data();
+                        
+                        // Extract studentId from document ID (format: studentIdpayments)
+                        const studentId = docId.replace('payments', '') || docId;
+                        
+                        // Use the calculated fields from the document
+                        const payment = data.payment || 0;
+                        const discount = data.discount || 0;
+                        const shouldPay = data.shouldPay || (payment - discount);
+                        
+                        // Calculate paid amount fresh from paymentHistory subcollection
+                        const paid = await calculatePaidFromHistory(studentId);
+                        
+                        const debt = data.debt || Math.max(0, shouldPay - paid);
+                        // Always recalculate status to ensure it includes discount correctly
+                        const status = shouldPay > 0 ? Math.round((paid / shouldPay) * 100) : 0;
+                        
+                        // Calculate currentBalance using exact same formula as balance.html
+                        const initialBalance = -(payment - discount);
+                        const currentBalance = initialBalance + paid;
+                        
+                        newPayments.push({
+                            studentId: studentId,
+                            fullname: data.fullname || 'N/A',
+                            tariff: data.tariff || 'N/A',
+                            payment: payment,
+                            discount: discount,
+                            shouldPay: shouldPay,
+                            paid: paid,
+                            debt: debt,
+                            status: status,
+                            currentBalance: currentBalance
+                        });
+                    }
+                    
+                    // Sort by studentId
+                    newPayments.sort((a, b) => a.studentId.localeCompare(b.studentId));
+                    
+                    // Check if data actually changed before updating
+                    if (JSON.stringify(allPayments) !== JSON.stringify(newPayments)) {
+                        console.log(`Payment data updated: ${newPayments.length} records, refreshing table...`);
+                        
+                        allPayments = newPayments;
+                        filteredPayments = [...allPayments];
+                        
+                        // Maintain current page if possible
+                        const maxPage = Math.ceil(filteredPayments.length / itemsPerPage);
+                        if (currentPage > maxPage) {
+                            currentPage = Math.max(1, maxPage);
+                        }
+                        
+                        // Populate filter options with actual data
+                        populateTariffFilter();
+                        
+                        updateTable();
+                        
+                        // Flash effect for table update
+                        const tableBody = document.getElementById('tableBody');
+                        if (tableBody) {
+                            tableBody.classList.add('updated-flash');
+                            setTimeout(() => tableBody.classList.remove('updated-flash'), 1000);
+                        }
+                    }
+                }, (error) => {
+                    console.error('Error in real-time listener:', error);
+                    displayError('Real-time updates failed: ' + error.message);
+                });
+                
+                console.log('Real-time payment data listener established');
+                
+            } catch (error) {
+                console.error('Error setting up real-time payment data:', error);
+                displayError('Failed to load payment data: ' + error.message);
+            }
+        }
+
+        // Format number values
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount || 0);
+        }
+
+        // Format thousands separator for input
+        function formatThousands(value) {
+            // Remove all non-digit characters
+            const numericValue = value.replace(/\D/g, '');
+            // Add thousands separator
+            return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        // Remove thousands separator and return numeric value
+        function parseThousands(value) {
+            return parseInt(value.replace(/,/g, '')) || 0;
+        }
+
+        // Format timestamp for display
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return 'N/A';
+            
+            // Handle Firestore timestamp
+            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            
+            return new Intl.DateTimeFormat('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }).format(date);
+        }
+
+        // Generate status snippet based on payment progress
+        function getStatusSnippet(status, paid, shouldPay) {
+            const percentage = Math.round(status);
+            
+            if (shouldPay > 0 && paid > shouldPay) {
+                // Overpayment case
+                return `<span class="status-snippet overpaid" title="Overpaid: ${percentage}% (${formatCurrency(paid - shouldPay)} extra)">OVERPAID</span>`;
+            } else if (status >= 100 || (shouldPay > 0 && paid >= shouldPay)) {
+                return `<span class="status-snippet full" title="Payment Complete: ${percentage}%">FULL</span>`;
+            } else if (status > 0 && paid > 0) {
+                return `<span class="status-snippet partial" title="Partially Paid: ${percentage}%">${percentage}%</span>`;
+            } else {
+                return `<span class="status-snippet none" title="No Payment Made: ${percentage}%">UNPAID</span>`;
+            }
+        }
+
+        // Update table with current data
+        function updateTable() {
+            const tableBody = document.getElementById('tableBody');
+            
+            if (filteredPayments.length === 0) {
+                displayNoResults();
+                updatePagination();
+                return;
+            }
+            
+            // Calculate pagination
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const currentPayments = filteredPayments.slice(startIndex, endIndex);
+            
+            // Update table content
+            tableBody.innerHTML = currentPayments.map(payment => `
+                <tr onclick="openPaymentDetails('${payment.studentId}', '${payment.fullname}')" data-student-id="${payment.studentId}">
+                    <td class="student-id">${payment.studentId}</td>
+                    <td class="fullname" title="${payment.fullname}">${payment.fullname}</td>
+                    <td class="tariff">${payment.tariff}</td>
+                    <td class="amount ${(payment.currentBalance || 0) < 0 ? 'debt' : 'no-debt'}">${formatCurrency(payment.currentBalance || 0)} UZS</td>
+                    <td class="amount">${formatCurrency(payment.discount)}</td>
+                    <td class="status">${getStatusSnippet(payment.status, payment.paid, payment.shouldPay)}</td>
+                </tr>
+            `).join('');
+            
+            // Update pagination info
+            updatePagination();
+        }
+
+        // Function to update pagination information
+        function updatePagination() {
+            const totalPayments = filteredPayments.length;
+            const startCount = totalPayments === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+            const endCount = Math.min(currentPage * itemsPerPage, totalPayments);
+            
+            document.getElementById('startCount').textContent = startCount;
+            document.getElementById('endCount').textContent = endCount;
+            document.getElementById('totalCount').textContent = totalPayments;
+            
+            // Update button states
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = endCount >= totalPayments;
+        }
+
+        // Setup search functionality
+        function setupSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const statusFilter = document.getElementById('statusFilter');
+            const tariffFilter = document.getElementById('tariffFilter');
+            
+            // Text search
+            searchInput.addEventListener('input', performSearch);
+            
+            // Filter dropdowns
+            statusFilter.addEventListener('change', performSearch);
+            tariffFilter.addEventListener('change', performSearch);
+        }
+
+        // Perform search with all filters
+        function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const tariffFilter = document.getElementById('tariffFilter').value;
+            
+            filteredPayments = allPayments.filter(payment => {
+                // Text search (ID, name, tariff)
+                const textMatch = searchTerm === '' || 
+                    payment.studentId.toLowerCase().includes(searchTerm) ||
+                    payment.fullname.toLowerCase().includes(searchTerm) ||
+                    payment.tariff.toLowerCase().includes(searchTerm);
+                
+                // Status filter
+                let statusMatch = true;
+                if (statusFilter !== '') {
+                    const status = getPaymentStatus(payment);
+                    statusMatch = status === statusFilter;
+                }
+                
+                // Tariff filter
+                let tariffMatch = true;
+                if (tariffFilter !== '') {
+                    tariffMatch = payment.tariff.toLowerCase().includes(tariffFilter.toLowerCase());
+                }
+                
+                return textMatch && statusMatch && tariffMatch;
+            });
+            
+            // Reset to first page when searching
+            currentPage = 1;
+            updateTable();
+        }
+
+        // Get payment status category
+        function getPaymentStatus(payment) {
+            const { status, paid, shouldPay } = payment;
+            
+            if (shouldPay > 0 && paid > shouldPay) {
+                return 'overpaid';
+            } else if (status >= 100 || (shouldPay > 0 && paid >= shouldPay)) {
+                return 'full';
+            } else if (status > 0 && paid > 0) {
+                return 'partial';
+            } else {
+                return 'unpaid';
+            }
+        }
+
+        // Populate tariff filter options dynamically
+        function populateTariffFilter() {
+            const tariffFilter = document.getElementById('tariffFilter');
+            const uniqueTariffs = [...new Set(allPayments.map(payment => payment.tariff))].sort();
+            
+            // Clear existing options except "All Tariffs"
+            tariffFilter.innerHTML = '<option value="">All Tariffs</option>';
+            
+            // Add unique tariffs from data
+            uniqueTariffs.forEach(tariff => {
+                if (tariff && tariff !== 'N/A') {
+                    const option = document.createElement('option');
+                    option.value = tariff;
+                    option.textContent = tariff;
+                    tariffFilter.appendChild(option);
+                }
+            });
+        }
+
+        // Display error state
+        function displayError(message) {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="error">
+                        <div class="error-icon">âš ï¸</div>
+                        <p>${message}</p>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Display no results state
+        function displayNoResults() {
+            const tableBody = document.getElementById('tableBody');
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            
+            if (searchTerm) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="no-results">
+                            <div class="no-results-icon">ðŸ"</div>
+                            <p>No payment records found for "${searchTerm}"</p>
+                        </td>
+                    </tr>
+                `;
+            } else {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="no-results">
+                            <div class="no-results-icon">ðŸ"‹</div>
+                            <p>No payment records found in the database</p>
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            // Update pagination info for no results
+            document.getElementById('startCount').textContent = '0';
+            document.getElementById('endCount').textContent = '0';
+            document.getElementById('totalCount').textContent = '0';
+            document.getElementById('prevPage').disabled = true;
+            document.getElementById('nextPage').disabled = true;
+        }
+
+        // Fetch payment history for a student from subcollection
+        async function fetchPaymentHistory(studentId) {
+            console.log(`Fetching payment history for student: ${studentId}`);
+            
+            try {
+                const { collection, getDocs, doc, orderBy, query } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                
+                // Access the paymentHistory subcollection inside the student's payment document
+                const paymentDocId = `${studentId}payments`;
+                const paymentDocRef = doc(db, "payments", paymentDocId);
+                const paymentHistoryRef = collection(paymentDocRef, "paymentHistory");
+                
+                // Query with ordering by timestamp (newest first)
+                const q = query(paymentHistoryRef, orderBy("timestamp", "desc"));
+                const snapshot = await getDocs(q);
+                
+                const paymentHistory = [];
+                
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    paymentHistory.push({
+                        id: doc.id,
+                        timestamp: data.timestamp,
+                        amount: data.amount || 0,
+                        paymentMethod: data.paymentMethod || 'N/A',
+                        receivedBy: data.receivedBy || 'N/A'
+                    });
+                });
+                
+                console.log(`Found ${paymentHistory.length} payment history records for student ${studentId}`);
+                return paymentHistory;
+                
+            } catch (error) {
+                console.error('Error fetching payment history:', error);
+                return [];
+            }
+        }
+
+        // Calculate paid amount from payment history subcollection
+        async function calculatePaidFromHistory(studentId) {
+            try {
+                const paymentHistory = await fetchPaymentHistory(studentId);
+                const totalPaid = paymentHistory.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+                console.log(`Calculated total paid for ${studentId}: ${totalPaid}`);
+                return totalPaid;
+            } catch (error) {
+                console.error('Error calculating paid amount:', error);
+                return 0;
+            }
+        }
+
+        // Modal functions
+        async function openPaymentDetails(studentId, fullname) {
+            console.log(`🔗 Navigating to balance page for student: ${studentId}`);
+            window.location.href = `balance.html?studentId=${studentId}`;
+        }
+
+        async function displayPaymentDetails(payment, studentId, fullname) {
+            const modalBody = document.getElementById('modalBody');
+            
+            if (!payment) {
+                modalBody.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">ðŸ"‹</div>
+                        <p>No payment records found for ${fullname}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Fetch payment history
+            const paymentHistory = await fetchPaymentHistory(studentId);
+            
+            modalBody.innerHTML = `
+                <div class="student-summary">
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <div class="summary-label">Payment Required</div>
+                            <div class="summary-value neutral">${formatCurrency(payment.payment)}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Discount</div>
+                            <div class="summary-value positive">${formatCurrency(payment.discount)}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Should Pay</div>
+                            <div class="summary-value neutral">${formatCurrency(payment.shouldPay)}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Total Paid</div>
+                            <div class="summary-value positive">${formatCurrency(payment.paid)}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Remaining Debt</div>
+                            <div class="summary-value ${payment.debt > 0 ? 'negative' : 'positive'}">${formatCurrency(payment.debt)}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Payment Progress</div>
+                            <div class="summary-value ${payment.status >= 100 ? 'positive' : payment.status > 0 ? 'neutral' : 'negative'}">${payment.status}%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="payment-history">
+                    <h3 class="form-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        Payment History
+                    </h3>
+                    ${paymentHistory.length > 0 ? `
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Amount</th>
+                                    <th>Payment Method</th>
+                                    <th>Received By</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${paymentHistory.map(transaction => `
+                                    <tr>
+                                        <td class="timestamp">${formatTimestamp(transaction.timestamp)}</td>
+                                        <td class="history-amount">${formatCurrency(transaction.amount)}</td>
+                                        <td>${transaction.paymentMethod}</td>
+                                        <td>${transaction.receivedBy}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    ` : `
+                        <div class="no-history">
+                            No payment history found for this student
+                        </div>
+                    `}
+                </div>
+                
+                <div class="payment-form">
+                    <h3 class="form-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                        </svg>
+                        Add New Payment
+                    </h3>
+                    <form id="paymentForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label" for="paymentAmount">Payment Amount</label>
+                                <input type="text" id="paymentAmount" class="form-input" placeholder="Enter amount" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="paymentMethod">Payment Method</label>
+                                <select id="paymentMethod" class="form-select" required>
+                                    <option value="">Select method</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Card M.A">Card M.A</option>
+                                    <option value="Card J.A">Card J.A</option>
+                                    <option value="Bank transfer">Bank transfer</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="receivedBy">Received By</label>
+                                <select id="receivedBy" class="form-select" required>
+                                    <option value="">Select receiver</option>
+                                    <option value="M.Ali">M.Ali</option>
+                                    <option value="Azizbek">Azizbek</option>
+                                    <option value="Khayitxon">Khayitxon</option>
+                                    <option value="Jasurbek">Jasurbek</option>
+                                    <option value="Admin">Admin</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="button" class="save-payment-btn" onclick="savePayment('${studentId}', '${fullname}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                            Save Payment
+                        </button>
+                    </form>
+                </div>
+            `;
+
+            // Add thousands separator formatting to the payment amount input
+            const paymentAmountInput = document.getElementById('paymentAmount');
+            paymentAmountInput.addEventListener('input', function(e) {
+                const cursorPosition = e.target.selectionStart;
+                const oldValue = e.target.value;
+                const formattedValue = formatThousands(e.target.value);
+                e.target.value = formattedValue;
+                
+                // Maintain cursor position
+                const newCursorPosition = cursorPosition + (formattedValue.length - oldValue.length);
+                e.target.setSelectionRange(newCursorPosition, newCursorPosition);
+            });
+        }
+
+        // Save payment function with enhanced animations and notifications
+        async function savePayment(studentId, fullname) {
+            const amountInput = document.getElementById('paymentAmount');
+            const methodSelect = document.getElementById('paymentMethod');
+            const receivedBySelect = document.getElementById('receivedBy');
+            const saveBtn = document.querySelector('.save-payment-btn');
+            
+            // Get values
+            const paymentAmount = parseThousands(amountInput.value);
+            const paymentMethod = methodSelect.value;
+            const receivedBy = receivedBySelect.value;
+            
+            // Validate inputs with enhanced feedback
+            if (!paymentAmount || paymentAmount <= 0) {
+                showToast('warning', 'Invalid Amount', 'Please enter a valid payment amount');
+                amountInput.focus();
+                amountInput.style.borderColor = '#f59e0b';
+                setTimeout(() => amountInput.style.borderColor = '', 3000);
+                return;
+            }
+            
+            if (!paymentMethod) {
+                showToast('warning', 'Payment Method Required', 'Please select a payment method');
+                methodSelect.focus();
+                methodSelect.style.borderColor = '#f59e0b';
+                setTimeout(() => methodSelect.style.borderColor = '', 3000);
+                return;
+            }
+            
+            if (!receivedBy) {
+                showToast('warning', 'Receiver Required', 'Please select who received the payment');
+                receivedBySelect.focus();
+                receivedBySelect.style.borderColor = '#f59e0b';
+                setTimeout(() => receivedBySelect.style.borderColor = '', 3000);
+                return;
+            }
+            
+            try {
+                // Set loading state
+                setButtonState(saveBtn, 'loading', 'Processing Payment...', 'btn-spinner');
+                
+                // Show processing toast
+                const processingToast = showToast('info', 'Processing Payment', 'Please wait...', 10000);
+                
+                // Import Firebase functions
+                const { doc, updateDoc, addDoc, collection, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                
+                // Get payment document reference
+                const paymentDocId = `${studentId}payments`;
+                const paymentDocRef = doc(db, "payments", paymentDocId);
+                
+                // Add payment to subcollection
+                const paymentHistoryRef = collection(paymentDocRef, "paymentHistory");
+                const paymentData = {
+                    timestamp: serverTimestamp(),
+                    amount: paymentAmount,
+                    paymentMethod: paymentMethod,
+                    receivedBy: receivedBy
+                };
+                
+                await addDoc(paymentHistoryRef, paymentData);
+                
+                // Calculate new totals from subcollection
+                const newPaidAmount = await calculatePaidFromHistory(studentId);
+                
+                // Get current payment document to calculate other fields
+                const currentPayment = allPayments.find(p => p.studentId === studentId);
+                if (!currentPayment) {
+                    throw new Error('Student payment record not found');
+                }
+                
+                const payment = currentPayment.payment || 0;
+                const discount = currentPayment.discount || 0;
+                const shouldPay = payment - discount;
+                const debt = Math.max(0, shouldPay - newPaidAmount);
+                const status = shouldPay > 0 ? Math.round((newPaidAmount / shouldPay) * 100) : 0;
+                
+                // Calculate currentBalance using exact same formula as balance.html
+                const initialBalance = -(payment - discount);
+                const currentBalance = initialBalance + newPaidAmount;
+                
+                // Log payment activity
+                if (window.auditLogger) {
+                    await window.auditLogger.logPayment(studentId, fullname, {
+                        amount: paymentAmount,
+                        paymentMethod: paymentMethod,
+                        receivedBy: receivedBy,
+                        paymentType: 'tuition'
+                    });
+                    console.log('Payment activity logged for:', studentId);
+                }
+                
+                // Write to Google Sheets via Apps Script with debt information!
+                if (window.appsScriptGoogleSheets) {
+                    try {
+                        await window.appsScriptGoogleSheets.writePaymentData(studentId, fullname, {
+                            amount: paymentAmount,
+                            paymentMethod: paymentMethod,
+                            receivedBy: receivedBy,
+                            remainingDebt: debt
+                        });
+                        console.log('Payment data written to Google Sheets for:', studentId);
+                    } catch (error) {
+                        console.error('Error writing payment to Google Sheets:', error);
+                        // Don't fail the payment if Google Sheets fails
+                    }
+                }
+                
+                // Update the main payment document with calculated values (including currentBalance)
+                await updateDoc(paymentDocRef, {
+                    paid: newPaidAmount,
+                    debt: debt,
+                    status: status,
+                    shouldPay: shouldPay, // Also ensure shouldPay is saved correctly
+                    currentBalance: currentBalance,
+                    lastUpdated: serverTimestamp()
+                });
+                
+                // Remove processing toast
+                removeToast(processingToast);
+                
+                // Set success state
+                setButtonState(saveBtn, 'success', 'Payment Saved!', 'btn-checkmark');
+                
+                // Show success notification
+                showToast('success', 'Payment Saved!', 
+                    `${formatCurrency(paymentAmount)} payment saved successfully`
+                );
+                
+                // Clear form
+                amountInput.value = '';
+                methodSelect.value = '';
+                receivedBySelect.value = '';
+                
+                // Close modal after delay
+                setTimeout(() => {
+                    closeModal();
+                }, 2000);
+                
+                // Reset button after delay
+                setTimeout(() => {
+                    setButtonState(saveBtn, 'default', 'Save Payment');
+                }, 3000);
+                
+            } catch (error) {
+                console.error('Error saving payment:', error);
+                
+                // Set error state
+                setButtonState(saveBtn, 'error', 'Failed to Save', 'btn-error');
+                
+                // Show error notification
+                showToast('error', 'Payment Failed', 
+                    'Something went wrong. Please try again.'
+                );
+                
+                // Reset button after delay
+                setTimeout(() => {
+                    setButtonState(saveBtn, 'default', 'Save Payment');
+                }, 3000);
+            }
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('paymentModal');
+            modal.classList.remove('active');
+        }
+
+        // Pagination event listeners
+        function setupPagination() {
+            document.getElementById('prevPage').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    updateTable();
+                }
+            });
+
+            document.getElementById('nextPage').addEventListener('click', () => {
+                const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    updateTable();
+                }
+            });
+        }
+
+        // Clear filters function
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('tariffFilter').value = '';
+            performSearch();
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Payment Management System Starting...');
+            setupPagination();
+            initializeApp();
+        });
+
+        // Update all existing records with correct status calculation
+        async function updateAllRecordsStatus() {
+            console.log('🔄 Updating all records with correct status calculations...');
+            
+            try {
+                const { collection, getDocs, doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                
+                const paymentsRef = collection(db, "payments");
+                const snapshot = await getDocs(paymentsRef);
+                
+                let updatedCount = 0;
+                
+                for (const docSnap of snapshot.docs) {
+                    const docId = docSnap.id;
+                    const data = docSnap.data();
+                    
+                    // Extract studentId from document ID
+                    const studentId = docId.replace('payments', '') || docId;
+                    
+                    // Get current values
+                    const payment = data.payment || 0;
+                    const discount = data.discount || 0;
+                    // Use the exact same formula as the real-time listener
+                    const shouldPay = payment - discount;
+                    
+                    // Calculate paid amount from subcollection
+                    const paid = await calculatePaidFromHistory(studentId);
+                    
+                    // Calculate correct status using same formula as real-time listener
+                    const correctStatus = shouldPay > 0 ? Math.round((paid / shouldPay) * 100) : 0;
+                    const currentStatus = data.status || 0;
+                    
+                    // Calculate currentBalance using exact same formula as balance.html
+                    const initialBalance = -(payment - discount);
+                    const currentBalance = initialBalance + paid;
+                    
+                    console.log(`📊 Student ${studentId}: payment=${payment}, discount=${discount}, shouldPay=${shouldPay}, paid=${paid}, status=${currentStatus}% → ${correctStatus}%`);
+                    
+                    // Always update to ensure consistency (not just when different)
+                    const docRef = doc(db, "payments", docId);
+                    await updateDoc(docRef, {
+                        status: correctStatus,
+                        shouldPay: shouldPay,
+                        paid: paid,
+                        debt: Math.max(0, shouldPay - paid),
+                        currentBalance: currentBalance,
+                        lastUpdated: new Date()
+                    });
+                    
+                    updatedCount++;
+                }
+                
+                console.log(`✅ Updated ${updatedCount} records with correct status calculations`);
+                
+                // Status records updated silently (no toast notification)
+                
+            } catch (error) {
+                console.error('❌ Error updating records:', error);
+                showToast('error', 'Update Failed', 'Error updating records: ' + error.message);
+            }
+        }
+    </script>
+  
+</body>
+</html>

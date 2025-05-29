@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Cache Demo - UniApp</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f7;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #1d1d1f;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #86868b;
+            font-size: 18px;
+        }
+        
+        .demo-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #e5e5e7;
+            border-radius: 8px;
+        }
+        
+        .demo-section h3 {
+            color: #1d1d1f;
+            margin-top: 0;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #007aff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056cc;
+        }
+        
+        .btn-secondary {
+            background: #f2f2f7;
+            color: #1d1d1f;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e5e7;
+        }
+        
+        .btn-danger {
+            background: #ff3b30;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #d70015;
+        }
+        
+        .status-panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .status-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .status-label {
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        
+        .status-value {
+            color: #86868b;
+        }
+        
+        .online {
+            color: #34c759;
+        }
+        
+        .offline {
+            color: #ff3b30;
+        }
+        
+        .log-panel {
+            background: #1d1d1f;
+            color: #f5f5f7;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 14px;
+            height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .performance-meter {
+            background: #f2f2f7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .performance-bar {
+            height: 8px;
+            background: #e5e5e7;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .performance-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #34c759, #30d158);
+            transition: width 0.3s ease;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e5e7;
+        }
+        
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #86868b;
+        }
+        
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #f2f2f7;
+            border-top: 3px solid #007aff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .offline-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #ff9500;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            z-index: 1000;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Enhanced Cache Demo</h1>
+            <p>Test the performance improvements and offline functionality</p>
+        </div>
+        
+        <!-- Cache Status Panel -->
+        <div class="demo-section">
+            <h3>📊 Cache Status</h3>
+            <div class="status-panel" id="statusPanel">
+                <div class="status-item">
+                    <span class="status-label">Connection Status:</span>
+                    <span class="status-value" id="connectionStatus">🌐 Online</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Cached Items:</span>
+                    <span class="status-value" id="cachedItems">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Memory Usage:</span>
+                    <span class="status-value" id="memoryUsage">0 KB</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Sync Queue:</span>
+                    <span class="status-value" id="syncQueue">0 pending</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Performance Testing -->
+        <div class="demo-section">
+            <h3>⚡ Performance Testing</h3>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="testLoadStudents()">Load Students (Cached)</button>
+                <button class="btn btn-primary" onclick="testLoadPayments()">Load Payments (Cached)</button>
+                <button class="btn btn-secondary" onclick="testForceRefresh()">Force Refresh</button>
+                <button class="btn btn-danger" onclick="clearAllCache()">Clear Cache</button>
+            </div>
+            
+            <div class="performance-meter">
+                <div>Last Operation: <span id="lastOperation">None</span></div>
+                <div>Load Time: <span id="loadTime">0ms</span></div>
+                <div class="performance-bar">
+                    <div class="performance-fill" id="performanceFill" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Offline Testing -->
+        <div class="demo-section">
+            <h3>📱 Offline Testing</h3>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="simulateOffline()">Simulate Offline</button>
+                <button class="btn btn-secondary" onclick="simulateOnline()">Simulate Online</button>
+                <button class="btn btn-primary" onclick="testOfflineOperation()">Test Offline Add</button>
+                <button class="btn btn-primary" onclick="syncOfflineData()">Sync Offline Data</button>
+            </div>
+            <p><em>Try going offline (disconnect internet) and test the functionality!</em></p>
+        </div>
+        
+        <!-- Data Display -->
+        <div class="demo-section">
+            <h3>📋 Data Display</h3>
+            <div id="dataDisplay">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Click "Load Students" or "Load Payments" to see cached data</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Console Log -->
+        <div class="demo-section">
+            <h3>📝 Console Log</h3>
+            <div class="log-panel" id="logPanel">
+                Welcome to Enhanced Cache Demo!\n
+                Click buttons above to test caching and offline functionality.\n
+                Watch this log for real-time performance metrics.\n\n
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script type="module" src="./firebase.js"></script>
+    <script type="module" src="./enhanced-cache.js"></script>
+    
+    <script type="module">
+        // Demo functionality
+        let logPanel;
+        let performanceData = [];
+        
+        function log(message) {
+            if (!logPanel) logPanel = document.getElementById('logPanel');
+            const timestamp = new Date().toLocaleTimeString();
+            logPanel.textContent += `[${timestamp}] ${message}\n`;
+            logPanel.scrollTop = logPanel.scrollHeight;
+        }
+        
+        function updateStatus() {
+            if (!window.SmartDataService || !window.SmartDataService.isInitialized) {
+                setTimeout(updateStatus, 100);
+                return;
+            }
+            
+            const stats = window.SmartDataService.getCacheStats();
+            
+            document.getElementById('connectionStatus').innerHTML = 
+                stats.isOnline ? '🌐 Online' : '📱 Offline';
+            document.getElementById('connectionStatus').className = 
+                `status-value ${stats.isOnline ? 'online' : 'offline'}`;
+            
+            document.getElementById('cachedItems').textContent = stats.memoryEntries;
+            document.getElementById('memoryUsage').textContent = stats.memorySize;
+            document.getElementById('syncQueue').textContent = `${stats.syncQueueLength} pending`;
+        }
+        
+        function updatePerformance(operation, duration) {
+            document.getElementById('lastOperation').textContent = operation;
+            document.getElementById('loadTime').textContent = `${duration}ms`;
+            
+            // Update performance bar (0-2000ms scale)
+            const percentage = Math.min((duration / 2000) * 100, 100);
+            document.getElementById('performanceFill').style.width = `${percentage}%`;
+            
+            // Change color based on performance
+            const fill = document.getElementById('performanceFill');
+            if (duration < 100) {
+                fill.style.background = 'linear-gradient(90deg, #34c759, #30d158)'; // Green
+            } else if (duration < 500) {
+                fill.style.background = 'linear-gradient(90deg, #ff9500, #ffb340)'; // Orange
+            } else {
+                fill.style.background = 'linear-gradient(90deg, #ff3b30, #ff6961)'; // Red
+            }
+        }
+        
+        async function measureOperation(name, operation) {
+            const startTime = performance.now();
+            log(`🔄 Starting: ${name}`);
+            
+            try {
+                const result = await operation();
+                const duration = Math.round(performance.now() - startTime);
+                
+                log(`✅ Completed: ${name} (${duration}ms)`);
+                updatePerformance(name, duration);
+                
+                return result;
+            } catch (error) {
+                const duration = Math.round(performance.now() - startTime);
+                log(`❌ Failed: ${name} (${duration}ms) - ${error.message}`);
+                updatePerformance(name, duration);
+                throw error;
+            }
+        }
+        
+        function displayData(data, type) {
+            const display = document.getElementById('dataDisplay');
+            
+            if (!data || data.length === 0) {
+                display.innerHTML = `
+                    <div class="loading">
+                        <p>No ${type} data available</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const headers = type === 'students' 
+                ? ['ID', 'Full Name', 'Phone', 'Tariff']
+                : ['ID', 'Student ID', 'Amount', 'Status'];
+            
+            const rows = data.slice(0, 10).map(item => {
+                if (type === 'students') {
+                    return `
+                        <tr>
+                            <td>${item.id?.substring(0, 8) || 'N/A'}</td>
+                            <td>${item.fullname || 'N/A'}</td>
+                            <td>${item.phone || 'N/A'}</td>
+                            <td>${item.tariff || 'N/A'}</td>
+                        </tr>
+                    `;
+                } else {
+                    return `
+                        <tr>
+                            <td>${item.id?.substring(0, 8) || 'N/A'}</td>
+                            <td>${item.studentId || 'N/A'}</td>
+                            <td>${item.amount || 'N/A'}</td>
+                            <td>${item.status || 'N/A'}</td>
+                        </tr>
+                    `;
+                }
+            }).join('');
+            
+            display.innerHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
+                <p style="margin-top: 10px; color: #86868b;">
+                    Showing first 10 of ${data.length} ${type}
+                </p>
+            `;
+        }
+        
+        // Global functions for buttons
+        window.testLoadStudents = async function() {
+            const result = await measureOperation('Load Students', async () => {
+                const data = await window.SmartDataService.getStudents(50, 1);
+                return data.students || [];
+            });
+            
+            displayData(result, 'students');
+            updateStatus();
+        };
+        
+        window.testLoadPayments = async function() {
+            const result = await measureOperation('Load Payments', async () => {
+                const data = await window.SmartDataService.getPayments(50, 1);
+                return data.payments || [];
+            });
+            
+            displayData(result, 'payments');
+            updateStatus();
+        };
+        
+        window.testForceRefresh = async function() {
+            await measureOperation('Force Refresh', async () => {
+                await window.SmartDataService.refreshAll();
+                return 'Cache cleared';
+            });
+            
+            log('🔄 Cache cleared - next load will fetch from server');
+            updateStatus();
+        };
+        
+        window.clearAllCache = async function() {
+            await measureOperation('Clear Cache', async () => {
+                await window.SmartDataService.refreshAll();
+                return 'All cache cleared';
+            });
+            
+            document.getElementById('dataDisplay').innerHTML = `
+                <div class="loading">
+                    <p>Cache cleared. Click "Load Students" or "Load Payments" to reload data.</p>
+                </div>
+            `;
+            updateStatus();
+        };
+        
+        window.simulateOffline = function() {
+            // Override navigator.onLine
+            Object.defineProperty(navigator, 'onLine', {
+                writable: true,
+                value: false
+            });
+            
+            // Trigger offline event
+            window.dispatchEvent(new Event('offline'));
+            log('📱 Simulated offline mode');
+            updateStatus();
+        };
+        
+        window.simulateOnline = function() {
+            // Restore navigator.onLine
+            Object.defineProperty(navigator, 'onLine', {
+                writable: true,
+                value: true
+            });
+            
+            // Trigger online event
+            window.dispatchEvent(new Event('online'));
+            log('🌐 Simulated online mode');
+            updateStatus();
+        };
+        
+        window.testOfflineOperation = async function() {
+            const testStudent = {
+                fullname: 'Test Student (Offline)',
+                phone: '+1234567890',
+                tariff: 'Test Tariff',
+                timestamp: Date.now()
+            };
+            
+            await measureOperation('Offline Add Student', async () => {
+                const result = await window.SmartDataService.addStudent(testStudent);
+                return result;
+            });
+            
+            log('📝 Student added to offline queue (if offline) or Firebase (if online)');
+            updateStatus();
+        };
+        
+        window.syncOfflineData = async function() {
+            await measureOperation('Sync Offline Data', async () => {
+                if (window.SmartDataService.cache.syncOfflineOperations) {
+                    await window.SmartDataService.cache.syncOfflineOperations();
+                }
+                return 'Sync completed';
+            });
+            
+            log('🔄 Offline data sync completed');
+            updateStatus();
+        };
+        
+        // Initialize demo
+        function initDemo() {
+            log('🚀 Enhanced Cache Demo initialized');
+            log('📊 Monitoring cache performance...');
+            
+            // Update status every 5 seconds
+            setInterval(updateStatus, 5000);
+            updateStatus();
+            
+            // Listen for online/offline events
+            window.addEventListener('online', () => {
+                log('🌐 Connection restored');
+                updateStatus();
+            });
+            
+            window.addEventListener('offline', () => {
+                log('📱 Connection lost - using cached data');
+                updateStatus();
+            });
+        }
+        
+        // Wait for SmartDataService to be ready
+        if (window.SmartDataService && window.SmartDataService.isInitialized) {
+            initDemo();
+        } else {
+            const checkInterval = setInterval(() => {
+                if (window.SmartDataService && window.SmartDataService.isInitialized) {
+                    clearInterval(checkInterval);
+                    initDemo();
+                }
+            }, 100);
+        }
+    </script>
+</body>
+</html> 

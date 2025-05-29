@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Student - UniApp</title>
+    <link href="./dist/output.css" rel="stylesheet">
+    <link href="./dark-mode-styles.css" rel="stylesheet">
+    <link href="./sizing-fixes.css" rel="stylesheet">
+    <script src="./dark-mode.js"></script>
+    <script src="./audit-logger.js"></script>
+    <script src="./config.js"></script>
+    <script src="./apps-script-integration.js"></script>
+  
+    <script src="./auth.js"></script>
+    <style>
+        /* Apple-styled Submit Button - Google Translate Style */
+        .submit-button {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 160px;
+            height: 44px;
+            font-weight: 500;
+            font-size: 16px;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            outline: none;
+            cursor: pointer;
+            transition: width 0.3s ease, background-color 0.2s ease, opacity 0.2s ease;
+            box-shadow: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            padding: 0 12px;
+            margin: 0;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .submit-button:hover:not(:disabled) {
+            background: #0056CC;
+        }
+
+        .submit-button:active:not(:disabled) {
+            background: #004999;
+            transition: background-color 0.1s ease;
+        }
+
+        .submit-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .submit-button.loading {
+            width: 140px;
+        }
+
+        .submit-button.success {
+            background: #34C759;
+            width: 160px;
+        }
+
+        .submit-button.error {
+            background: #FF3B30;
+            animation: appleShake 0.6s ease-out;
+            width: 160px;
+        }
+
+        @keyframes appleShake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+            20%, 40%, 60%, 80% { transform: translateX(2px); }
+        }
+
+        .button-text {
+            transition: opacity 0.3s ease;
+            font-weight: 500;
+            font-size: 16px;
+            letter-spacing: -0.01em;
+            margin: 0;
+            padding: 0;
+            line-height: 1;
+        }
+
+        /* Inline Loading Spinner */
+        .inline-spinner {
+            opacity: 0;
+            width: 0;
+            transition: opacity 0.3s ease, width 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .submit-button.loading .inline-spinner {
+            opacity: 1;
+            width: 20px;
+        }
+
+        .apple-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: appleSpinnerRotate 1s linear infinite;
+        }
+
+        @keyframes appleSpinnerRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Success and Error Icons - Inline */
+        .button-icon {
+            opacity: 0;
+            width: 0;
+            transition: opacity 0.3s ease, width 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .button-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .submit-button.success .success-icon {
+            opacity: 1;
+            width: 20px;
+        }
+
+        .submit-button.error .error-icon {
+            opacity: 1;
+            width: 20px;
+        }
+
+        /* Ensure button height never changes */
+        .submit-button {
+            height: 44px !important;
+            min-height: 44px !important;
+            max-height: 44px !important;
+            box-sizing: border-box !important;
+        }
+
+        /* External Loading Spinner */
+        .external-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 24px;
+            height: 24px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .external-spinner.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Button Container */
+        .button-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Toast notification styles */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            max-width: 400px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            background: linear-gradient(45deg, #10b981, #059669);
+        }
+
+        .toast.error {
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+        }
+
+        .toast-icon {
+            flex-shrink: 0;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .toast-message {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        /* Modern Accordion Animations */
+        .accordion-container {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            margin-bottom: 24px;
+        }
+
+        .accordion-container:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .accordion-header {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 20px 24px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            border: none;
+            outline: none;
+        }
+
+        .accordion-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .accordion-header:hover::before {
+            left: 100%;
+        }
+
+        .accordion-header:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        }
+
+        .accordion-header.active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+        }
+
+        .accordion-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+            z-index: 1;
+            position: relative;
+            letter-spacing: 0.025em;
+        }
+
+        .accordion-icon {
+            width: 20px;
+            height: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1;
+            position: relative;
+        }
+
+        .accordion-header.active .accordion-icon {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            opacity: 0;
+        }
+
+        .accordion-content.active {
+            max-height: 800px;
+            opacity: 1;
+            padding: 32px 24px;
+        }
+
+        .accordion-content-inner {
+            transform: translateY(-15px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
+            opacity: 0;
+        }
+
+        .accordion-content.active .accordion-content-inner {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Enhanced form field animations */
+        .form-field {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 24px;
+        }
+
+        .form-field:hover {
+            transform: translateY(-1px);
+        }
+
+        .form-field input,
+        .form-field select,
+        .form-field textarea {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 14px 18px;
+            font-size: 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            background-color: #ffffff;
+            line-height: 1.5;
+        }
+
+        .form-field input:focus,
+        .form-field select:focus,
+        .form-field textarea:focus {
+            transform: scale(1.01);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+            border-color: #3b82f6;
+            outline: none;
+        }
+
+        .form-field label {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+            color: #374151;
+            letter-spacing: 0.025em;
+            padding-left: 2px;
+        }
+
+        /* Staggered animation for form fields */
+        .accordion-content.active .form-field {
+            animation: slideInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            opacity: 0;
+        }
+
+        .accordion-content.active .form-field:nth-child(1) { animation-delay: 0.05s; }
+        .accordion-content.active .form-field:nth-child(2) { animation-delay: 0.1s; }
+        .accordion-content.active .form-field:nth-child(3) { animation-delay: 0.15s; }
+        .accordion-content.active .form-field:nth-child(4) { animation-delay: 0.2s; }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Progress indicator */
+        .accordion-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 0;
+        }
+
+        .accordion-header.active .accordion-progress {
+            width: 100%;
+        }
+
+        /* Improved grid spacing */
+        .accordion-content .grid {
+            gap: 20px;
+        }
+
+        .accordion-content .space-y-6 > * + * {
+            margin-top: 24px;
+        }
+
+        /* Better container spacing */
+        .bg-white {
+            padding: 32px;
+            margin: 24px;
+            border: 1px solid #e5e7eb;
+        }
+
+        /* Improved button container */
+        .flex.justify-end {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        /* Form spacing improvements */
+        #registrationForm {
+            padding: 8px 0;
+        }
+
+        /* Main content padding */
+        .p-8 {
+            padding: 32px;
+        }
+
+        .max-w-4xl {
+            padding: 0 16px;
+        }
+
+        /* Text spacing improvements */
+        h1 {
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f3f4f6;
+            letter-spacing: 0.025em;
+        }
+
+        /* Input placeholder spacing */
+        .form-field input::placeholder,
+        .form-field textarea::placeholder {
+            color: #9ca3af;
+            font-size: 14px;
+            padding-left: 2px;
+        }
+
+        /* Select arrow spacing */
+        .form-field select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px 12px;
+            padding-right: 40px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .accordion-header {
+                padding: 16px 20px;
+            }
+            
+            .accordion-content.active {
+                padding: 24px 20px;
+            }
+            
+            .form-field input,
+            .form-field select,
+            .form-field textarea {
+                padding: 12px 16px;
+            }
+            
+            .bg-white {
+                padding: 24px;
+                margin: 16px;
+            }
+            
+            .p-8 {
+                padding: 24px;
+            }
+            
+            .grid {
+                gap: 16px;
+            }
+            
+            .form-field {
+                margin-bottom: 20px;
+            }
+        }
+
+        /* Dark mode text spacing */
+        .dark .form-field label {
+            color: #e5e7eb;
+        }
+
+        .dark .form-field input,
+        .dark .form-field select,
+        .dark .form-field textarea {
+            background-color: #374151;
+            border-color: #4b5563;
+            color: #f9fafb;
+        }
+
+        .dark .form-field input:focus,
+        .dark .form-field select:focus,
+        .dark .form-field textarea:focus {
+            border-color: #60a5fa;
+            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.15);
+        }
+
+        /* Modern Sidebar Styles - Updated for Tooltips */
+        .modern-sidebar {
+            width: 70px;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            overflow: visible;
+        }
+
+        .modern-sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        }
+
+        .sidebar-header {
+            padding: 20px 0;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-logo:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .sidebar-nav {
+            padding: 0 12px;
+            overflow: visible;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 46px;
+            height: 46px;
+            margin: 0 auto 12px;
+            border-radius: 14px;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: visible;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 14px;
+        }
+
+        .nav-item:hover::before {
+            opacity: 1;
+        }
+
+        .nav-item:hover {
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .nav-item.active::before {
+            opacity: 0;
+        }
+
+        .nav-item.active:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .nav-icon {
+            width: 22px;
+            height: 22px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item:hover .nav-icon {
+            transform: scale(1.1);
+        }
+
+        /* Tooltip styles - Clean and Simple */
+        .modern-sidebar .nav-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 70px;
+            top: 50%;
+            transform: translateY(-50%) translateX(-8px) scale(0.8);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 999999;
+            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .modern-sidebar .nav-item:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(-50%) translateX(0) scale(1);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .modern-sidebar {
+                width: 60px;
+            }
+            
+            .sidebar-logo {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            
+            .nav-item {
+                width: 42px;
+                height: 42px;
+            }
+            
+            .nav-icon {
+                width: 20px;
+                height: 20px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <div class="flex h-screen">
+        <!-- Modern Sidebar -->
+        <div class="modern-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">UA</div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="index.html" class="nav-item" data-tooltip="Dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                    </svg>
+                </a>
+                <a href="register.html" class="nav-item active" data-tooltip="Register Student">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+                <a href="studentlist.html" class="nav-item" data-tooltip="Student List">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                    </svg>
+                </a>
+                <a href="payments.html" class="nav-item" data-tooltip="Payments">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                        <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+                <a href="appfee.html" class="nav-item" data-tooltip="Application Fee">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <div class="p-8">
+                <div class="max-w-4xl mx-auto">
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 transition-colors duration-300">
+                        <h1 class="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-6 transition-colors duration-300">Register New Student</h1>
+                        
+                        <!-- Registration Form -->
+                        <form id="registrationForm" class="space-y-4" onsubmit="handleSubmit(event)">
+                            <!-- Accordion 1: Personal Information -->
+                            <div class="accordion-container">
+                                <button type="button" class="accordion-header" onclick="toggleAccordion('personalInfo')">
+                                    <h2 class="accordion-title">Personal Information</h2>
+                                    <svg class="accordion-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                    <div class="accordion-progress"></div>
+                                </button>
+                                <div id="personalInfo" class="accordion-content">
+                                    <div class="accordion-content-inner">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div class="form-field">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                                            <input type="text" 
+                                                name="lastName"
+                                                required
+                                                class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-colors duration-200 uppercase" 
+                                                placeholder="Enter last name" 
+                                                style="text-transform: uppercase;">
+                                        </div>
+                                        <div class="form-field">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                                            <input type="text" 
+                                                name="firstName"
+                                                required
+                                                class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-colors duration-200 uppercase" 
+                                                placeholder="Enter first name" 
+                                                style="text-transform: uppercase;">
+                                        </div>
+                                        <div class="form-field">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Middle Name *</label>
+                                            <input type="text" 
+                                                name="middleName"
+                                                required
+                                                class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-colors duration-200 uppercase" 
+                                                placeholder="Enter middle name" 
+                                                style="text-transform: uppercase;">
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div class="form-field">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Passport Number *</label>
+                                            <input type="text" 
+                                                name="passportNumber"
+                                                required
+                                                class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-colors duration-200 uppercase" 
+                                                placeholder="AB1234567" 
+                                                pattern="[A-Z]{2}[0-9]{7}"
+                                                maxlength="9"
+                                                oninput="formatPassportNumber(this)"
+                                                onkeypress="return validatePassportInput(event)"
+                                                style="text-transform: uppercase;"
+                                                title="Please enter passport number in format: 2 letters followed by 7 digits (e.g., AB1234567)">
+                                        </div>
+                                        <div class="form-field">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Birth Date *</label>
+                                            <input type="date" 
+                                                name="birthDate"
+                                                id="birthDate"
+                                                required
+                                                class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-colors duration-200" 
+                                                value="2005-01-01"
+                                                min="1990-01-01"
+                                                max="2010-12-31">
+                                        </div>
+                                        <div class="form-field">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">About Us *</label>
+                                            <select name="hearAboutUs" required class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-colors duration-200">
+                                                <option value="">Select an option</option>
+                                                <option value="instagram">Instagram</option>
+                                                <option value="friend">Friends</option>
+                                                <option value="topikcenter">Topik Center</option>
+                                                <option value="seoul">Seoul Study</option>
+                                                <option value="umida">Umidaxon</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Accordion 2: Contact Information -->
+                            <div class="accordion-container">
+                                <button type="button" class="accordion-header" onclick="toggleAccordion('contactInfo')">
+                                    <h2 class="accordion-title">Contact Information</h2>
+                                    <svg class="accordion-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                    <div class="accordion-progress"></div>
+                                </button>
+                                <div id="contactInfo" class="accordion-content">
+                                    <div class="accordion-content-inner">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div class="form-field">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number 1 *</label>
+                                            <input type="tel" 
+                                                name="phone1"
+                                                required
+                                                class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-colors duration-200" 
+                                                placeholder="93-105-00-11"
+                                                maxlength="12"
+                                                oninput="formatPhoneNumber(this)"
+                                                onkeypress="return validatePhoneInput(event)"
+                                                title="Please enter phone number in format: XX-XXX-XX-XX">
+                                        </div>
+                                        <div class="form-field">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number 2 *</label>
+                                            <input type="tel" 
+                                                name="phone2"
+                                                required
+                                                class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-colors duration-200" 
+                                                placeholder="93-105-00-11"
+                                                maxlength="12"
+                                                oninput="formatPhoneNumber(this)"
+                                                onkeypress="return validatePhoneInput(event)"
+                                                title="Please enter phone number in format: XX-XXX-XX-XX">
+                                        </div>
+                                        <div class="form-field">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                                            <input type="email" 
+                                                name="email"
+                                                required
+                                                class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-colors duration-200" 
+                                                placeholder="Enter email address">
+                                        </div>
+                                    </div>
+                                    <div class="form-field">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Address *</label>
+                                        <textarea name="address" required class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-colors duration-200" rows="2" placeholder="Enter full address"></textarea>
+                                    </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Accordion 3: Educational Background -->
+                            <div class="accordion-container">
+                                <button type="button" class="accordion-header" onclick="toggleAccordion('educationInfo')">
+                                    <h2 class="accordion-title">Educational Background</h2>
+                                    <svg class="accordion-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                    <div class="accordion-progress"></div>
+                                </button>
+                                <div id="educationInfo" class="accordion-content">
+                                    <div class="accordion-content-inner">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div class="form-field">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Education Level *</label>
+                                            <select name="educationLevel" id="educationLevel" required class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-colors duration-200" onchange="updateUniversityOptions()">
+                                                <option value="">Select level</option>
+                                                <option value="COLLEGE">COLLEGE</option>
+                                                <option value="BACHELOR">BACHELOR</option>
+                                                <option value="MASTERS">MASTERS</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-field">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Language Certificate *</label>
+                                            <select name="languageCertificate" required class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-colors duration-200">
+                                                <option value="">Select certificate</option>
+                                                <option value="ielts-expected">IELTS EXPECTED</option>
+                                                <option value="ielts-5.5">IELTS 5.5</option>
+                                                <option value="ielts-6.0">IELTS 6.0</option>
+                                                <option value="ielts-6.5">IELTS 6.5</option>
+                                                <option value="ielts-7.0">IELTS 7.0</option>
+                                                <option value="ielts-7.5">IELTS 7.5</option>
+                                                <option value="ielts-8.0">IELTS 8.0</option>
+                                                <option value="ielts-8.5">IELTS 8.5</option>
+                                                <option value="ielts-9.0">IELTS 9.0</option>
+                                                <option value="topik-2">TOPIK 2</option>
+                                                <option value="topik-3">TOPIK 3</option>
+                                                <option value="topik-4">TOPIK 4</option>
+                                                <option value="topik-5">TOPIK 5</option>
+                                                <option value="topik-6">TOPIK 6</option>
+                                                <option value="topik-expected">TOPIK EXPECTED</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-field">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Tariff *</label>
+                                            <select name="tariff" required class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-colors duration-200">
+                                                <option value="">Select tariff</option>
+                                                <option value="STANDART">STANDART</option>
+                                                <option value="PREMIUM">PREMIUM</option>
+                                                <option value="VISA PLUS">VISA PLUS</option>
+                                                <option value="1FOIZ">1FOIZ</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="form-field">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">University 1 *</label>
+                                            <select name="university1" id="university1" required class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-colors duration-200">
+                                                <option value="">Select university</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-field">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">University 2 *</label>
+                                            <select name="university2" id="university2" required class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-colors duration-200">
+                                                <option value="">Select university</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Accordion 4: Additional Notes -->
+                            <div class="accordion-container">
+                                <button type="button" class="accordion-header" onclick="toggleAccordion('additionalNotes')">
+                                    <h2 class="accordion-title">Additional Notes</h2>
+                                    <svg class="accordion-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                    <div class="accordion-progress"></div>
+                                </button>
+                                <div id="additionalNotes" class="accordion-content">
+                                    <div class="accordion-content-inner">
+                                        <div class="form-field">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Additional Information *</label>
+                                        <textarea name="additionalNotes" required class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-colors duration-200" rows="3" placeholder="Enter any additional information or comments"></textarea>
+                                    </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end mt-6">
+                                <button type="submit" id="submitButton" class="submit-button">
+                                    <span class="button-text">Register Student</span>
+                                    <div class="inline-spinner">
+                                        <div class="apple-spinner"></div>
+                                    </div>
+                                    <div class="button-icon success-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div class="button-icon error-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Configuration -->
+    <script type="module">
+        import { 
+            db, 
+            collection, 
+            addDoc, 
+            getDocs, 
+            query, 
+            where, 
+            setDoc, 
+            doc, 
+            writeBatch,
+            updateDoc,
+            deleteDoc,
+            getDoc,
+            FirebaseService
+        } from './firebase.js';
+        
+        // Make Firebase available globally
+        window.db = db;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.getDocs = getDocs;
+        window.query = query;
+        window.where = where;
+        window.setDoc = setDoc;
+        window.doc = doc;
+        window.writeBatch = writeBatch;
+        window.updateDoc = updateDoc;
+        window.deleteDoc = deleteDoc;
+        window.getDoc = getDoc;
+        window.FirebaseService = FirebaseService;
+        
+        // Initialize audit logger
+        if (window.auditLogger) {
+            window.auditLogger.initialize(db);
+            window.auditLogger.setCurrentUser('admin'); // Set current user
+            console.log('✅ Audit Logger initialized in register.html');
+        }
+        
+        // Initialize Apps Script Google Sheets integration
+        if (window.appsScriptGoogleSheets) {
+            console.log('✅ Apps Script Google Sheets integration ready for registration');
+        }
+
+        // Ensure dark mode toggle is working properly
+        setTimeout(() => {
+            const toggleButton = document.getElementById('dark-mode-toggle');
+            if (!toggleButton && window.darkModeManager) {
+                console.log('🔧 Creating dark mode toggle button...');
+                window.darkModeManager.createToggleButton();
+            }
+            
+            // Verify button functionality
+            const finalButton = document.getElementById('dark-mode-toggle');
+            if (finalButton) {
+                console.log('✅ Dark mode toggle button is ready');
+                
+                // Add click event listener if missing
+                if (!finalButton.hasAttribute('data-initialized')) {
+                    finalButton.addEventListener('click', () => {
+                        if (window.darkModeManager) {
+                            window.darkModeManager.toggle();
+                        }
+                    });
+                    finalButton.setAttribute('data-initialized', 'true');
+                }
+            } else {
+                console.error('❌ Dark mode toggle button failed to initialize');
+            }
+        }, 1000);
+    </script>
+
+    <script>
+        // Move all functions inside a DOMContentLoaded event listener to ensure Firebase is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize dark mode
+            if (window.darkModeManager) {
+                // Force recreate the toggle button
+                const existingToggle = document.getElementById('dark-mode-toggle');
+                if (existingToggle) {
+                    existingToggle.remove();
+                }
+                window.darkModeManager.createToggleButton();
+                console.log('✅ Dark mode toggle initialized');
+            }
+
+            // Initialize all accordions as closed (they start closed by default)
+            const accordions = ['personalInfo', 'contactInfo', 'educationInfo', 'additionalNotes'];
+            // No need to add classes - accordions start closed by default
+
+            // Initialize university options
+            updateUniversityOptions();
+
+            // Add name attributes to all form inputs
+            const form = document.getElementById('registrationForm');
+            const inputs = form.querySelectorAll('input, select, textarea');
+            
+            inputs.forEach(input => {
+                if (!input.name) {
+                    input.name = input.id || input.getAttribute('placeholder').toLowerCase().replace(/\s+/g, '');
+                }
+            });
+        });
+
+        function toggleAccordion(id) {
+            // Close all accordions first
+            const allAccordions = ['personalInfo', 'contactInfo', 'educationInfo', 'additionalNotes'];
+            allAccordions.forEach(accordionId => {
+                const content = document.getElementById(accordionId);
+                const button = content.previousElementSibling;
+                
+                if (accordionId !== id) {
+                    // Close other accordions
+                    content.classList.remove('active');
+                    button.classList.remove('active');
+                }
+            });
+
+            // Toggle the clicked accordion
+            const content = document.getElementById(id);
+            const button = content.previousElementSibling;
+            
+            const isCurrentlyActive = content.classList.contains('active');
+            
+            if (isCurrentlyActive) {
+                // Close the accordion
+                content.classList.remove('active');
+                button.classList.remove('active');
+            } else {
+                // Open the accordion
+                content.classList.add('active');
+                button.classList.add('active');
+                
+                // Enhanced centering for better readability
+                setTimeout(() => {
+                    const accordionContainer = button.parentElement;
+                    
+                    // Get current scroll position and viewport info
+                    const currentScroll = window.pageYOffset;
+                    const viewportHeight = window.innerHeight;
+                    const rect = accordionContainer.getBoundingClientRect();
+                    
+                    // Calculate absolute position of accordion
+                    const accordionTop = currentScroll + rect.top;
+                    
+                    // Position accordion header in the top 15% of viewport for optimal reading
+                    const optimalPosition = accordionTop - (viewportHeight * 0.15);
+                    
+                    // Ensure we don't scroll past the top of the page
+                    const finalScrollPosition = Math.max(0, optimalPosition);
+                    
+                    // Smooth scroll to the calculated position
+                    window.scrollTo({
+                        top: finalScrollPosition,
+                        behavior: 'smooth'
+                    });
+                    
+                    console.log('Scrolling accordion to position:', finalScrollPosition);
+                }, 300); // Wait for accordion animation to complete
+            }
+        }
+
+        function formatPassportNumber(input) {
+            // Remove any non-alphanumeric characters
+            let value = input.value.replace(/[^A-Za-z0-9]/g, '');
+            
+            // Ensure first two characters are letters
+            let letters = value.match(/[A-Za-z]{0,2}/)[0].toUpperCase();
+            // Get remaining digits
+            let digits = value.replace(/[A-Za-z]/g, '').slice(0, 7);
+            
+            // Combine letters and digits
+            input.value = letters + digits;
+        }
+
+        function validatePassportInput(event) {
+            const input = event.target;
+            const currentValue = input.value;
+            
+            // If we have less than 2 letters, only allow letters
+            if (currentValue.length < 2) {
+                return /[A-Za-z]/.test(event.key);
+            }
+            
+            // If we have 2 or more characters, only allow digits
+            if (currentValue.length >= 2) {
+                return /[0-9]/.test(event.key);
+            }
+            
+            return false;
+        }
+
+        function formatPhoneNumber(input) {
+            // Remove all non-digit characters
+            let value = input.value.replace(/\D/g, '');
+            
+            // Format the number as XX-XXX-XX-XX
+            if (value.length > 0) {
+                if (value.length <= 2) {
+                    value = value;
+                } else if (value.length <= 5) {
+                    value = value.slice(0, 2) + '-' + value.slice(2);
+                } else if (value.length <= 7) {
+                    value = value.slice(0, 2) + '-' + value.slice(2, 5) + '-' + value.slice(5);
+                } else {
+                    value = value.slice(0, 2) + '-' + value.slice(2, 5) + '-' + value.slice(5, 7) + '-' + value.slice(7, 9);
+                }
+            }
+            
+            // Only update if the value has changed to prevent cursor jumping
+            if (input.value !== value) {
+                input.value = value;
+            }
+        }
+
+        function validatePhoneInput(event) {
+            const input = event.target;
+            const value = input.value.replace(/\D/g, '');
+            
+            // Only allow digits and limit to 9 digits total
+            return /[0-9]/.test(event.key) && value.length < 9;
+        }
+
+        const universityOptions = {
+            COLLEGE: ["SeoJeong", "Daewon", "Kunjang", "DIST", "SeoYeong", "Chungbuk", "Jangan", "Other"],
+            MASTERS: [
+                "Kangwon - E VISA", "SunMoon - E VISA", "Joon Bu - E VISA", "AnYang - E VISA",
+                "SMIT - E VISA", "Woosuk - E VISA", "Dong eui E VISA", "Sejong", "Gachon", "BUFS",
+                "Won Kwan - E VISA (Sertifikatsiz)", "Youngsan - E VISA (Sertifikatsiz)"
+            ],
+            BACHELOR: [
+                "BUFS", "Chonnam National University", "Chung-Ang University", "Chungnam National University", 
+                "DGIST", "Daegu University", "Daejin University", "Dong-A University", 
+                "Dong-Eui University", "Ewha Womans University", "Far East University", "Gachon University", "Hankuk (HUFS)", 
+                "Hanyang University", "Incheon National University", "Inha University", "Jeonbuk National University", 
+                "Kangwon National University", "Keimyung University", "Konkuk University", "KAIST", 
+                "Korea University", "Kookmin University", "Kyung Hee University", "Kyungpook National University", 
+                "POSTECH", "Sejong University", "Seoul National University (SNU)", 
+                "Semyung University", "Sogang University", "SunMoon University", "Sungkyunkwan University (SKKU)", "Sungshin Women's University", 
+                "TongMyong University", "UNIST", "University of Seoul", "Yeungnam University", 
+                "Yonsei University", "Other"
+            ]
+        };
+
+        function updateUniversityOptions() {
+            const educationLevel = document.getElementById('educationLevel').value;
+            const university1 = document.getElementById('university1');
+            const university2 = document.getElementById('university2');
+            
+            // Clear existing options
+            university1.innerHTML = '<option value="">Select university</option>';
+            university2.innerHTML = '<option value="">Select university</option>';
+            
+            if (educationLevel && universityOptions[educationLevel]) {
+                // Add new options
+                universityOptions[educationLevel].forEach(university => {
+                    university1.add(new Option(university, university));
+                    university2.add(new Option(university, university));
+                });
+            }
+        }
+
+        async function generateStudentId(educationLevel) {
+            const prefix = {
+                'COLLEGE': 'CS',
+                'BACHELOR': 'BS',
+                'MASTERS': 'MS'
+            }[educationLevel];
+
+            if (!prefix) return null;
+
+            try {
+                // Query existing documents to find the latest number
+                const q = query(collection(db, 'register'), where('studentId', '>=', prefix));
+                const querySnapshot = await getDocs(q);
+                
+                let maxNumber = 0;
+                querySnapshot.forEach((doc) => {
+                    const studentId = doc.data().studentId;
+                    const number = parseInt(studentId.replace(prefix, ''));
+                    if (!isNaN(number) && number > maxNumber) {
+                        maxNumber = number;
+                    }
+                });
+
+                // Generate new student ID
+                return `${prefix}${maxNumber + 1}`;
+            } catch (error) {
+                console.error('Error generating student ID:', error);
+                return null;
+            }
+        }
+
+        function generateDocumentId(studentId) {
+            return `${studentId}reg`;
+        }
+
+        // Google Translate Style Button Animation
+        function setButtonState(state, message = '') {
+            const button = document.getElementById('submitButton');
+            const buttonText = button.querySelector('.button-text');
+            
+            // Remove all state classes
+            button.classList.remove('loading', 'success', 'error');
+            
+            switch (state) {
+                case 'loading':
+                    button.classList.add('loading');
+                    button.disabled = true;
+                    buttonText.textContent = 'Registering...';
+                    break;
+                case 'success':
+                    button.classList.add('success');
+                    button.disabled = false;
+                    buttonText.textContent = 'Success!';
+                    showToast('success', 'Registration Successful!', message);
+                    break;
+                case 'error':
+                    button.classList.add('error');
+                    button.disabled = false;
+                    buttonText.textContent = 'Try Again';
+                    showToast('error', 'Registration Failed', message);
+                    break;
+                default:
+                    button.disabled = false;
+                    buttonText.textContent = 'Register Student';
+                    break;
+            }
+        }
+
+        function showToast(type, title, message) {
+            // Remove existing toast
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            // Create new toast
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = type === 'success' 
+                ? '<svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>'
+                : '<svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>';
+            
+            toast.innerHTML = `
+                <div class="toast-icon">${icon}</div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Show toast
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 5000);
+        }
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+            
+            // Set loading state immediately
+            setButtonState('loading');
+            
+            try {
+                // Get form data
+                const formData = new FormData(event.target);
+                const data = {
+                    lastName: formData.get('lastName'),
+                    firstName: formData.get('firstName'),
+                    middleName: formData.get('middleName'),
+                    passportNumber: formData.get('passportNumber'),
+                    birthDate: formData.get('birthDate'),
+                    hearAboutUs: formData.get('hearAboutUs'),
+                    phone1: formData.get('phone1'),
+                    phone2: formData.get('phone2'),
+                    email: formData.get('email'),
+                    address: formData.get('address'),
+                    educationLevel: formData.get('educationLevel'),
+                    languageCertificate: formData.get('languageCertificate'),
+                    tariff: formData.get('tariff'),
+                    university1: formData.get('university1'),
+                    university2: formData.get('university2'),
+                    additionalNotes: formData.get('additionalNotes'),
+                    timestamp: new Date(),
+                    status: 'pending'
+                };
+
+                // Basic validation
+                if (!data.lastName || !data.firstName || !data.educationLevel) {
+                    throw new Error('Please fill in all required fields (Name and Education Level)');
+                }
+
+                // Transform specified fields to uppercase
+                const fieldsToUppercase = ['lastName', 'firstName', 'middleName', 'hearAboutUs', 'languageCertificate', 'tariff'];
+                fieldsToUppercase.forEach(field => {
+                    if (data[field]) {
+                        data[field] = data[field].toUpperCase();
+                    }
+                });
+
+                // Create fullname
+                const fullname = `${data.lastName} ${data.firstName} ${data.middleName}`.trim();
+                data.fullname = fullname;
+
+                // Generate student ID based on education level
+                const studentId = await generateStudentId(data.educationLevel);
+                if (!studentId) {
+                    throw new Error('Failed to generate student ID. Please try again.');
+                }
+                data.studentId = studentId;
+
+                // Generate document IDs for different collections
+                const registerDocId = generateDocumentId(studentId);
+                const appfeeDocId = `${studentId}appfee`;
+                const paymentsDocId = `${studentId}payments`;
+                
+                // Create batch write for registration, appfee, and payments
+                const batch = writeBatch(db);
+
+                // 1. Save registration data
+                const registerRef = doc(db, "register", registerDocId);
+                batch.set(registerRef, {
+                    ...data,
+                    id: registerDocId
+                });
+
+                // 2. Save app fee record with default fields
+                const appfeeRef = doc(db, "appfee", appfeeDocId);
+                batch.set(appfeeRef, {
+                    studentId: studentId,
+                    fullname: fullname,
+                    tariff: data.tariff,
+                    university1: data.university1,
+                    university2: data.university2,
+                    pay1: "",
+                    pay2: "",
+                    status: "unpaid",
+                    timestamp: new Date()
+                });
+
+                // 3. Create payment document with initial values
+                const paymentsRef = doc(db, "payments", paymentsDocId);
+                
+                // Extract payment amount from tariff (you may need to adjust this logic)
+                let paymentAmount = 0;
+                if (data.tariff) {
+                    const tariffUpper = data.tariff.toUpperCase();
+                    // Tariff-to-payment mapping
+                    if (tariffUpper.includes('STANDART')) {
+                        paymentAmount = 5300000; // 5,300,000 UZS
+                    } else if (tariffUpper.includes('PREMIUM')) {
+                        paymentAmount = 15000000; // 15,000,000 UZS
+                    } else if (tariffUpper.includes('VISA PLUS')) {
+                        paymentAmount = 65000000; // 65,000,000 UZS
+                    } else if (tariffUpper.includes('1FOIZ')) {
+                        paymentAmount = 2000000; // 2,000,000 UZS
+                    } else {
+                        paymentAmount = 5300000; // Default to STANDART amount
+                    }
+                }
+                
+                const discount = 0; // Default discount
+                const shouldPay = paymentAmount - discount;
+                const paid = 0; // Initially no payments made
+                const debt = shouldPay; // Initially full debt
+                const status = 0; // 0% paid initially
+                
+                batch.set(paymentsRef, {
+                    studentId: studentId,
+                    fullname: fullname,
+                    tariff: data.tariff,
+                    payment: paymentAmount,
+                    discount: discount,
+                    shouldPay: shouldPay,
+                    paid: paid,
+                    debt: debt,
+                    status: status,
+                    timestamp: new Date(),
+                    lastUpdated: new Date(),
+                    createdBy: 'Registration',
+                    currentBalance: -shouldPay // Negative balance means they owe money
+                });
+
+                // Commit the batch
+                await batch.commit();
+
+                // Log registration activity
+                if (window.auditLogger) {
+                    await window.auditLogger.logRegistration(data);
+                    console.log('📝 Registration activity logged for:', studentId);
+                }
+                
+                // Write to Google Sheets via Apps Script
+                if (window.appsScriptGoogleSheets) {
+                    try {
+                        await window.appsScriptGoogleSheets.writeRegistrationData(data);
+                        console.log('📊 Registration data written to Google Sheets for:', studentId);
+                    } catch (error) {
+                        console.error('❌ Error writing to Google Sheets:', error);
+                        // Don't fail the registration if Google Sheets fails
+                    }
+                }
+
+                // Show success state
+                setButtonState('success', `Student ${fullname} registered with ID: ${studentId}`);
+                
+                // Reset form after success animation
+                setTimeout(() => {
+                    event.target.reset();
+                    updateUniversityOptions();
+                    setButtonState('default');
+                }, 3000);
+                
+            } catch (error) {
+                console.error("Error saving data:", error);
+                
+                // Show error state
+                let errorMessage = 'Please check your connection and try again.';
+                if (error.message.includes('required fields')) {
+                    errorMessage = error.message;
+                } else if (error.message.includes('student ID')) {
+                    errorMessage = error.message;
+                } else if (error.code === 'permission-denied') {
+                    errorMessage = 'Permission denied. Please contact administrator.';
+                } else if (error.code === 'unavailable') {
+                    errorMessage = 'Service temporarily unavailable. Please try again.';
+                }
+                
+                setButtonState('error', errorMessage);
+                
+                // Reset button after error animation
+                setTimeout(() => {
+                    setButtonState('default');
+                }, 4000);
+            }
+        }
+    </script>
+</body>
+</html>

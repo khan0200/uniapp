@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Register Collection - UniApp</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 { color: #1d4ed8; text-align: center; }
+        .debug-output {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        button {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug Register Collection</h1>
+        
+        <button onclick="debugRegisterCollection()">Check Register Collection Structure</button>
+        <button onclick="clearOutput()">Clear Output</button>
+        
+        <div id="output" class="debug-output">Click the button above to debug the register collection...</div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, limit, query } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
+        
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDtc3StzPcG7oivivYlXnKrR6S0c0xelJg",
+            authDomain: "uniuni-dd4af.firebaseapp.com",
+            projectId: "uniuni-dd4af",
+            storageBucket: "uniuni-dd4af.firebasestorage.app",
+            messagingSenderId: "583982319464",
+            appId: "1:583982319464:web:ed3021724ef42f196df8dd"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // Make db available globally
+        window.db = db;
+        window.collection = collection;
+        window.getDocs = getDocs;
+        window.limit = limit;
+        window.query = query;
+        
+        console.log('✅ Firebase initialized for debug page');
+    </script>
+    
+    <script>
+        function log(message) {
+            const output = document.getElementById('output');
+            output.textContent += message + '\n';
+            console.log(message);
+        }
+        
+        function clearOutput() {
+            document.getElementById('output').textContent = 'Output cleared...\n';
+        }
+        
+        async function debugRegisterCollection() {
+            log('🔍 Starting register collection debug...');
+            
+            try {
+                // Get first 5 documents from register collection
+                const q = query(collection(window.db, "register"), limit(5));
+                const querySnapshot = await getDocs(q);
+                
+                log(`📊 Found ${querySnapshot.size} register documents`);
+                log('');
+                
+                let docCount = 0;
+                querySnapshot.forEach((doc) => {
+                    docCount++;
+                    const data = doc.data();
+                    
+                    log(`📄 Document ${docCount}:`);
+                    log(`   Document ID: ${doc.id}`);
+                    log(`   Data Structure:`);
+                    
+                    // List all fields in the document
+                    Object.keys(data).forEach(key => {
+                        const value = data[key];
+                        if (typeof value === 'string') {
+                            log(`   ${key}: "${value}"`);
+                        } else if (typeof value === 'object' && value !== null) {
+                            if (value.toDate) {
+                                log(`   ${key}: ${value.toDate()}`);
+                            } else {
+                                log(`   ${key}: ${JSON.stringify(value)}`);
+                            }
+                        } else {
+                            log(`   ${key}: ${value}`);
+                        }
+                    });
+                    log('');
+                });
+                
+                if (docCount === 0) {
+                    log('❌ No documents found in register collection');
+                } else {
+                    log('✅ Debug complete! Look for the field that contains the student ID (like BS123, CS456, etc.)');
+                }
+                
+            } catch (error) {
+                log(`❌ Error debugging register collection: ${error.message}`);
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html> 

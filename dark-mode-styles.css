@@ -1,0 +1,517 @@
+/* Dark Mode Styles with Proper Sizing */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Base dark mode styles */
+.dark body {
+    background-color: #0f172a !important;
+    color: #f1f5f9 !important;
+}
+
+.dark .container {
+    background-color: #1e293b !important;
+}
+
+.dark .main-content {
+    background-color: #1e293b !important;
+}
+
+.dark #app {
+    background-color: #0f172a !important;
+    color: #f1f5f9 !important;
+}
+
+/* Dashboard Cards */
+.dark .stat-card {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+    border: 1px solid #475569 !important;
+    color: #f1f5f9 !important;
+}
+
+.dark .stat-title {
+    color: #e2e8f0 !important;
+}
+
+.dark .stat-number {
+    color: #60a5fa !important;
+}
+
+.dark .breakdown-label {
+    color: #94a3b8 !important;
+}
+
+.dark .breakdown-value {
+    color: #f1f5f9 !important;
+}
+
+.dark .breakdown-item {
+    border-bottom: 1px solid #475569 !important;
+}
+
+/* Table Styles */
+.dark .table-container {
+    background-color: #1e293b !important;
+    border: 1px solid #475569 !important;
+}
+
+.dark .table-header {
+    background-color: #334155 !important;
+    border-bottom: 1px solid #475569 !important;
+}
+
+.dark .table-header th {
+    color: #94a3b8 !important;
+    font-size: 11px !important; /* Fixed size */
+    padding: 8px 6px !important; /* Reduced padding */
+}
+
+.dark .table-body tr {
+    border-bottom: 1px solid #475569 !important;
+}
+
+.dark .table-body tr:hover {
+    background-color: #334155 !important;
+}
+
+.dark .table-body td {
+    color: #f1f5f9 !important;
+    font-size: 13px !important; /* Fixed size */
+    padding: 6px 6px !important; /* Reduced padding */
+}
+
+.dark .student-id {
+    color: #60a5fa !important;
+    font-size: 12px !important; /* Fixed size */
+}
+
+.dark .fullname {
+    color: #f1f5f9 !important;
+    font-size: 13px !important; /* Fixed size */
+}
+
+.dark .tariff {
+    color: #94a3b8 !important;
+    font-size: 12px !important; /* Fixed size */
+}
+
+/* Form Elements */
+.dark input,
+.dark select,
+.dark textarea {
+    background-color: #334155 !important;
+    border: 1px solid #475569 !important;
+    color: #f1f5f9 !important;
+    font-size: 14px !important; /* Fixed size */
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2) !important;
+}
+
+.dark input::placeholder,
+.dark select::placeholder,
+.dark textarea::placeholder {
+    color: #64748b !important;
+}
+
+.dark .search-bar {
+    background-color: #334155 !important;
+    border: 1px solid #475569 !important;
+    color: #f1f5f9 !important;
+    font-size: 14px !important; /* Fixed size */
+    padding: 10px 14px !important; /* Reduced padding */
+}
+
+.dark .search-bar:focus {
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2) !important;
+}
+
+/* Buttons */
+.dark .submit-button {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+}
+
+.dark .retry-button {
+    background-color: #3b82f6 !important;
+}
+
+.dark .retry-button:hover {
+    background-color: #2563eb !important;
+}
+
+/* Typography */
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+    color: #f1f5f9 !important;
+}
+
+.dark .title {
+    color: #f1f5f9 !important;
+    font-size: 24px !important; /* Fixed size */
+}
+
+.dark .subtitle {
+    color: #94a3b8 !important;
+    font-size: 14px !important; /* Fixed size */
+}
+
+/* Loading States */
+.dark .loading {
+    color: #94a3b8 !important;
+}
+
+.dark .loading-spinner {
+    border-color: #475569 !important;
+    border-top-color: #60a5fa !important;
+}
+
+/* Error States */
+.dark .error-state {
+    color: #f87171 !important;
+}
+
+/* Sidebar */
+.dark .modern-sidebar {
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
+    border-right: 1px solid #475569 !important;
+}
+
+.dark .sidebar {
+    background-color: #1e293b !important;
+}
+
+.dark .sidebar-logo {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+}
+
+.dark .nav-item {
+    color: #94a3b8 !important;
+}
+
+.dark .nav-item:hover {
+    color: #f1f5f9 !important;
+}
+
+.dark .nav-item.active {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+    color: #ffffff !important;
+}
+
+/* Status Snippets */
+.dark .status-snippet.full {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: #ffffff !important;
+}
+
+.dark .status-snippet.partial {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    color: #ffffff !important;
+}
+
+.dark .status-snippet.debt {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    color: #ffffff !important;
+}
+
+.dark .status-snippet.no-debt {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: #ffffff !important;
+}
+
+/* Amount Colors */
+.dark .amount.paid {
+    color: #34d399 !important;
+}
+
+.dark .amount.debt {
+    color: #f87171 !important;
+}
+
+.dark .amount.no-debt {
+    color: #34d399 !important;
+}
+
+/* Modal */
+.dark .modal {
+    background-color: #1e293b !important;
+    border: 1px solid #475569 !important;
+}
+
+.dark .modal-overlay {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Accordion */
+.dark .accordion-container {
+    background-color: #1e293b !important;
+    border: 1px solid #475569 !important;
+}
+
+.dark .accordion-header {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+}
+
+.dark .accordion-content {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+}
+
+/* Toast Notifications */
+.dark .toast.success {
+    background: linear-gradient(45deg, #10b981, #059669) !important;
+}
+
+.dark .toast.error {
+    background: linear-gradient(45deg, #ef4444, #dc2626) !important;
+}
+
+/* Scrollbar */
+.dark ::-webkit-scrollbar {
+    width: 8px !important;
+    height: 8px !important;
+}
+
+.dark ::-webkit-scrollbar-track {
+    background: #1e293b !important;
+    border-radius: 4px !important;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: #475569 !important;
+    border-radius: 4px !important;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #64748b !important;
+}
+
+/* Borders */
+.dark hr {
+    border-color: #475569 !important;
+}
+
+.dark .border {
+    border-color: #475569 !important;
+}
+
+.dark .border-t {
+    border-top-color: #475569 !important;
+}
+
+.dark .border-b {
+    border-bottom-color: #475569 !important;
+}
+
+.dark .border-l {
+    border-left-color: #475569 !important;
+}
+
+.dark .border-r {
+    border-right-color: #475569 !important;
+}
+
+/* Background overrides */
+.dark .bg-white {
+    background-color: #1e293b !important;
+}
+
+.dark .bg-gray-50 {
+    background-color: #0f172a !important;
+}
+
+.dark .bg-gray-100 {
+    background-color: #1e293b !important;
+}
+
+.dark .bg-gray-200 {
+    background-color: #334155 !important;
+}
+
+/* Text color overrides */
+.dark .text-gray-900 {
+    color: #f1f5f9 !important;
+}
+
+.dark .text-gray-800 {
+    color: #e2e8f0 !important;
+}
+
+.dark .text-gray-700 {
+    color: #cbd5e1 !important;
+}
+
+.dark .text-gray-600 {
+    color: #94a3b8 !important;
+}
+
+.dark .text-gray-500 {
+    color: #64748b !important;
+}
+
+/* Shadow overrides */
+.dark .shadow {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark .shadow-lg {
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark .shadow-xl {
+    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Card specific styles */
+.dark .payment-card {
+    background-color: #1e293b !important;
+    border: 1px solid #475569 !important;
+}
+
+.dark .student-card {
+    background-color: #1e293b !important;
+    border: 1px solid #475569 !important;
+}
+
+.dark .fee-card {
+    background-color: #1e293b !important;
+    border: 1px solid #475569 !important;
+}
+
+/* Dark mode toggle button positioning and styling */
+#dark-mode-toggle {
+    position: fixed !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    z-index: 9999 !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+}
+
+.dark #dark-mode-toggle {
+    background: #374151 !important;
+    border-color: #6b7280 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Responsive sizing fixes */
+@media (max-width: 768px) {
+    .dark .title {
+        font-size: 20px !important;
+    }
+    
+    .dark .subtitle {
+        font-size: 12px !important;
+    }
+    
+    .dark .table-header th {
+        font-size: 10px !important;
+        padding: 6px 4px !important;
+    }
+    
+    .dark .table-body td {
+        font-size: 11px !important;
+        padding: 4px 4px !important;
+    }
+    
+    .dark .search-bar {
+        font-size: 12px !important;
+        padding: 8px 12px !important;
+    }
+    
+    #dark-mode-toggle {
+        width: 36px !important;
+        height: 36px !important;
+        bottom: 16px !important;
+        right: 16px !important;
+    }
+}
+
+/* Icon sizing fixes */
+.nav-icon {
+    width: 18px !important;
+    height: 18px !important;
+}
+
+.accordion-icon {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+/* Form input sizing */
+.fee-input {
+    font-size: 11px !important;
+    padding: 3px 5px !important;
+    width: 80px !important;
+}
+
+.save-btn {
+    font-size: 9px !important;
+    padding: 3px 6px !important;
+}
+
+/* Table column width fixes */
+.student-id {
+    width: 70px !important;
+    max-width: 70px !important;
+}
+
+.fullname {
+    min-width: 180px !important;
+    max-width: 250px !important;
+}
+
+.phone-col,
+.tariff-col,
+.education-col,
+.passport-col {
+    width: 100px !important;
+    max-width: 100px !important;
+    font-size: 12px !important;
+}
+
+.university-col {
+    width: 120px !important;
+    max-width: 120px !important;
+}
+
+.fee-input-col {
+    width: 90px !important;
+    max-width: 90px !important;
+}
+
+.action-col {
+    width: 70px !important;
+    max-width: 70px !important;
+}
+
+/* Compact table styling */
+.table-container {
+    font-size: 13px !important;
+}
+
+.table-header th {
+    padding: 8px 6px !important;
+    font-size: 11px !important;
+}
+
+.table-body td {
+    padding: 6px 6px !important;
+    font-size: 12px !important;
+} 

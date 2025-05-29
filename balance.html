@@ -1,0 +1,2331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Balance - UniApp</title>
+    <link href="./dist/output.css" rel="stylesheet">
+    <link href="./dark-mode-styles.css" rel="stylesheet">
+    <link href="./sizing-fixes.css" rel="stylesheet">
+    <script src="./dark-mode.js"></script>
+    <script src="./auth.js"></script>
+    <script src="./audit-logger.js"></script>
+    <script src="./config.js"></script>
+    <script src="./apps-script-integration.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Modern Sidebar Styles */
+        .flex {
+            display: flex;
+        }
+
+        .h-screen {
+            height: 100vh;
+        }
+
+        .modern-sidebar {
+            width: 70px;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modern-sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        }
+
+        .sidebar-header {
+            padding: 20px 0;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-logo:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .sidebar-nav {
+            padding: 0 12px;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 120px);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 46px;
+            height: 46px;
+            margin: 0 auto 12px;
+            border-radius: 14px;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-item:hover::before {
+            opacity: 1;
+        }
+
+        .nav-item:hover {
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .nav-item.active::before {
+            opacity: 0;
+        }
+
+        .nav-item.active:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .logout-btn {
+            color: #ef4444 !important;
+            margin-top: auto;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.1) !important;
+            color: #ef4444 !important;
+        }
+
+        .nav-icon {
+            width: 22px;
+            height: 22px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item:hover .nav-icon {
+            transform: scale(1.1);
+        }
+
+        /* Tooltip styles */
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 65px;
+            top: 50%;
+            transform: translateY(-50%) translateX(-8px) scale(0.8);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.92) 0%, rgba(20, 20, 20, 0.95) 100%);
+            color: white;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 10000;
+            pointer-events: none;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4), 0 3px 10px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-width: max-content;
+        }
+
+        /* Arrow for tooltip */
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 58px;
+            top: 50%;
+            transform: translateY(-50%) translateX(-8px) scale(0.8);
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid rgba(0, 0, 0, 0.92);
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 10001;
+            pointer-events: none;
+        }
+
+        .nav-item:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(-50%) translateX(0) scale(1);
+            transition-delay: 0.1s;
+        }
+
+        .nav-item:hover::before {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(-50%) translateX(0) scale(1);
+            transition-delay: 0.1s;
+        }
+
+        /* Enhanced hover animation */
+        .nav-item:hover {
+            transform: translateY(-1px);
+        }
+
+        .nav-item:hover .nav-icon {
+            transform: scale(1.1) rotate(2deg);
+        }
+
+        .flex-1 {
+            flex: 1 1 0%;
+        }
+
+        .overflow-auto {
+            overflow: auto;
+        }
+
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 24px 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .student-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .student-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 700;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .student-details h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .student-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .back-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        /* Stats Cards */
+        .stats-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .balance-column,
+        .appfee-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-change {
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-positive {
+            color: #10b981;
+        }
+
+        .stat-negative {
+            color: #ef4444;
+        }
+
+        .stat-neutral {
+            color: #3b82f6;
+        }
+
+        /* Chart Section */
+        .chart-section {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+            height: fit-content;
+        }
+
+        .quick-actions h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1e293b;
+        }
+
+        .action-button {
+            width: 100%;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .action-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .action-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .action-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .action-secondary:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+
+        /* Payment History */
+        .payment-history {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+
+        .history-header {
+            padding: 24px 30px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .history-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .history-subtitle {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .history-content {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .payment-item {
+            padding: 20px 30px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .payment-item:hover {
+            background: #f8fafc;
+        }
+
+        .payment-item:last-child {
+            border-bottom: none;
+        }
+
+        .payment-details {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .payment-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .payment-icon.income {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .payment-info h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .payment-meta {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .payment-amount {
+            text-align: right;
+        }
+
+        .amount-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #10b981;
+            margin-bottom: 4px;
+        }
+
+        .amount-date {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        /* Loading States */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 24px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+
+        .close-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            font-size: 16px;
+            background: white;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .submit-button {
+            width: 100%;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            border-left: 4px solid #10b981;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.4s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            border-left-color: #ef4444;
+        }
+
+        .toast.warning {
+            border-left-color: #f59e0b;
+        }
+
+        /* Dark Mode */
+        .dark body {
+            background-color: #0f172a !important;
+            color: #f1f5f9 !important;
+        }
+
+        .dark .stat-card,
+        .dark .chart-section,
+        .dark .quick-actions,
+        .dark .payment-history,
+        .dark .modal-content {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+        }
+
+        .dark .stat-label,
+        .dark .payment-meta,
+        .dark .history-subtitle {
+            color: #94a3b8 !important;
+        }
+
+        .dark .stat-value,
+        .dark .chart-title,
+        .dark .history-title {
+            color: #f1f5f9 !important;
+        }
+
+        /* Dark mode overrides for inline styled elements */
+        .dark #totalPaid {
+            color: #10b981 !important;
+        }
+
+        .dark #paymentProgress {
+            color: #94a3b8 !important;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .modern-sidebar {
+                width: 60px;
+            }
+            
+            .sidebar-logo {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            
+            .nav-item {
+                width: 42px;
+                height: 42px;
+            }
+            
+            .nav-icon {
+                width: 20px;
+                height: 20px;
+            }
+            
+            .container {
+                padding: 16px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .student-info {
+                flex-direction: column;
+            }
+            
+            .student-avatar {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+            
+            .student-details h1 {
+                font-size: 24px;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .stats-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .payment-item {
+                padding: 16px 20px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            
+            .payment-amount {
+                text-align: left;
+                width: 100%;
+            }
+        }
+
+        .clickable-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .clickable-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .dark .history-header {
+            background: #334155 !important;
+            border-bottom: 1px solid #475569 !important;
+        }
+
+        /* Flash animation for updated elements */
+        .updated-flash {
+            animation: flashUpdate 1s ease-in-out;
+        }
+        
+        @keyframes flashUpdate {
+            0% { background-color: rgba(52, 199, 89, 0.2); }
+            50% { background-color: rgba(52, 199, 89, 0.4); }
+            100% { background-color: transparent; }
+        }
+        
+        /* Balance status colors */
+        .balance-positive {
+            color: #34c759 !important;
+        }
+        
+        .balance-negative {
+            color: #ff3b30 !important;
+        }
+        
+        .balance-zero {
+            color: #8e8e93 !important;
+        }
+        
+        /* Empty history state */
+        .empty-history {
+            text-align: center;
+            padding: 40px 20px;
+            color: #8e8e93;
+        }
+        
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        /* Tooltip styles - Enhanced */
+        .modern-sidebar .nav-item {
+            position: relative;
+        }
+
+        .modern-sidebar .nav-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 65px;
+            top: 50%;
+            transform: translateY(-50%) translateX(-8px) scale(0.8);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(30, 30, 30, 0.98) 100%);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 10000;
+            pointer-events: none;
+            box-shadow: 
+                0 12px 35px rgba(0, 0, 0, 0.5), 
+                0 5px 15px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            min-width: max-content;
+            letter-spacing: 0.3px;
+        }
+
+        /* Arrow for tooltip - Enhanced */
+        .modern-sidebar .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 57px;
+            top: 50%;
+            transform: translateY(-50%) translateX(-8px) scale(0.8);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid rgba(0, 0, 0, 0.95);
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 10001;
+            pointer-events: none;
+            filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.3));
+        }
+
+        .modern-sidebar .nav-item:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(-50%) translateX(0) scale(1);
+            transition-delay: 0.15s;
+        }
+
+        .modern-sidebar .nav-item:hover::before {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(-50%) translateX(0) scale(1);
+            transition-delay: 0.15s;
+        }
+
+        /* Enhanced hover animation */
+        .modern-sidebar .nav-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .modern-sidebar .nav-item:hover .nav-icon {
+            transform: scale(1.15) rotate(3deg);
+        }
+    </style>
+</head>
+<body class="bg-gray-30 dark:bg-gray-900 transition-colors duration-300">
+    <div class="flex h-screen">
+        <!-- Modern Sidebar -->
+        <div class="modern-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">UA</div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="index.html" class="nav-item" data-tooltip="Dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                    </svg>
+                </a>
+                <a href="register.html" class="nav-item" data-tooltip="Register Student">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+                <a href="studentlist.html" class="nav-item" data-tooltip="Student List">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                    </svg>
+                </a>
+                <a href="payments.html" class="nav-item" data-tooltip="Payments">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                        <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+                <a href="appfee.html" class="nav-item" data-tooltip="Application Fee">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+                
+                <!-- Single Logout Button -->
+                
+            </nav>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <div class="container">
+                <!-- Header Section -->
+                <div class="header">
+                    <div class="header-content">
+                        <div class="student-info">
+                            <div class="student-avatar" id="studentAvatar">S</div>
+                            <div class="student-details">
+                                <h1 id="studentName">Loading...</h1>
+                                <div class="student-meta">
+                                    <span id="studentId">ID: ---</span>
+                                    <span id="studentTariff">Tariff: ---</span>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="payments.html" class="back-button">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="m12 19-7-7 7-7"/>
+                                <path d="M19 12H5"/>
+                            </svg>
+                            Back to Payments
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Dashboard Grid -->
+                <div class="dashboard-grid">
+                    <!-- Stats Section -->
+                    <div class="stats-section">
+                        <!-- Balance Column -->
+                        <div class="balance-column">
+                            <div class="stat-card">
+                                <div class="stat-label">Current Balance</div>
+                                <div class="stat-value" id="currentBalance" data-field="currentBalance">$0</div>
+                                <div class="stat-change">
+                                    <span id="balanceStatus">Student Balance</span>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card clickable-card" onclick="openDiscountModal()">
+                                <div class="stat-label">Discount Applied</div>
+                                <div class="stat-value stat-positive" id="totalDiscount" data-field="discount">$0</div>
+                                <div class="stat-change stat-positive">
+                                    <span id="discountReason">Service discount</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- App Fee Column -->
+                        <div class="appfee-column">
+                            <div class="stat-card">
+                                <div class="stat-label" id="appFee1Label">University 1 Fee</div>
+                                <div class="stat-value stat-neutral" id="appFee1">$0</div>
+                                <div class="stat-change stat-neutral">
+                                    <span id="appFee1Status">Application fee</span>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="stat-label" id="appFee2Label">University 2 Fee</div>
+                                <div class="stat-value stat-neutral" id="appFee2">$0</div>
+                                <div class="stat-change stat-neutral">
+                                    <span id="appFee2Status">Application fee</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <h3>Quick Actions</h3>
+                        <button class="action-button action-primary" onclick="openPaymentModal()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="1" y="5" width="22" height="14" rx="3" ry="3"/>
+                                <line x1="1" y1="10" x2="23" y2="10"/>
+                            </svg>
+                            Add Service Payment
+                        </button>
+                        <button class="action-button action-secondary" onclick="openAppFeeModal()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14,2 14,8 20,8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                                <polyline points="10,9 9,9 8,9"/>
+                            </svg>
+                            Add App Fee Payment
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Payment History Section -->
+                <div class="payment-history">
+                    <div class="history-header">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px;">
+                            <h3 class="history-title">Service Payment History</h3>
+                            <div style="text-align: right;">
+                                <div style="font-size: 24px; font-weight: 700; color: #10b981; margin-bottom: 4px;" id="totalPaid">$0</div>
+                                <div style="font-size: 14px; color: #64748b;" id="paymentProgress">Service payments</div>
+                            </div>
+                        </div>
+                        <p class="history-subtitle">Recent service payment transactions and balance updates</p>
+                    </div>
+                    <div class="history-content" id="paymentHistoryContent">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            <p>Loading payment history...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Modal -->
+            <div id="paymentModal" class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Add Service Payment</h3>
+                        <button class="close-button" onclick="closePaymentModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="paymentForm" onsubmit="submitPayment(event)">
+                            <div class="form-group">
+                                <label class="form-label">Payment Amount</label>
+                                <input type="text" id="paymentAmount" class="form-input" placeholder="Enter service payment amount" required inputmode="numeric" pattern="[0-9,]*">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Payment Method</label>
+                                <select id="paymentMethod" class="form-select" required>
+                                    <option value="">Select payment method</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Card M.A">Card M.A</option>
+                                    <option value="Card J.A">Card J.A</option>
+                                    <option value="Bank transfer">Bank transfer</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Received By</label>
+                                <select id="receivedBy" class="form-select" required>
+                                    <option value="">Select receiver</option>
+                                    <option value="M.Ali">M.Ali</option>
+                                    <option value="Azizbek">Azizbek</option>
+                                    <option value="Khayitxon">Khayitxon</option>
+                                    <option value="Jasurbek">Jasurbek</option>
+                                    <option value="Admin">Admin</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="submit-button" id="submitButton">
+                                Save Service Payment
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Discount Modal -->
+            <div id="discountModal" class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Apply Service Discount</h3>
+                        <button class="close-button" onclick="closeDiscountModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="discountForm" onsubmit="submitDiscount(event)">
+                            <div class="form-group">
+                                <label class="form-label">Discount Amount</label>
+                                <input type="text" id="discountAmount" class="form-input" placeholder="Enter discount amount" required inputmode="numeric" pattern="[0-9,]*">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Reason for Discount</label>
+                                <textarea id="discountReasonInput" class="form-input" placeholder="Enter reason for applying this discount..." required rows="3" style="resize: vertical; min-height: 80px;"></textarea>
+                            </div>
+                            <div style="display: flex; gap: 12px;">
+                                <button type="submit" class="submit-button" id="discountSubmitButton" style="flex: 1;">
+                                    Save Discount
+                                </button>
+                                <button type="button" class="submit-button" onclick="closeDiscountModal()" style="flex: 1; background: #6b7280; color: white;">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- App Fee Modal -->
+            <div id="appFeeModal" class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Add Application Fee Payment</h3>
+                        <button class="close-button" onclick="closeAppFeeModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="appFeeForm" onsubmit="submitAppFee(event)">
+                            <div class="form-group">
+                                <label class="form-label">University</label>
+                                <select id="appFeeUniversity" class="form-select" required>
+                                    <option value="">Select university</option>
+                                    <option value="university1">University 1</option>
+                                    <option value="university2">University 2</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Fee Amount</label>
+                                <input type="text" id="appFeeAmount" class="form-input" placeholder="Enter fee amount" required inputmode="numeric" pattern="[0-9,]*">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Payment Method</label>
+                                <select id="appFeePaymentMethod" class="form-select" required>
+                                    <option value="">Select payment method</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Card M.A">Card M.A</option>
+                                    <option value="Card J.A">Card J.A</option>
+                                    <option value="Bank transfer">Bank transfer</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Received By</label>
+                                <select id="appFeeReceivedBy" class="form-select" required>
+                                    <option value="">Select receiver</option>
+                                    <option value="M.Ali">M.Ali</option>
+                                    <option value="Azizbek">Azizbek</option>
+                                    <option value="Khayitxon">Khayitxon</option>
+                                    <option value="Jasurbek">Jasurbek</option>
+                                    <option value="Admin">Admin</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; gap: 12px;">
+                                <button type="submit" class="submit-button" id="appFeeSubmitButton" style="flex: 1;">
+                                    Save App Fee Payment
+                                </button>
+                                <button type="button" class="submit-button" onclick="closeAppFeeModal()" style="flex: 1; background: #6b7280; color: white;">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toast Container -->
+            <div class="toast-container" id="toastContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let studentData = null;
+        let paymentHistory = [];
+        let db = null;
+        let currentStudentId = null;
+        let chart = null;
+
+        // Get student ID from URL parameters
+        function getStudentIdFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('studentId');
+        }
+
+        // Initialize the application
+        async function initializeApp() {
+            console.log('🔄 Initializing Balance System...');
+            
+            // Get student ID from URL
+            currentStudentId = getStudentIdFromURL();
+            if (!currentStudentId) {
+                showToast('error', 'Error', 'No student ID provided');
+                setTimeout(() => {
+                    window.location.href = 'payments.html';
+                }, 2000);
+                return;
+            }
+            
+            try {
+                // Import Firebase
+                const { initializeApp } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js');
+                const { getFirestore } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                
+                // Firebase config
+                const firebaseConfig = {
+                    apiKey: "AIzaSyDtc3StzPcG7oivivYlXnKrR6S0c0xelJg",
+                    authDomain: "uniuni-dd4af.firebaseapp.com",
+                    projectId: "uniuni-dd4af",
+                    storageBucket: "uniuni-dd4af.firebasestorage.app",
+                    messagingSenderId: "583982319464",
+                    appId: "1:583982319464:web:ed3021724ef42f196df8dd"
+                };
+                
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                
+                console.log('✅ Firebase initialized successfully');
+                
+                // Initialize audit logger
+                if (window.auditLogger) {
+                    await window.auditLogger.initialize(db);
+                    window.auditLogger.setCurrentUser('admin');
+                    console.log('✅ Audit Logger initialized');
+                }
+                
+                // Load student data
+                await loadStudentData();
+                
+            } catch (error) {
+                console.error('❌ Error initializing app:', error);
+                showToast('error', 'Initialization Failed', error.message);
+            }
+        }
+
+        // Load student data and payment history
+        async function loadStudentData() {
+            try {
+                console.log(`🔍 Loading data for student: ${currentStudentId}`);
+                
+                const { doc, getDoc, collection, getDocs, orderBy, query, onSnapshot } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                
+                // Set up real-time listener for payment document
+                const paymentDocId = `${currentStudentId}payments`;
+                const paymentDocRef = doc(db, "payments", paymentDocId);
+                
+                console.log(`📄 Setting up payment document listener for: ${paymentDocId}`);
+                
+                // Real-time listener for payment data
+                onSnapshot(paymentDocRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const newData = docSnap.data();
+                        
+                        // Update student data if it changed
+                        if (!studentData || JSON.stringify(studentData) !== JSON.stringify(newData)) {
+                            console.log('💫 Payment data updated, refreshing UI...');
+                            studentData = { ...newData, studentId: currentStudentId };
+                            updateStudentPaymentData();
+                        }
+                    } else {
+                        console.log('⚠️ Payment document does not exist for student:', currentStudentId);
+                    }
+                });
+                
+                // Set up real-time listener for application fee data
+                const appFeeDocId = `${currentStudentId}appfee`;
+                const appFeeDocRef = doc(db, "appfee", appFeeDocId);
+                
+                console.log(`📄 Setting up app fee document listener for: ${appFeeDocId}`);
+                
+                onSnapshot(appFeeDocRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const newAppFeeData = docSnap.data();
+                        
+                        // Initialize studentData if it doesn't exist yet
+                        if (!studentData) {
+                            studentData = { studentId: currentStudentId };
+                        }
+                        
+                        // Update app fee data if it changed
+                        const currentAppFee1 = studentData.appFee1 || 0;
+                        const currentAppFee2 = studentData.appFee2 || 0;
+                        const newAppFee1 = newAppFeeData.pay1 || 0;
+                        const newAppFee2 = newAppFeeData.pay2 || 0;
+                        
+                        if (currentAppFee1 !== newAppFee1 || currentAppFee2 !== newAppFee2) {
+                            console.log('💫 App fee data updated, refreshing UI...');
+                            
+                            // Update app fee data
+                            studentData.appFee1 = newAppFee1;
+                            studentData.appFee2 = newAppFee2;
+                            studentData.appFee1Date = newAppFeeData.pay1Date || null;
+                            studentData.appFee2Date = newAppFeeData.pay2Date || null;
+                            studentData.appFee1Method = newAppFeeData.pay1Method || null;
+                            studentData.appFee2Method = newAppFeeData.pay2Method || null;
+                            studentData.appFee1ReceivedBy = newAppFeeData.pay1ReceivedBy || null;
+                            studentData.appFee2ReceivedBy = newAppFeeData.pay2ReceivedBy || null;
+                            
+                            // Update only app fee UI
+                            updateAppFeeDisplay();
+                        }
+                    } else {
+                        console.log('⚠️ App fee document does not exist for student:', currentStudentId);
+                    }
+                });
+                
+                // Set up real-time listener for payment history
+                const paymentHistoryRef = collection(paymentDocRef, "paymentHistory");
+                const historyQuery = query(paymentHistoryRef, orderBy("timestamp", "desc"));
+                
+                console.log(`📋 Setting up payment history listener for: ${paymentDocId}/paymentHistory`);
+                
+                onSnapshot(historyQuery, (snapshot) => {
+                    const newPaymentHistory = [];
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        newPaymentHistory.push({
+                            id: doc.id,
+                            timestamp: data.timestamp,
+                            amount: data.amount || 0,
+                            paymentMethod: data.paymentMethod || 'N/A',
+                            receivedBy: data.receivedBy || 'N/A'
+                        });
+                    });
+                    
+                    console.log(`📋 Payment history loaded: ${newPaymentHistory.length} records for student ${currentStudentId}`);
+                    
+                    // Always update payment history (even if empty or unchanged)
+                    paymentHistory = newPaymentHistory;
+                    updatePaymentHistory();
+                    updateStatistics(); // Update statistics as well since totals might have changed
+                }, (error) => {
+                    console.error('❌ Error in payment history listener:', error);
+                    // Show empty state on error
+                    paymentHistory = [];
+                    updatePaymentHistory();
+                });
+                
+                // Initial data load (for register data which doesn't need real-time updates)
+                await loadInitialStaticData();
+                
+            } catch (error) {
+                console.error('❌ Error setting up real-time listeners:', error);
+                showToast('error', 'Error', 'Failed to setup real-time updates: ' + error.message);
+            }
+        }
+
+        // Load initial static data (register data, university names)
+        async function loadInitialStaticData() {
+            try {
+                const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                
+                // Initialize studentData if it doesn't exist
+                if (!studentData) {
+                    studentData = { studentId: currentStudentId };
+                    console.log('📋 Initialized empty studentData object');
+                }
+                
+                // Load student register data to get university names
+                const registerDocId = currentStudentId + 'reg';
+                const registerDocRef = doc(db, "register", registerDocId);
+                const registerSnap = await getDoc(registerDocRef);
+                
+                let registerData = {};
+                if (registerSnap.exists()) {
+                    registerData = registerSnap.data();
+                    console.log('📋 Register data loaded:', registerData);
+                } else {
+                    console.log('⚠️ No register document found for student:', currentStudentId);
+                }
+                
+                // Get university names from register data - with null safety
+                if (!studentData.university1Name) {
+                    studentData.university1Name = registerData.university1 || 'University 1';
+                }
+                if (!studentData.university2Name) {
+                    studentData.university2Name = registerData.university2 || 'University 2';
+                }
+                
+                console.log('✅ Initial data loaded successfully');
+                
+                // Update UI with initial data - only if studentData has required fields
+                if (studentData.fullname) {
+                    updateStudentInfo();
+                    updateStatistics();
+                    updatePaymentHistory();
+                    updateAppFeeDisplay();
+                } else {
+                    console.log('⏳ Waiting for payment data to load before updating UI...');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error loading initial data:', error);
+                showToast('error', 'Error', 'Failed to load initial data: ' + error.message);
+            }
+        }
+
+        // Update student information in header
+        function updateStudentInfo() {
+            // Add null safety check
+            if (!studentData) {
+                console.log('⏳ updateStudentInfo: studentData not available yet');
+                return;
+            }
+            
+            const avatar = document.getElementById('studentAvatar');
+            const name = document.getElementById('studentName');
+            const id = document.getElementById('studentId');
+            const tariff = document.getElementById('studentTariff');
+            
+            const fullname = studentData.fullname || 'Unknown Student';
+            const tariffName = studentData.tariff || 'N/A';
+            const tariffAmount = studentData.serviceTariff || studentData.payment || 0;
+            
+            if (avatar) avatar.textContent = fullname.charAt(0).toUpperCase();
+            if (name) name.textContent = fullname;
+            if (id) id.textContent = `ID: ${currentStudentId}`;
+            if (tariff) tariff.textContent = `Tariff: ${tariffName} (${formatCurrency(tariffAmount)})`;
+        }
+
+        // Update only student payment data section
+        function updateStudentPaymentData() {
+            updateStudentInfo();
+            updateStatistics();
+            updateAppFeeDisplay(); // Ensure app fee display is updated with university names
+        }
+
+        // Update only application fee display
+        function updateAppFeeDisplay() {
+            if (!studentData) return;
+            
+            // Get university names
+            const university1Name = studentData.university1Name || 'University 1';
+            const university2Name = studentData.university2Name || 'University 2';
+            
+            // Update labels with actual university names
+            const appFee1Label = document.getElementById('appFee1Label');
+            const appFee2Label = document.getElementById('appFee2Label');
+            const appFee1Status = document.getElementById('appFee1Status');
+            const appFee2Status = document.getElementById('appFee2Status');
+            
+            if (appFee1Label) {
+                appFee1Label.textContent = `${university1Name} (APPFEE)`;
+            }
+            if (appFee2Label) {
+                appFee2Label.textContent = `${university2Name} (APPFEE)`;
+            }
+            
+            // Update status text with payment details only
+            if (appFee1Status) {
+                const fee1Amount = studentData.appFee1 || 0;
+                if (fee1Amount > 0) {
+                    // Show detailed payment info if payment exists
+                    const paymentDetails = [];
+                    if (studentData.appFee1Date) {
+                        paymentDetails.push(formatAppFeeDate(studentData.appFee1Date));
+                    }
+                    if (studentData.appFee1ReceivedBy) {
+                        paymentDetails.push(`Received by ${studentData.appFee1ReceivedBy}`);
+                    }
+                    if (studentData.appFee1Method) {
+                        paymentDetails.push(studentData.appFee1Method);
+                    }
+                    
+                    const detailsText = paymentDetails.length > 0 ? paymentDetails.join(', ') : '';
+                    appFee1Status.innerHTML = `<small style="font-size: 12px; color: #94a3b8;">${detailsText}</small>`;
+                } else {
+                    appFee1Status.textContent = 'Not payed yet';
+                }
+            }
+            
+            if (appFee2Status) {
+                const fee2Amount = studentData.appFee2 || 0;
+                if (fee2Amount > 0) {
+                    // Show detailed payment info if payment exists
+                    const paymentDetails = [];
+                    if (studentData.appFee2Date) {
+                        paymentDetails.push(formatAppFeeDate(studentData.appFee2Date));
+                    }
+                    if (studentData.appFee2ReceivedBy) {
+                        paymentDetails.push(`Received by ${studentData.appFee2ReceivedBy}`);
+                    }
+                    if (studentData.appFee2Method) {
+                        paymentDetails.push(studentData.appFee2Method);
+                    }
+                    
+                    const detailsText = paymentDetails.length > 0 ? paymentDetails.join(', ') : '';
+                    appFee2Status.innerHTML = `<small style="font-size: 12px; color: #94a3b8;">${detailsText}</small>`;
+                } else {
+                    appFee2Status.textContent = 'Not payed yet';
+                }
+            }
+            
+            // Update fee amounts with UZS currency
+            const appFee1Element = document.getElementById('appFee1');
+            const appFee2Element = document.getElementById('appFee2');
+            
+            if (appFee1Element) {
+                const amount = studentData.appFee1 || 0;
+                appFee1Element.textContent = amount > 0 ? `${formatCurrency(amount)} UZS` : '0 UZS';
+                appFee1Element.classList.add('updated-flash');
+                setTimeout(() => appFee1Element.classList.remove('updated-flash'), 1000);
+            }
+            
+            if (appFee2Element) {
+                const amount = studentData.appFee2 || 0;
+                appFee2Element.textContent = amount > 0 ? `${formatCurrency(amount)} UZS` : '0 UZS';
+                appFee2Element.classList.add('updated-flash');
+                setTimeout(() => appFee2Element.classList.remove('updated-flash'), 1000);
+            }
+        }
+
+        // Update payment history display
+        function updatePaymentHistory() {
+            console.log('🔄 Updating payment history display...');
+            const historyContainer = document.getElementById('paymentHistoryContent');
+            
+            if (!historyContainer) {
+                console.error('❌ Payment history container not found!');
+                return;
+            }
+            
+            console.log(`📋 Displaying ${paymentHistory ? paymentHistory.length : 0} payment records`);
+            
+            if (!paymentHistory || paymentHistory.length === 0) {
+                historyContainer.innerHTML = `
+                    <div class="empty-history">
+                        <div class="empty-icon">📋</div>
+                        <p>No payment history available</p>
+                        <small style="color: #94a3b8; margin-top: 8px; display: block;">Student ID: ${currentStudentId || 'Unknown'}</small>
+                    </div>
+                `;
+                console.log('📋 Showing empty payment history state');
+                return;
+            }
+            
+            try {
+                const historyHTML = paymentHistory.map(payment => {
+                    const timestamp = payment.timestamp?.toDate() ? payment.timestamp.toDate() : new Date();
+                    return `
+                        <div class="payment-item" data-payment-id="${payment.id}">
+                            <div class="payment-details">
+                                <div class="payment-icon income">+</div>
+                                <div class="payment-info">
+                                    <h4>Service Payment</h4>
+                                    <div class="payment-meta">${payment.paymentMethod} • Received by ${payment.receivedBy}</div>
+                                </div>
+                            </div>
+                            <div class="payment-amount">
+                                <div class="amount-value">${formatCurrency(payment.amount)}</div>
+                                <div class="amount-date">${formatTimestamp(payment.timestamp)}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                historyContainer.innerHTML = historyHTML;
+                console.log('✅ Payment history displayed successfully');
+                
+            } catch (error) {
+                console.error('❌ Error displaying payment history:', error);
+                historyContainer.innerHTML = `
+                    <div class="empty-history">
+                        <div class="empty-icon">⚠️</div>
+                        <p>Error loading payment history</p>
+                        <small style="color: #ef4444; margin-top: 8px; display: block;">${error.message}</small>
+                    </div>
+                `;
+            }
+        }
+
+        // Enhanced updateStatistics function with selective updates
+        function updateStatistics() {
+            if (!studentData || !paymentHistory) return;
+            
+            // Calculate statistics - Fix: Use consistent field reference for service tariff
+            const serviceTariff = studentData.serviceTariff || studentData.payment || 0;
+            const discount = studentData.discount || 0;
+            const totalPayments = paymentHistory.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+            const initialBalance = -(serviceTariff - discount);
+            const currentBalance = initialBalance + totalPayments;
+            const amountDue = Math.abs(Math.min(0, currentBalance));
+            const totalAppFee = (studentData.appFee1 || 0) + (studentData.appFee2 || 0);
+            
+            // Update student data with calculated values
+            studentData.serviceTariff = serviceTariff;
+            studentData.totalPayments = totalPayments;
+            studentData.currentBalance = currentBalance;
+            studentData.amountDue = amountDue;
+            studentData.initialBalance = initialBalance;
+            
+            // Selectively update UI elements
+            const shouldPay = Math.max(serviceTariff - discount, 0); // Calculate what should actually be paid after discount
+            const progressPercentage = shouldPay > 0 ? Math.round((totalPayments / shouldPay) * 100) : 0;
+            
+            const updates = [
+                { selector: '[data-field="serviceTariff"]', value: formatCurrency(serviceTariff) },
+                { selector: '[data-field="discount"]', value: `${formatCurrency(discount)} UZS` },
+                { selector: '[data-field="totalPayments"]', value: formatCurrency(totalPayments) },
+                { selector: '[data-field="currentBalance"]', value: `${formatCurrency(currentBalance)} UZS` },
+                { selector: '[data-field="amountDue"]', value: formatCurrency(amountDue) },
+                { selector: '[data-field="totalAppFee"]', value: formatCurrency(totalAppFee) },
+                { selector: '#totalPaid', value: formatCurrency(totalPayments) },
+                { selector: '#paymentProgress', value: `${progressPercentage}% of required amount paid` }
+            ];
+            
+            updates.forEach(({ selector, value }) => {
+                const element = document.querySelector(selector);
+                if (element && element.textContent !== value) {
+                    element.textContent = value;
+                    element.classList.add('updated-flash');
+                    setTimeout(() => element.classList.remove('updated-flash'), 1000);
+                }
+            });
+            
+            // Update discount reason display
+            const discountReasonElement = document.getElementById('discountReason');
+            if (discountReasonElement) {
+                const discountReason = studentData.discountReason;
+                if (discountReason && discount > 0) {
+                    discountReasonElement.textContent = `Discount: ${discountReason}`;
+                } else {
+                    discountReasonElement.textContent = 'No discount applied';
+                }
+            }
+            
+            // Update balance status color
+            const balanceElement = document.querySelector('[data-field="currentBalance"]');
+            if (balanceElement) {
+                balanceElement.className = balanceElement.className.replace(/balance-\w+/g, '');
+                if (currentBalance > 0) {
+                    balanceElement.classList.add('balance-positive');
+                } else if (currentBalance < 0) {
+                    balanceElement.classList.add('balance-negative');
+                } else {
+                    balanceElement.classList.add('balance-zero');
+                }
+            }
+        }
+
+        // Modal functions
+        function openPaymentModal() {
+            document.getElementById('paymentModal').classList.add('active');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.remove('active');
+            document.getElementById('paymentForm').reset();
+        }
+
+        function openDiscountModal() {
+            document.getElementById('discountModal').classList.add('active');
+        }
+
+        function closeDiscountModal() {
+            document.getElementById('discountModal').classList.remove('active');
+            document.getElementById('discountForm').reset();
+        }
+
+        function openAppFeeModal() {
+            document.getElementById('appFeeModal').classList.add('active');
+            
+            // Update university options with actual names - with null safety
+            const universitySelect = document.getElementById('appFeeUniversity');
+            const university1Name = (studentData && studentData.university1Name) || 'University 1';
+            const university2Name = (studentData && studentData.university2Name) || 'University 2';
+            
+            universitySelect.innerHTML = `
+                <option value="">Select university</option>
+                <option value="university1">${university1Name}</option>
+                <option value="university2">${university2Name}</option>
+            `;
+        }
+
+        function closeAppFeeModal() {
+            document.getElementById('appFeeModal').classList.remove('active');
+            document.getElementById('appFeeForm').reset();
+        }
+
+        // Submit payment
+        async function submitPayment(event) {
+            event.preventDefault();
+            
+            const amount = parseThousands(document.getElementById('paymentAmount').value);
+            const method = document.getElementById('paymentMethod').value;
+            const receivedBy = document.getElementById('receivedBy').value;
+            const submitBtn = document.getElementById('submitButton');
+            
+            if (!amount || amount <= 0) {
+                showToast('warning', 'Invalid Amount', 'Please enter a valid payment amount');
+                return;
+            }
+            
+            if (amount < 1000) {
+                showToast('warning', 'Minimum Amount', 'Payment amount must be at least 1,000');
+                return;
+            }
+            
+            try {
+                submitBtn.textContent = 'Processing...';
+                submitBtn.disabled = true;
+                
+                const { doc, updateDoc, addDoc, collection, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                
+                const paymentDocId = `${currentStudentId}payments`;
+                const paymentDocRef = doc(db, "payments", paymentDocId);
+                
+                // Add to payment history
+                const paymentHistoryRef = collection(paymentDocRef, "paymentHistory");
+                await addDoc(paymentHistoryRef, {
+                    amount: amount,
+                    paymentMethod: method,
+                    receivedBy: receivedBy,
+                    timestamp: serverTimestamp()
+                });
+                
+                // Calculate new balance values
+                const newTotalPayments = (studentData.totalPayments || 0) + amount;
+                const serviceTariff = studentData.serviceTariff || studentData.payment || 0;
+                const discount = studentData.discount || 0;
+                const initialBalance = -(serviceTariff - discount);
+                const newCurrentBalance = initialBalance + newTotalPayments;
+                const newAmountDue = Math.abs(Math.min(0, newCurrentBalance));
+                
+                // Update main document with new balance calculations
+                await updateDoc(paymentDocRef, {
+                    paid: newTotalPayments, // Keep for compatibility
+                    currentBalance: newCurrentBalance,
+                    amountDue: newAmountDue,
+                    lastUpdated: serverTimestamp()
+                });
+                
+                // Log activity
+                if (window.auditLogger) {
+                    await window.auditLogger.logPayment(currentStudentId, studentData.fullname, {
+                        amount: amount,
+                        paymentMethod: method,
+                        receivedBy: receivedBy,
+                        paymentType: 'service',
+                        newBalance: newCurrentBalance
+                    });
+                }
+                
+                // Write to Google Sheets
+                if (window.appsScriptGoogleSheets) {
+                    try {
+                        await window.appsScriptGoogleSheets.writePaymentData(currentStudentId, studentData.fullname, {
+                            amount: amount,
+                            paymentMethod: method,
+                            receivedBy: receivedBy,
+                            remainingDebt: newCurrentBalance
+                        });
+                        console.log('Payment data written to Google Sheets:', {
+                            studentId: currentStudentId,
+                            amount: amount,
+                            method: method
+                        });
+                    } catch (sheetsError) {
+                        console.error('Error writing to Google Sheets:', sheetsError);
+                        // Don't fail the payment if Google Sheets fails
+                        showToast('warning', 'Google Sheets Warning', 'Payment saved but Google Sheets update failed');
+                    }
+                }
+                
+                showToast('success', 'Service Payment Saved!', `${formatCurrency(amount)} payment saved. New balance: ${formatCurrency(newCurrentBalance)}`);
+                
+                closePaymentModal();
+                await loadStudentData(); // Refresh data
+                
+            } catch (error) {
+                console.error('❌ Error saving payment:', error);
+                showToast('error', 'Payment Failed', 'Something went wrong. Please try again.');
+            } finally {
+                submitBtn.textContent = 'Save Service Payment';
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Submit discount
+        async function submitDiscount(event) {
+            event.preventDefault();
+            
+            const amount = parseThousands(document.getElementById('discountAmount').value);
+            const reasonElement = document.getElementById('discountReasonInput');
+            const reason = reasonElement ? reasonElement.value.trim() : '';
+            const submitBtn = document.getElementById('discountSubmitButton');
+            
+            if (!amount || amount <= 0) {
+                showToast('warning', 'Invalid Amount', 'Please enter a valid discount amount');
+                return;
+            }
+            
+            if (amount < 1000) {
+                showToast('warning', 'Minimum Amount', 'Discount amount must be at least 1,000');
+                return;
+            }
+            
+            if (!reason) {
+                showToast('warning', 'Missing Reason', 'Please provide a reason for the discount');
+                return;
+            }
+            
+            try {
+                submitBtn.textContent = 'Processing...';
+                submitBtn.disabled = true;
+                
+                const { doc, updateDoc, addDoc, collection, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                
+                const paymentDocId = `${currentStudentId}payments`;
+                const paymentDocRef = doc(db, "payments", paymentDocId);
+                
+                // Calculate new discount total
+                const currentDiscount = studentData.discount || 0;
+                const newTotalDiscount = currentDiscount + amount;
+                
+                // Add to discount history
+                const discountHistoryRef = collection(paymentDocRef, "discountHistory");
+                await addDoc(discountHistoryRef, {
+                    amount: amount,
+                    reason: reason,
+                    appliedBy: 'admin',
+                    timestamp: serverTimestamp()
+                });
+                
+                // Recalculate balance with new discount
+                const serviceTariff = studentData.serviceTariff || studentData.payment || 0;
+                const totalPayments = studentData.totalPayments || 0;
+                const initialBalance = -(serviceTariff - newTotalDiscount);
+                const newCurrentBalance = initialBalance + totalPayments;
+                
+                // Update main document
+                await updateDoc(paymentDocRef, {
+                    discount: newTotalDiscount,
+                    discountReason: reason,
+                    currentBalance: newCurrentBalance,
+                    lastUpdated: serverTimestamp()
+                });
+                
+                // Log activity
+                if (window.auditLogger && window.auditLogger.db) {
+                    try {
+                        const { collection, addDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                        
+                        const auditLogRef = collection(window.auditLogger.db, "auditLog");
+                        await addDoc(auditLogRef, {
+                            action: 'discount_applied',
+                            title: 'Service Discount Applied',
+                            description: `Discount of ${formatCurrency(amount)} applied to ${studentData.fullname} (ID: ${currentStudentId}). Reason: ${reason}`,
+                            studentId: currentStudentId,
+                            studentName: studentData.fullname,
+                            user: 'admin',
+                            timestamp: serverTimestamp(),
+                            metadata: {
+                                discountAmount: amount,
+                                reason: reason,
+                                newTotalDiscount: newTotalDiscount,
+                                newBalance: newCurrentBalance
+                            }
+                        });
+                        
+                        console.log('📝 Logged discount application:', currentStudentId);
+                    } catch (auditError) {
+                        console.error('❌ Error logging discount:', auditError);
+                    }
+                }
+                
+                showToast('success', 'Discount Applied!', `${formatCurrency(amount)} discount applied successfully`);
+                
+                closeDiscountModal();
+                await loadStudentData(); // Refresh data
+                
+            } catch (error) {
+                console.error('❌ Error applying discount:', error);
+                showToast('error', 'Discount Failed', 'Something went wrong. Please try again.');
+            } finally {
+                submitBtn.textContent = 'Save Discount';
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Submit app fee payment
+        async function submitAppFee(event) {
+            event.preventDefault();
+            
+            const university = document.getElementById('appFeeUniversity').value;
+            const amount = parseThousands(document.getElementById('appFeeAmount').value);
+            const method = document.getElementById('appFeePaymentMethod').value;
+            const receivedBy = document.getElementById('appFeeReceivedBy').value;
+            const submitBtn = document.getElementById('appFeeSubmitButton');
+            
+            if (!university) {
+                showToast('warning', 'Select University', 'Please select a university');
+                return;
+            }
+            
+            if (!amount || amount <= 0) {
+                showToast('warning', 'Invalid Amount', 'Please enter a valid fee amount');
+                return;
+            }
+            
+            if (amount < 1000) {
+                showToast('warning', 'Minimum Amount', 'Fee amount must be at least 1,000');
+                return;
+            }
+            
+            try {
+                submitBtn.textContent = 'Processing...';
+                submitBtn.disabled = true;
+                
+                const { doc, updateDoc, addDoc, collection, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+                
+                // Update application fee record
+                const appFeeDocId = `${currentStudentId}appfee`;
+                const appFeeDocRef = doc(db, "appfee", appFeeDocId);
+                
+                const updateData = {};
+                if (university === 'university1') {
+                    updateData.pay1 = amount;
+                    updateData.pay1Date = serverTimestamp();
+                    updateData.pay1Method = method;
+                    updateData.pay1ReceivedBy = receivedBy;
+                } else {
+                    updateData.pay2 = amount;
+                    updateData.pay2Date = serverTimestamp();
+                    updateData.pay2Method = method;
+                    updateData.pay2ReceivedBy = receivedBy;
+                }
+                updateData.lastUpdated = serverTimestamp();
+                
+                await updateDoc(appFeeDocRef, updateData);
+                
+                // Add to app fee payment history (optional)
+                const appFeeHistoryRef = collection(appFeeDocRef, "paymentHistory");
+                await addDoc(appFeeHistoryRef, {
+                    university: university,
+                    amount: amount,
+                    paymentMethod: method,
+                    receivedBy: receivedBy,
+                    timestamp: serverTimestamp()
+                });
+                
+                // Log activity
+                if (window.auditLogger) {
+                    await window.auditLogger.logApplicationFee(currentStudentId, studentData.fullname, {
+                        university: university === 'university1' ? (studentData.university1Name || 'University 1') : (studentData.university2Name || 'University 2'),
+                        amount: amount,
+                        paymentMethod: method,
+                        receivedBy: receivedBy,
+                        totalAmount: amount,
+                        feeBreakdown: `${university === 'university1' ? 'University 1' : 'University 2'}: ${formatCurrency(amount)}`
+                    });
+                }
+                
+                // Write to Google Sheets
+                if (window.appsScriptGoogleSheets) {
+                    try {
+                        const universityName = university === 'university1' ? 
+                            (studentData.university1Name || 'University 1') : 
+                            (studentData.university2Name || 'University 2');
+                            
+                        await window.appsScriptGoogleSheets.writeAppFeeData(currentStudentId, studentData.fullname, {
+                            amount: amount,
+                            paymentMethod: method,
+                            receivedBy: receivedBy,
+                            university1: university === 'university1' ? universityName : '',
+                            university2: university === 'university2' ? universityName : ''
+                        });
+                        console.log('App fee data written to Google Sheets:', {
+                            studentId: currentStudentId,
+                            amount: amount,
+                            university: universityName,
+                            method: method
+                        });
+                    } catch (sheetsError) {
+                        console.error('Error writing app fee to Google Sheets:', sheetsError);
+                        // Don't fail the payment if Google Sheets fails
+                        showToast('warning', 'Google Sheets Warning', 'App fee saved but Google Sheets update failed');
+                    }
+                }
+                
+                showToast('success', 'App Fee Updated!', `${formatCurrency(amount)} application fee saved successfully`);
+                
+                closeAppFeeModal();
+                await loadStudentData(); // Refresh data
+                
+            } catch (error) {
+                console.error('❌ Error saving app fee:', error);
+                showToast('error', 'App Fee Failed', 'Something went wrong. Please try again.');
+            } finally {
+                submitBtn.textContent = 'Save App Fee Payment';
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Toast notification system
+        function showToast(type, title, message, duration = 5000) {
+            const toastContainer = document.getElementById('toastContainer');
+            const toastId = 'toast-' + Date.now();
+            
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.id = toastId;
+            toast.innerHTML = `
+                <div>${icons[type] || icons.info}</div>
+                <div>
+                    <div style="font-weight: 600; margin-bottom: 4px;">${title}</div>
+                    <div style="font-size: 14px; color: #64748b;">${message}</div>
+                </div>
+                <button onclick="removeToast('${toastId}')" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #9ca3af;">&times;</button>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                removeToast(toastId);
+            }, duration);
+            
+            return toastId;
+        }
+
+        function removeToast(toastId) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 400);
+            }
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', (e) => {
+            const paymentModal = document.getElementById('paymentModal');
+            const discountModal = document.getElementById('discountModal');
+            const appFeeModal = document.getElementById('appFeeModal');
+            
+            if (e.target === paymentModal) {
+                closePaymentModal();
+            }
+            if (e.target === discountModal) {
+                closeDiscountModal();
+            }
+            if (e.target === appFeeModal) {
+                closeAppFeeModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closePaymentModal();
+                closeDiscountModal();
+                closeAppFeeModal();
+            }
+        });
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Balance Page Starting...');
+            
+            // Apply thousands separator formatting to all amount input fields
+            const amountInputs = [
+                'paymentAmount',
+                'discountAmount', 
+                'appFeeAmount'
+            ];
+            
+            amountInputs.forEach(inputId => {
+                const inputElement = document.getElementById(inputId);
+                if (inputElement) {
+                    applyThousandsFormatting(inputElement);
+                }
+            });
+            
+            initializeApp();
+        });
+
+        // Logout function (only available in sidebar)
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear any stored authentication data
+                localStorage.removeItem('userToken');
+                sessionStorage.clear();
+                
+                // Show logout notification
+                showToast('info', 'Logged Out', 'You have been successfully logged out');
+                
+                // Redirect to login page after short delay
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+            }
+        }
+
+        // Format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount || 0);
+        }
+
+        // Format thousands separator for input fields
+        function formatThousands(value) {
+            // Handle empty or invalid input
+            if (!value) return '';
+            
+            // Convert to string and remove all non-digit characters
+            const numericValue = String(value).replace(/\D/g, '');
+            
+            // Return empty string if no digits
+            if (!numericValue) return '';
+            
+            // Add thousands separator using regex
+            return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        // Parse thousands separator and return numeric value
+        function parseThousands(value) {
+            return parseInt(value.replace(/,/g, '')) || 0;
+        }
+
+        // Apply thousands separator formatting to an input field
+        function applyThousandsFormatting(inputElement) {
+            inputElement.addEventListener('input', function(e) {
+                const cursorPosition = e.target.selectionStart;
+                const oldValue = e.target.value;
+                const oldLength = oldValue.length;
+                
+                // Get the formatted value
+                const formattedValue = formatThousands(e.target.value);
+                
+                // Only update if the value actually changed
+                if (formattedValue !== oldValue) {
+                    e.target.value = formattedValue;
+                    
+                    // Calculate new cursor position more accurately
+                    const lengthDifference = formattedValue.length - oldLength;
+                    let newCursorPosition = cursorPosition + lengthDifference;
+                    
+                    // Ensure cursor position is within bounds
+                    newCursorPosition = Math.max(0, Math.min(newCursorPosition, formattedValue.length));
+                    
+                    // Set cursor position after a brief delay to ensure it works
+                    setTimeout(() => {
+                        try {
+                            e.target.setSelectionRange(newCursorPosition, newCursorPosition);
+                        } catch (error) {
+                            // Ignore errors in case input type doesn't support selection
+                        }
+                    }, 0);
+                }
+            });
+
+            // Handle paste events
+            inputElement.addEventListener('paste', function(e) {
+                setTimeout(() => {
+                    e.target.value = formatThousands(e.target.value);
+                }, 0);
+            });
+            
+            // Handle focus to format any existing value
+            inputElement.addEventListener('focus', function(e) {
+                if (e.target.value) {
+                    e.target.value = formatThousands(e.target.value);
+                }
+            });
+        }
+
+        // Format date
+        function formatDate(date) {
+            return new Intl.DateTimeFormat('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }).format(date);
+        }
+
+        // Format timestamp
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return 'N/A';
+            
+            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            
+            return new Intl.DateTimeFormat('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }).format(date);
+        }
+
+        // Format date for app fees in a more readable format
+        function formatAppFeeDate(timestamp) {
+            if (!timestamp) return '';
+            
+            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            
+            const day = date.getDate();
+            const month = date.toLocaleDateString('en-US', { month: 'long' });
+            const year = date.getFullYear();
+            
+            // Add ordinal suffix to day
+            const getOrdinalSuffix = (day) => {
+                if (day >= 11 && day <= 13) return 'th';
+                switch (day % 10) {
+                    case 1: return 'st';
+                    case 2: return 'nd';
+                    case 3: return 'rd';
+                    default: return 'th';
+                }
+            };
+            
+            return `${day}${getOrdinalSuffix(day)} ${month}, ${year}`;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "name": "uniapp",
+  "version": "1.0.0",
+  "description": "University Application Management System",
+  "main": "index.html",
+  "scripts": {
+    "build": "npm run create-public && npm run copy-files",
+    "create-public": "mkdir -p public",
+    "copy-files": "cp -r *.html *.js *.css dist/* public/ 2>/dev/null || true",
+    "dev": "serve .",
+    "start": "serve ."
+  },
+  "keywords": [
+    "university",
+    "application",
+    "management",
+    "student",
+    "firebase"
+  ],
+  "author": "UniApp Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/uniapp.git"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "devDependencies": {
+    "serve": "^14.2.1"
+  },
+  "dependencies": {}
+}

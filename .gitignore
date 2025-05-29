@@ -1,0 +1,67 @@
+# Dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.development
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-*
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Build outputs (if any)
+dist/
+build/
+out/
+
+# Temporary files
+tmp/
+temp/
+
+# Cache directories
+.cache/
+.npm/
+.yarn/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Local development
+.DS_Store
+*.local
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Vercel
+.vercel
