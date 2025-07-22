@@ -623,40 +623,20 @@ const todayLinePosition = computed(() => {
     const now = new Date()
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     
-    // Find the exact position based on the dateRange array
-    let todayIndex = -1
+    // Use the same calculation method as markers and bars for consistency
+    const chartStartDate = dateRange.value[0]?.date
+    if (!chartStartDate) return -1000
     
-    if (zoomLevel.value === 'day') {
-      // For day view, find exact date match
-      todayIndex = dateRange.value.findIndex(dateItem => {
-        const itemDate = new Date(dateItem.date)
-        const normalizedItemDate = new Date(itemDate.getFullYear(), itemDate.getMonth(), itemDate.getDate())
-        return normalizedItemDate.getTime() === today.getTime()
-      })
-    } else if (zoomLevel.value === 'week') {
-      // For week view, find which week contains today
-      todayIndex = dateRange.value.findIndex(dateItem => {
-        const weekStart = new Date(dateItem.date)
-        const normalizedWeekStart = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate())
-        const weekEnd = new Date(normalizedWeekStart)
-        weekEnd.setDate(normalizedWeekStart.getDate() + 6)
-        return today >= normalizedWeekStart && today <= weekEnd
-      })
-    } else if (zoomLevel.value === 'month') {
-      // For month view, find which month contains today
-      todayIndex = dateRange.value.findIndex(dateItem => {
-        const monthDate = new Date(dateItem.date)
-        return monthDate.getFullYear() === today.getFullYear() && monthDate.getMonth() === today.getMonth()
-      })
-    }
+    // Calculate position using day difference method (same as getMarkerStyle)
+    const dayDiff = Math.floor((today - chartStartDate) / (1000 * 60 * 60 * 24))
     
     // Only show today line if it's within the visible range
-    if (todayIndex < 0 || todayIndex >= dateRange.value.length) {
+    if (dayDiff < 0 || dayDiff >= dateRange.value.length) {
       return -1000 // Hide off-screen
     }
     
-    // Calculate position: university column width + (index * column width) + half column width for centering
-    return universityColumnWidth + (todayIndex * dateColumnWidth.value) + (dateColumnWidth.value / 2)
+    // Calculate position: university column width + (day difference * column width) + half column width for centering
+    return universityColumnWidth + (dayDiff * dateColumnWidth.value) + (dateColumnWidth.value / 2)
   } catch (error) {
     console.error('Error calculating today line position:', error)
     return -1000
