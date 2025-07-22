@@ -74,7 +74,7 @@
       <!-- Chart Header with Dates -->
       <div class="gantt-header">
         <div class="university-column-header">Universities</div>
-        <div class="dates-header" ref="datesHeader" @scroll="syncScroll">
+        <div class="dates-header" ref="datesHeader">
           <div 
             v-for="date in dateRange" 
             :key="date.key"
@@ -732,11 +732,6 @@ const syncScroll = (event) => {
       if (datesHeader.value.scrollLeft !== scrollLeft) {
         datesHeader.value.scrollLeft = scrollLeft
       }
-    } else if (target === datesHeader.value) {
-      // Sync body scroll with header scroll
-      if (ganttBody.value.scrollLeft !== scrollLeft) {
-        ganttBody.value.scrollLeft = scrollLeft
-      }
     }
   }
 }
@@ -1382,8 +1377,14 @@ onUnmounted(() => {
 
 .dates-header {
   display: flex;
-  overflow-x: auto;
+  overflow-x: scroll;
   overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.dates-header::-webkit-scrollbar {
+  display: none; /* WebKit */
 }
 
 .date-column {
@@ -1455,6 +1456,7 @@ onUnmounted(() => {
 
 .timeline-row {
   display: flex;
+  align-items: stretch;
   border-bottom: 1px solid #f3f4f6;
   min-height: 64px;
   transition: background-color 0.2s;
@@ -1507,6 +1509,9 @@ onUnmounted(() => {
   left: 0;
   background: inherit;
   z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .dark .university-info {
@@ -1542,6 +1547,8 @@ onUnmounted(() => {
   position: relative;
   height: 4rem;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 
 .admission-bar {
@@ -1551,7 +1558,8 @@ onUnmounted(() => {
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  top: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   height: 32px;
   min-width: 20px;
   z-index: 5;
@@ -1581,7 +1589,8 @@ onUnmounted(() => {
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  top: 8px;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 15;
 }
 
@@ -1609,9 +1618,10 @@ onUnmounted(() => {
   top: 0;
   bottom: 0;
   background-color: #dc2626;
-  z-index: 30;
+  z-index: 50;
   width: 2px;
   box-shadow: 0 0 4px rgba(220, 38, 38, 0.5);
+  pointer-events: none;
 }
 
 .today-label {
@@ -1626,7 +1636,8 @@ onUnmounted(() => {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   top: -8px;
   left: -12px;
-  z-index: 31;
+  z-index: 51;
+  pointer-events: none;
 }
 
 .legend-container {
