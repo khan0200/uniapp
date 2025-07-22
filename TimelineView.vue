@@ -153,10 +153,12 @@
 
         <!-- Today Line -->
         <div 
+          v-if="todayLinePosition > 0"
           class="today-line"
           :style="{ left: todayLinePosition + 'px' }"
         >
           <div class="today-label">TODAY</div>
+          <div class="today-line-vertical"></div>
         </div>
       </div>
     </div>
@@ -478,6 +480,16 @@ watch(() => form.value.university_name, (newVal) => {
   }
 })
 
+// Watch for zoom level changes to recalculate TODAY line position
+watch([zoomLevel, dateColumnWidth], () => {
+  // TODAY line position will automatically recalculate due to computed property
+})
+
+// Watch for timeline data changes to recalculate TODAY line position
+watch(timelines, () => {
+  // TODAY line position will automatically recalculate due to computed property
+}, { deep: true })
+
 // Store the original timeline date range without padding for accurate positioning
 const originalDateRange = computed(() => {
   if (timelines.value.length === 0) return { start: null, end: null }
@@ -615,33 +627,114 @@ const getTimelineStatus = (timeline) => {
   }
 }
 
+// Current date reactive reference that updates automatically
+const currentDate = ref(new Date())
+
+// Update current date every minute to ensure accuracy
+const updateCurrentDate = () => {
+  const newDate = new Date()
+  const oldDate = currentDate.value
+  
+  // Only update if the date actually changed (not just time)
+  if (!oldDate || 
+      newDate.getDate() !== oldDate.getDate() || 
+      newDate.getMonth() !== oldDate.getMonth() || 
+      newDate.getFullYear() !== oldDate.getFullYear()) {
+    console.log('Date changed from', oldDate?.toDateString(), 'to', newDate.toDateString())
+    currentDate.value = newDate
+  }
+}
+
+// Method to manually refresh today line (useful for testing)
+const refreshTodayLine = () => {
+  updateCurrentDate()
+  console.log('Today line refreshed at', new Date().toLocaleString())
+}
+
 const todayLinePosition = computed(() => {
   if (dateRange.value.length === 0) return -1000 // Hide off-screen
   
   try {
-    // Get today's date - use consistent timezone handling
-    const now = new Date()
+    // Get today's date with proper timezone handling
+    const now = currentDate.value
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     
     // Use the same calculation method as markers and bars for consistency
     const chartStartDate = dateRange.value[0]?.date
-    if (!chartStartDate) return -1000
-    
-    // Calculate position using day difference method (same as getMarkerStyle)
-    const dayDiff = Math.floor((today - chartStartDate) / (1000 * 60 * 60 * 24))
-    
-    // Only show today line if it's within the visible range
-    if (dayDiff < 0 || dayDiff >= dateRange.value.length) {
-      return -1000 // Hide off-screen
+    if (!chartStartDate) {
+      return -1000
     }
     
-    // Calculate position: university column width + (day difference * column width) + half column width for centering
-    return universityColumnWidth + (dayDiff * dateColumnWidth.value) + (dateColumnWidth.value / 2)
+    // Normalize chart start date for comparison
+    const normalizedChartStart = new Date(chartStartDate.getFullYear(), chartStartDate.getMonth(), chartStartDate.getDate())
+    
+    // Calculate position using day difference method (same as getMarkerStyle)
+    const timeDiff = today.getTime() - normalizedChartStart.getTime()
+    const dayDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24))
+    
+    // Validate date range
+    if (dayDiff < 0) {
+      return -1000 // Hide off-screen - today is before chart start
+    }
+    
+    if (dayDiff >= dateRange.value.length) {
+      return -1000 // Hide off-screen - today is after chart end
+    }
+    
+    // Find the exact date column for today
+    let exactColumnIndex = -1
+    for (let i = 0; i < dateRange.value.length; i++) {
+      const columnDate = new Date(dateRange.value[i].date)
+      const normalizedColumnDate = new Date(columnDate.getFullYear(), columnDate.getMonth(), columnDate.getDate())
+      
+      if (normalizedColumnDate.getTime() === today.getTime()) {
+        exactColumnIndex = i
+        break
+      }
+    }
+    
+    if (exactColumnIndex === -1) {
+      // Fallback to calculated position if exact match not found
+      exactColumnIndex = dayDiff
+    }
+    
+    // Calculate position: university column width + (column index * column width) + half column width for centering
+    const position = universityColumnWidth + (exactColumnIndex * dateColumnWidth.value) + (dateColumnWidth.value / 2)
+    
+    return position
   } catch (error) {
     console.error('Error calculating today line position:', error)
     return -1000
   }
 })
+
+// Debug information (can be accessed from browser console)
+const getTodayLineDebugInfo = () => {
+  const now = currentDate.value
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const chartStartDate = dateRange.value[0]?.date
+  const normalizedChartStart = chartStartDate ? new Date(chartStartDate.getFullYear(), chartStartDate.getMonth(), chartStartDate.getDate()) : null
+  
+  return {
+    currentDate: currentDate.value.toLocaleString(),
+    today: today.toDateString(),
+    chartStartDate: chartStartDate?.toDateString(),
+    normalizedChartStart: normalizedChartStart?.toDateString(),
+    dateRangeLength: dateRange.value.length,
+    todayPosition: todayLinePosition.value,
+    dateColumns: dateRange.value.map((d, i) => ({ 
+      index: i, 
+      date: d.date.toDateString(), 
+      isToday: new Date(d.date.getFullYear(), d.date.getMonth(), d.date.getDate()).getTime() === today.getTime() 
+    }))
+  }
+}
+
+// Expose debug function globally for development
+if (typeof window !== 'undefined') {
+  window.debugTodayLine = getTodayLineDebugInfo
+  window.refreshTodayLine = refreshTodayLine
+}
 
 // Methods
 const refreshData = async () => {
@@ -981,6 +1074,8 @@ const getCsrfToken = () => {
 }
 
 // Lifecycle
+let dateUpdateInterval = null
+
 // Keyboard shortcuts handler
 const handleKeydown = (event) => {
   if (event.ctrlKey || event.metaKey) {
@@ -1005,6 +1100,12 @@ onMounted(async () => {
   
   // Add keyboard shortcuts for zoom
   document.addEventListener('keydown', handleKeydown)
+  
+  // Set up date update interval (every minute)
+  dateUpdateInterval = setInterval(updateCurrentDate, 60000)
+  
+  // Initial date update
+  updateCurrentDate()
 })
 
 onUnmounted(() => {
@@ -1013,6 +1114,12 @@ onUnmounted(() => {
     ganttBody.value.removeEventListener('scroll', syncScroll)
   }
   document.removeEventListener('keydown', handleKeydown)
+  
+  // Clear date update interval
+  if (dateUpdateInterval) {
+    clearInterval(dateUpdateInterval)
+    dateUpdateInterval = null
+  }
 })
 </script>
 
@@ -1597,11 +1704,20 @@ onUnmounted(() => {
   position: absolute;
   top: 0;
   bottom: 0;
-  background-color: #dc2626;
   z-index: 50;
-  width: 2px;
-  box-shadow: 0 0 4px rgba(220, 38, 38, 0.5);
   pointer-events: none;
+  width: 0; /* Container has no width, children position themselves */
+}
+
+.today-line-vertical {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -1px; /* Center the 2px line */
+  width: 2px;
+  background-color: #dc2626;
+  box-shadow: 0 0 4px rgba(220, 38, 38, 0.5);
+  z-index: 50;
 }
 
 .today-label {
@@ -1615,9 +1731,10 @@ onUnmounted(() => {
   border-radius: 0.25rem;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   top: -8px;
-  left: -12px;
+  left: -24px; /* Adjusted to center properly */
   z-index: 51;
-  pointer-events: none;
+  white-space: nowrap;
+  transform: translateX(50%); /* Center the label */
 }
 
 .legend-container {
