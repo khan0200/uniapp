@@ -259,7 +259,8 @@ async function savePaymentToFirestore(paymentData) {
         }
 
         if (typeof showNotification === 'function') {
-            showNotification('Payment recorded successfully!', 'success');
+            const message = paymentData.isWithdrawal ? 'Withdrawal recorded successfully!' : 'Payment recorded successfully!';
+            showNotification(message, 'success');
         }
 
         return docRef.id;
@@ -314,6 +315,8 @@ async function updateStudentBalance(studentFirestoreId, paymentAmount) {
 }
 
 // Update student discount after DISCOUNT payment
+// Note: Balance is already updated by updateStudentBalance() when the payment is saved.
+// This function only updates the discount field to avoid double-counting.
 async function updateStudentDiscount(studentFirestoreId, discountAmount) {
     if (!firebaseInitialized || !studentFirestoreId) return;
 
@@ -329,24 +332,18 @@ async function updateStudentDiscount(studentFirestoreId, discountAmount) {
         const currentDiscount = parseFloat(studentData.discount) || 0;
         const newDiscount = currentDiscount + parseFloat(discountAmount);
 
-        // Discount also affects balance (adds to balance like a payment)
-        const currentBalance = parseFloat(studentData.balance) || 0;
-        const newBalance = currentBalance + parseFloat(discountAmount);
-
-        // Update student with new discount and balance
+        // Update student with new discount only (balance already updated by updateStudentBalance)
         await db.collection('students').doc(studentFirestoreId).update({
             discount: newDiscount,
-            balance: newBalance,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        console.log('✅ Student discount updated:', newDiscount, 'New balance:', newBalance);
+        console.log('✅ Student discount updated:', newDiscount);
 
         // Also update local data
         const studentIndex = window.studentsData.findIndex(s => s.firestoreId === studentFirestoreId);
         if (studentIndex !== -1) {
             window.studentsData[studentIndex].discount = newDiscount;
-            window.studentsData[studentIndex].balance = newBalance;
 
             // Refresh the payments UI if the function exists
             if (typeof renderPaymentStudents === 'function') {

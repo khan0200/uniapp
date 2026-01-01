@@ -1155,11 +1155,18 @@ function renderPaymentHistory(filteredData = null) {
             `<span class="payment-badge payment-student-info">${p.studentId} - ${p.studentName}</span>` :
             '';
 
+        // Check if amount is negative (withdrawal)
+        const amount = parseFloat(p.amount) || 0;
+        const isWithdrawal = amount < 0;
+        const amountPrefix = isWithdrawal ? '-' : '+';
+        const amountClass = isWithdrawal ? 'text-danger' : 'text-success';
+        const displayAmount = formatAmount(Math.abs(amount));
+
         return `
         <div class="col-12 col-md-6 col-lg-4">
             <div class="payment-history-card">
                 <div class="payment-header">
-                    <span class="payment-amount">+${formatAmount(p.amount)} UZS</span>
+                    <span class="payment-amount ${amountClass}">${amountPrefix}${displayAmount} UZS</span>
                     <span class="payment-timestamp">${timestamp}</span>
                 </div>
                 <div class="payment-details">
@@ -1384,6 +1391,70 @@ function submitPayment() {
     }, 500);
 }
 
+// Submit withdrawal
+function submitWithdrawal() {
+    const amountInput = document.getElementById('withdrawAmount');
+    const reasonInput = document.getElementById('withdrawReason');
+    const studentInput = document.getElementById('withdrawStudent');
+
+    // Validate required fields
+    const amount = parseAmount(amountInput.value);
+    const reason = reasonInput.value.trim().toUpperCase();
+
+    if (!amount || amount <= 0) {
+        showNotification('Please enter a valid amount!', 'error');
+        amountInput.focus();
+        return;
+    }
+
+    if (!reason) {
+        showNotification('Please enter a reason for withdrawal!', 'error');
+        reasonInput.focus();
+        return;
+    }
+
+    // Build withdrawal data as a negative payment
+    const withdrawalData = {
+        amount: -amount, // Negative amount for withdrawal
+        method: 'Withdrawal',
+        receivedBy: 'System',
+        notes: `WITHDRAWAL: ${reason}`,
+        isDiscount: false,
+        isWithdrawal: true, // Flag to identify withdrawals
+        studentFirestoreId: null,
+        studentId: null,
+        studentName: null
+    };
+
+    // Get student info if selected
+    if (studentInput.value) {
+        const selectedOption = studentInput.options[studentInput.selectedIndex];
+        withdrawalData.studentFirestoreId = studentInput.value;
+        withdrawalData.studentId = selectedOption.dataset.studentId;
+        withdrawalData.studentName = selectedOption.dataset.studentName;
+    }
+
+    // Save to Firestore
+    if (typeof savePaymentToFirestore === 'function') {
+        savePaymentToFirestore(withdrawalData);
+    }
+
+    // Close modal and reset form
+    const modal = bootstrap.Modal.getInstance(document.getElementById('withdrawPaymentModal'));
+    if (modal) {
+        modal.hide();
+    }
+    document.getElementById('withdrawPaymentForm').reset();
+
+    // Refresh payment history and students view
+    setTimeout(() => {
+        renderPaymentHistory();
+        if (withdrawalData.studentFirestoreId) {
+            renderPaymentStudents();
+        }
+    }, 500);
+}
+
 // Initialize payment modal when opened
 document.addEventListener('DOMContentLoaded', function () {
     const paymentModal = document.getElementById('addPaymentModal');
@@ -1393,9 +1464,40 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Initialize withdraw payment modal when opened
+    const withdrawModal = document.getElementById('withdrawPaymentModal');
+    if (withdrawModal) {
+        withdrawModal.addEventListener('show.bs.modal', function () {
+            populateWithdrawStudentDropdown();
+        });
+    }
+
     // Setup amount input formatting
     setupAmountInput();
+
+    // Setup withdraw amount input formatting
+    const withdrawAmountInput = document.getElementById('withdrawAmount');
+    if (withdrawAmountInput) {
+        withdrawAmountInput.addEventListener('input', function (e) {
+            let value = e.target.value.replace(/,/g, '');
+            if (value && !isNaN(value)) {
+                e.target.value = formatAmount(value);
+            }
+        });
+    }
 });
+
+// Populate student dropdown in Withdraw Payment modal
+function populateWithdrawStudentDropdown() {
+    const dropdown = document.getElementById('withdrawStudent');
+    if (!dropdown) return;
+
+    const students = window.studentsData.filter(s => !s.deleted);
+    students.sort((a, b) => (a.id || '').localeCompare(b.id || ''));
+
+    dropdown.innerHTML = '<option value="">No student (General withdrawal)</option>' +
+        students.map(s => `<option value="${s.firestoreId || s.id}" data-student-id="${s.id}" data-student-name="${s.fullName}">${s.id} - ${s.fullName}</option>`).join('');
+}
 
 // Edit payment - open modal with pre-filled data
 function editPayment(paymentFirestoreId) {
