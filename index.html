@@ -65,9 +65,9 @@
                     <div class="filter-item filter-search">
                         <i class="bi bi-search filter-icon"></i>
                         <input type="text" id="searchInput" class="form-control filter-input"
-                            placeholder="Search by name, ID, phone...">
+                            placeholder="Search by name, ID, phone, university...">
                     </div>
-                    
+
                     <!-- Tariff Filter -->
                     <div class="filter-item">
                         <i class="bi bi-tag filter-icon"></i>
@@ -80,11 +80,12 @@
                             <option value="REGIONAL VISA">REGIONAL VISA</option>
                         </select>
                     </div>
-                    
+
                     <!-- Level Filter -->
                     <div class="filter-item">
                         <i class="bi bi-mortarboard filter-icon"></i>
-                        <select class="form-select filter-input" id="filterLevel" aria-label="Filter by education level">
+                        <select class="form-select filter-input" id="filterLevel"
+                            aria-label="Filter by education level">
                             <option value="">All Levels</option>
                             <option value="COLLEGE">COLLEGE</option>
                             <option value="BACHELOR">BACHELOR</option>
@@ -94,7 +95,7 @@
                             <option value="DELETED" class="option-deleted">🗑️ Deleted students</option>
                         </select>
                     </div>
-                    
+
                     <!-- Group Filter -->
                     <div class="filter-item">
                         <i class="bi bi-people filter-icon"></i>
@@ -103,17 +104,24 @@
                             <!-- Groups will be populated dynamically -->
                         </select>
                     </div>
-                    
+
                     <!-- Actions -->
                     <div class="filter-actions">
-                        <button class="btn btn-filter-action" data-bs-toggle="modal" data-bs-target="#downloadExcelModal" title="Export to Excel">
+                        <button class="btn btn-filter-action" data-bs-toggle="modal"
+                            data-bs-target="#downloadExcelModal" title="Export to Excel">
                             <i class="bi bi-file-earmark-excel"></i>
                         </button>
-                        <button class="btn btn-primary-apple rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                        <button class="btn btn-primary-apple rounded-pill px-4" data-bs-toggle="modal"
+                            data-bs-target="#addStudentModal">
                             <i class="bi bi-plus-circle me-2"></i>Add Student
                         </button>
                     </div>
                 </div>
+            </div>
+
+            <!-- Student Counter -->
+            <div class="d-flex justify-content-end mb-2 px-1">
+                <span id="studentsCounter" class="text-secondary small fst-italic">Loading...</span>
             </div>
 
             <!-- Student Cards Container (Grid Layout) -->
@@ -124,6 +132,8 @@
                     <p class="text-secondary mt-3">No students yet. Click "Add Student" to get started.</p>
                 </div>
             </div>
+            <!-- Students Pagination -->
+            <div id="studentsPagination" class="d-flex justify-content-center align-items-center gap-3 mt-4"></div>
         </div>
 
         <!-- PAYMENTS TAB -->
@@ -175,6 +185,11 @@
                     </select>
                 </div>
 
+                <!-- Payment Students Counter -->
+                <div class="d-flex justify-content-end mb-2 px-1">
+                    <span id="paymentStudentsCounter" class="text-secondary small fst-italic">Loading...</span>
+                </div>
+
                 <!-- Students Cards for Payments -->
                 <div id="paymentStudentsList" class="row g-3">
                     <div class="col-12 text-center py-5">
@@ -182,6 +197,8 @@
                         <p class="text-secondary mt-3">Loading students...</p>
                     </div>
                 </div>
+                <!-- Payment Students Pagination -->
+                <div id="paymentStudentsPagination" class="d-flex justify-content-center align-items-center gap-3 mt-4"></div>
             </div>
 
             <!-- Payment History Sub-Tab -->
@@ -216,12 +233,20 @@
                     </button>
                 </div>
 
+                <!-- Payment History Counter -->
+                <div class="d-flex justify-content-end mb-2 px-1">
+                    <span id="paymentHistoryCounter" class="text-secondary small fst-italic">Loading...</span>
+                </div>
+
                 <!-- Payment History Cards -->
                 <div id="paymentHistoryList" class="row g-3">
                     <div class="col-12 text-center py-5">
                         <i class="bi bi-clock-history icon-empty-state"></i>
                         <p class="text-secondary mt-3">No payments recorded yet.</p>
                     </div>
+                </div>
+                <!-- Payment History Pagination -->
+                <div id="paymentHistoryPagination" class="d-flex justify-content-center align-items-center gap-3 mt-4">
                 </div>
             </div>
         </div>

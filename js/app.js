@@ -8,6 +8,55 @@ if (!window.studentsData) {
 }
 let currentStudentId = null;
 
+// Pagination State
+const ITEMS_PER_PAGE = 15;
+let studentsPage = 1;
+let paymentStudentsPage = 1;
+let paymentHistoryPage = 1;
+
+// Helper: Render Pagination Controls
+function renderPaginationControls(containerId, currentPage, totalItems, limit, onPageChangeName) {
+    const totalPages = Math.ceil(totalItems / limit);
+    const container = document.getElementById(containerId);
+
+    if (!container) return;
+
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+
+    const prevDisabled = currentPage === 1 ? 'disabled' : '';
+    const nextDisabled = currentPage === totalPages ? 'disabled' : '';
+
+    container.innerHTML = `
+        <button class="btn btn-outline-secondary rounded-pill px-3" ${prevDisabled} onclick="${onPageChangeName}(${currentPage - 1})">
+            <i class="bi bi-chevron-left me-1"></i> Prev
+        </button>
+        <span class="text-secondary fw-500">Page ${currentPage} of ${totalPages}</span>
+        <button class="btn btn-outline-secondary rounded-pill px-3" ${nextDisabled} onclick="${onPageChangeName}(${currentPage + 1})">
+            Next <i class="bi bi-chevron-right ms-1"></i>
+        </button>
+    `;
+}
+
+// Helper: Change Page Wrappers
+function changeStudentsPage(page) {
+    studentsPage = page;
+    renderStudents(); // or applyFilters() if filters are active
+}
+
+function changePaymentStudentsPage(page) {
+    paymentStudentsPage = page;
+    filterPaymentStudents(false); // Pass false to prevent resetting to page 1
+}
+
+function changePaymentHistoryPage(page) {
+    paymentHistoryPage = page;
+    filterPaymentHistory(false); // Pass false to prevent resetting to page 1
+}
+
+
 // Dynamic University Data Function - returns universities for a given level from Firestore
 function getUniversitiesForLevel(level) {
     if (!window.universitiesData || !level) return [];
@@ -111,64 +160,11 @@ function saveStudent() {
 }
 
 
+// Main render function - delegates to applyFilters for consistency
 function renderStudents() {
-    const container = document.getElementById('studentsList');
-
-    // Check if we're in deleted students view
-    const levelDropdown = document.getElementById('filterLevel');
-    const isShowingDeleted = levelDropdown && levelDropdown.value === 'DELETED';
-
-    // Filter the data based on deleted status
-    const displayData = window.studentsData.filter(s => {
-        if (isShowingDeleted) {
-            return s.deleted === true;
-        } else {
-            return !s.deleted;
-        }
-    });
-
-    if (displayData.length === 0) {
-        if (isShowingDeleted) {
-            container.innerHTML = '<div class="col-12 text-center py-5"><i class="bi bi-trash" style="font-size: 4rem; opacity: 0.3;"></i><p class="text-secondary mt-3">No deleted students.</p></div>';
-        } else {
-            container.innerHTML = '<div class="col-12 text-center py-5"><i class="bi bi-inbox" style="font-size: 4rem; opacity: 0.3;"></i><p class="text-secondary mt-3">No students yet. Click "Add Student" to get started.</p></div>';
-        }
-        return;
-    }
-
-    // Ultra-compact card - use unique student ID for identification
-    container.innerHTML = displayData.map((s) => {
-        // Use firestoreId if available, otherwise use student id as unique identifier
-        const uniqueId = s.firestoreId || s.id;
-
-        // Get importance color
-        const importanceColors = {
-            'GREEN': '#28a745',
-            'YELLOW': '#ffc107',
-            'RED': '#dc3545'
-        };
-        const importanceColor = s.noteImportance ? importanceColors[s.noteImportance] : null;
-
-        return `
-        <div class="col-12 col-md-6 col-lg-4">
-            <div class="student-card ${s.deleted ? 'deleted-student' : ''}" onclick="viewStudentDetails('${uniqueId}')">
-                ${importanceColor ? `<div class="importance-indicator" style="background: ${importanceColor};"></div>` : ''}
-                <div class="student-card-body">
-                    <div class="student-card-header">
-                        <div class="student-name">${s.deleted ? '<i class="bi bi-trash text-danger me-2"></i>' : ''}${s.fullName}</div>
-                        <span class="student-id-pill">${s.id}</span>
-                    </div>
-                    <div class="student-pills">
-                        <span class="pill pill-tariff"><i class="bi bi-tag-fill"></i> ${s.tariff}</span>
-                        <span class="pill pill-level"><i class="bi bi-mortarboard-fill"></i> ${s.level}</span>
-                        ${s.languageCertificate && s.languageCertificate !== 'NO CERTIFICATE' ? `<span class="pill pill-certificate"><i class="bi bi-award-fill"></i> ${s.languageCertificate}${s.certificateScore ? ': ' + s.certificateScore : ''}</span>` : ''}
-                    </div>
-                    ${s.university1 ? `<div class="student-university"><i class="bi bi-building"></i> ${s.university1}</div>` : ''}
-                </div>
-            </div>
-        </div>
-    `
-    }).join('');
+    // If this is called directly (e.g. after add/delete), we maintain current filters
+    // Passing false to avoid resetting to page 1
+    applyFilters(false);
 }
 
 // View student details in modal - now uses unique ID instead of array index
@@ -597,7 +593,18 @@ function saveEdit(field) {
     const group = document.querySelector(`[data-field="${field}"]`);
     const valueSpan = group.querySelector('.detail-value');
     if (valueSpan) {
-        valueSpan.textContent = newValue || '-';
+        if (field === 'languageCertificate') {
+            // Reconstruct the full HTML for language certificate + score
+            valueSpan.innerHTML = `<span class="badge badge-language">${newValue}</span>${s.certificateScore ? ` <span class="score-text">Score: ${s.certificateScore}</span>` : ''}`;
+        } else if (field === 'level' || field === 'group') {
+            // Handle other badges if necessary (though they don't have secondary fields like score)
+            const badgeClass = field === 'level' ? 'badge-level' : 'badge-group';
+            valueSpan.innerHTML = `<span class="badge ${badgeClass}">${newValue || (field === 'group' ? 'No Group' : '-')}</span>`;
+        } else if (field === 'tariff') {
+            valueSpan.innerHTML = `<span class="badge badge-tariff">${newValue}</span>`;
+        } else {
+            valueSpan.textContent = newValue || '-';
+        }
     }
 
     // Refresh the student list
@@ -812,7 +819,12 @@ function copyToClipboard(text, btnElement) {
 }
 
 // Filter and search functionality
-function applyFilters() {
+function applyFilters(resetPage = true) {
+    // If called from an event listener, resetPage is the event object (truthy), so we reset page
+    if (resetPage) {
+        studentsPage = 1;
+    }
+
     const container = document.getElementById('studentsList');
     const searchInput = document.getElementById('searchInput');
     const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
@@ -836,13 +848,15 @@ function applyFilters() {
             if (s.deleted) return false;
         }
 
-        // Search filter (name, ID, phone, email)
+        // Search filter (name, ID, phone, email, university)
         const matchesSearch = !searchQuery ||
             s.fullName.toLowerCase().includes(searchQuery) ||
             s.id.toLowerCase().includes(searchQuery) ||
             s.phone1.toLowerCase().includes(searchQuery) ||
             (s.phone2 && s.phone2.toLowerCase().includes(searchQuery)) ||
-            (s.email && s.email.toLowerCase().includes(searchQuery));
+            (s.email && s.email.toLowerCase().includes(searchQuery)) ||
+            (s.university1 && s.university1.toLowerCase().includes(searchQuery)) ||
+            (s.university2 && s.university2.toLowerCase().includes(searchQuery));
 
         // Tariff filter
         const matchesTariff = !tariffFilter || s.tariff === tariffFilter;
@@ -856,8 +870,24 @@ function applyFilters() {
         return matchesSearch && matchesTariff && matchesLevel && matchesGroup;
     });
 
-    // Render filtered data directly (don't replace window.studentsData)
-    if (filtered.length === 0) {
+    // Update Counter
+    const counterEl = document.getElementById('studentsCounter');
+    if (counterEl) {
+        if (searchQuery || tariffFilter || levelFilter || groupFilter) {
+            counterEl.textContent = `Found ${filtered.length} student${filtered.length !== 1 ? 's' : ''}`;
+        } else {
+            counterEl.textContent = `Total ${filtered.length} student${filtered.length !== 1 ? 's' : ''}`;
+        }
+    }
+
+    // Pagination Logic
+    const totalItems = filtered.length;
+    const startIndex = (studentsPage - 1) * ITEMS_PER_PAGE;
+    const paginatedData = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+    // Render paginated data
+    if (paginatedData.length === 0) {
+        renderPaginationControls('studentsPagination', 1, 0, ITEMS_PER_PAGE, 'changeStudentsPage');
         if (levelFilter === 'DELETED') {
             container.innerHTML = '<div class="col-12 text-center py-5"><i class="bi bi-trash" style="font-size: 4rem; opacity: 0.3;"></i><p class="text-secondary mt-3">No deleted students.</p></div>';
         } else {
@@ -866,7 +896,7 @@ function applyFilters() {
         return;
     }
 
-    container.innerHTML = filtered.map((s) => {
+    container.innerHTML = paginatedData.map((s) => {
         const uniqueId = s.firestoreId || s.id;
 
         // Get importance color
@@ -897,6 +927,9 @@ function applyFilters() {
         </div>
     `
     }).join('');
+
+    // Render Pagination Controls
+    renderPaginationControls('studentsPagination', studentsPage, totalItems, ITEMS_PER_PAGE, 'changeStudentsPage');
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -1253,6 +1286,28 @@ function renderPaymentStudents(filteredData = null) {
 
     const students = filteredData || window.studentsData.filter(s => !s.deleted);
 
+    // Update Counter
+    const counterEl = document.getElementById('paymentStudentsCounter');
+    if (counterEl) {
+        // Check if filters are active by checking input values
+        const searchTerm = document.getElementById('paymentSearchInput') ? document.getElementById('paymentSearchInput').value : '';
+        const tariffFilter = document.getElementById('paymentTariffFilter') ? document.getElementById('paymentTariffFilter').value : '';
+
+        if (searchTerm || tariffFilter) {
+            counterEl.textContent = `Found ${students.length} student${students.length !== 1 ? 's' : ''}`;
+        } else {
+            counterEl.textContent = `Total ${students.length} student${students.length !== 1 ? 's' : ''}`;
+        }
+    }
+
+    // Sort by ID
+    students.sort((a, b) => (a.id || '').localeCompare(b.id || ''));
+
+    // Pagination Logic
+    const totalItems = students.length;
+    const startIndex = (paymentStudentsPage - 1) * ITEMS_PER_PAGE;
+    const paginatedData = students.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
     if (!students || students.length === 0) {
         container.innerHTML = `
             <div class="col-12 text-center py-5">
@@ -1260,13 +1315,11 @@ function renderPaymentStudents(filteredData = null) {
                 <p class="text-secondary mt-3">No students found.</p>
             </div>
         `;
+        renderPaginationControls('paymentStudentsPagination', 1, 0, ITEMS_PER_PAGE, 'changePaymentStudentsPage');
         return;
     }
 
-    // Sort by ID
-    students.sort((a, b) => (a.id || '').localeCompare(b.id || ''));
-
-    container.innerHTML = students.map(s => {
+    container.innerHTML = paginatedData.map(s => {
         const balance = parseFloat(s.balance) || 0;
         const discount = parseFloat(s.discount) || 0;
         const balanceClass = balance > 0 ? 'bal-positive' : (balance < 0 ? 'bal-negative' : '');
@@ -1287,6 +1340,8 @@ function renderPaymentStudents(filteredData = null) {
         </div>
     `
     }).join('');
+
+    renderPaginationControls('paymentStudentsPagination', paymentStudentsPage, totalItems, ITEMS_PER_PAGE, 'changePaymentStudentsPage');
 }
 
 // Render payment history
@@ -1296,6 +1351,26 @@ function renderPaymentHistory(filteredData = null) {
 
     const payments = filteredData || window.paymentsData || [];
 
+    // Update Counter
+    const counterEl = document.getElementById('paymentHistoryCounter');
+    if (counterEl) {
+        // Check if filters are active
+        const searchTerm = document.getElementById('paymentHistorySearch') ? document.getElementById('paymentHistorySearch').value : '';
+        const methodFilter = document.getElementById('paymentMethodFilter') ? document.getElementById('paymentMethodFilter').value : '';
+        const receiverFilter = document.getElementById('receivedByFilter') ? document.getElementById('receivedByFilter').value : '';
+
+        if (searchTerm || methodFilter || receiverFilter) {
+            counterEl.textContent = `Found ${payments.length} payment${payments.length !== 1 ? 's' : ''}`;
+        } else {
+            counterEl.textContent = `Total ${payments.length} payment${payments.length !== 1 ? 's' : ''}`;
+        }
+    }
+
+    // Pagination Logic
+    const totalItems = payments.length;
+    const startIndex = (paymentHistoryPage - 1) * ITEMS_PER_PAGE;
+    const paginatedData = payments.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
     if (!payments || payments.length === 0) {
         container.innerHTML = `
             <div class="col-12 text-center py-5">
@@ -1303,10 +1378,11 @@ function renderPaymentHistory(filteredData = null) {
                 <p class="text-secondary mt-3">No payments recorded yet.</p>
             </div>
         `;
+        renderPaginationControls('paymentHistoryPagination', 1, 0, ITEMS_PER_PAGE, 'changePaymentHistoryPage');
         return;
     }
 
-    container.innerHTML = payments.map(p => {
+    container.innerHTML = paginatedData.map(p => {
         const timestamp = p.createdAt ? new Date(p.createdAt).toLocaleString('uz-UZ', {
             year: 'numeric',
             month: '2-digit',
@@ -1351,10 +1427,14 @@ function renderPaymentHistory(filteredData = null) {
         </div>
     `
     }).join('');
+
+    renderPaginationControls('paymentHistoryPagination', paymentHistoryPage, totalItems, ITEMS_PER_PAGE, 'changePaymentHistoryPage');
 }
 
 // Filter payment students
-function filterPaymentStudents() {
+function filterPaymentStudents(resetPage = true) {
+    if (resetPage) paymentStudentsPage = 1;
+
     const searchTerm = document.getElementById('paymentSearchInput').value.toLowerCase();
     const tariffFilter = document.getElementById('paymentTariffFilter').value;
 
@@ -1368,6 +1448,7 @@ function filterPaymentStudents() {
         );
     }
 
+
     // Apply tariff filter
     if (tariffFilter) {
         filtered = filtered.filter(s => s.tariff === tariffFilter);
@@ -1377,7 +1458,9 @@ function filterPaymentStudents() {
 }
 
 // Filter payment history
-function filterPaymentHistory() {
+function filterPaymentHistory(resetPage = true) {
+    if (resetPage) paymentHistoryPage = 1;
+
     const searchTerm = document.getElementById('paymentHistorySearch').value.toLowerCase();
     const methodFilter = document.getElementById('paymentMethodFilter').value;
     const receiverFilter = document.getElementById('receivedByFilter').value;
