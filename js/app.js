@@ -78,7 +78,7 @@ function saveStudent() {
         passport: '', // Can be added later
         tariff: tariff,
         level: document.getElementById('levelSelect').value,
-        languageCertificate: 'TOPIK', // Default, can be changed later
+        languageCertificate: 'NO CERTIFICATE', // Default, can be changed later
         certificateScore: '', // Can be added later
         university1: document.getElementById('uni1').value,
         university2: '', // Can be added later
@@ -169,10 +169,14 @@ function renderStudents() {
 
 // View student details in modal - now uses unique ID instead of array index
 function viewStudentDetails(uniqueId) {
-    // Find student by firestoreId or student id
-    const index = window.studentsData.findIndex(student =>
-        student.firestoreId === uniqueId || student.id === uniqueId
-    );
+    // Find student by firestoreId FIRST (more reliable), then fall back to student id
+    // This prevents matching the wrong student when multiple students might have overlapping IDs
+    let index = window.studentsData.findIndex(student => student.firestoreId === uniqueId);
+
+    // If not found by firestoreId, try by student id field
+    if (index === -1) {
+        index = window.studentsData.findIndex(student => student.id === uniqueId);
+    }
 
     if (index === -1) {
         showNotification('Student not found!', 'error');
@@ -180,7 +184,10 @@ function viewStudentDetails(uniqueId) {
     }
 
     const s = window.studentsData[index];
+    // Store the firestoreId for reliable identification in saveEdit and other functions
     currentStudentId = index;
+    // Also store the firestoreId separately for direct reference
+    window.currentStudentFirestoreId = s.firestoreId;
 
     // Generate university options based on level using dynamic data
     const uniOptions = getUniversitiesForLevel(s.level)
@@ -348,6 +355,7 @@ function viewStudentDetails(uniqueId) {
                     <div class="edit-field" style="display:none;">
                         <div class="d-flex gap-2">
                             <select class="form-select ios-input form-control-sm" id="edit-languageCertificate" style="flex:1;">
+                                <option value="NO CERTIFICATE" ${s.languageCertificate === 'NO CERTIFICATE' ? 'selected' : ''}>NO CERTIFICATE</option>
                                 <option value="TOPIK" ${s.languageCertificate === 'TOPIK' ? 'selected' : ''}>TOPIK</option>
                                 <option value="SKA" ${s.languageCertificate === 'SKA' ? 'selected' : ''}>SKA</option>
                                 <option value="IELTS" ${s.languageCertificate === 'IELTS' ? 'selected' : ''}>IELTS</option>
@@ -508,8 +516,22 @@ function saveEdit(field) {
         newValue = newValue.toUpperCase();
     }
 
-    // Update student data
-    const s = window.studentsData[currentStudentId];
+    // Find student by firestoreId for reliable identification
+    // This prevents editing the wrong student when array indices change
+    let s;
+    if (window.currentStudentFirestoreId) {
+        s = window.studentsData.find(student => student.firestoreId === window.currentStudentFirestoreId);
+    }
+    // Fallback to array index if firestoreId lookup fails
+    if (!s) {
+        s = window.studentsData[currentStudentId];
+    }
+
+    if (!s) {
+        showNotification('Error: Student not found!', 'error');
+        return;
+    }
+
     s[field] = newValue;
 
     // Handle certificate score separately
@@ -547,7 +569,18 @@ function saveEdit(field) {
 
 // Confirm delete student (soft delete)
 function confirmDeleteStudent() {
-    const s = window.studentsData[currentStudentId];
+    // Find student by firestoreId for reliable identification
+    let s;
+    if (window.currentStudentFirestoreId) {
+        s = window.studentsData.find(student => student.firestoreId === window.currentStudentFirestoreId);
+    }
+    if (!s) {
+        s = window.studentsData[currentStudentId];
+    }
+    if (!s) {
+        showNotification('Error: Student not found!', 'error');
+        return;
+    }
     if (confirm(`Are you sure you want to delete "${s.fullName}"?\n\nThis student will be moved to the "Deleted students" section and can be restored later.`)) {
         deleteStudent();
     }
@@ -555,7 +588,19 @@ function confirmDeleteStudent() {
 
 // Soft delete - mark student as deleted
 function deleteStudent() {
-    const s = window.studentsData[currentStudentId];
+    // Find student by firestoreId for reliable identification
+    let s;
+    if (window.currentStudentFirestoreId) {
+        s = window.studentsData.find(student => student.firestoreId === window.currentStudentFirestoreId);
+    }
+    if (!s) {
+        s = window.studentsData[currentStudentId];
+    }
+    if (!s) {
+        showNotification('Error: Student not found!', 'error');
+        return;
+    }
+
     s.deleted = true;
     s.deletedAt = new Date().toISOString();
 
@@ -576,7 +621,19 @@ function deleteStudent() {
 
 // Restore deleted student
 function restoreStudent() {
-    const s = window.studentsData[currentStudentId];
+    // Find student by firestoreId for reliable identification
+    let s;
+    if (window.currentStudentFirestoreId) {
+        s = window.studentsData.find(student => student.firestoreId === window.currentStudentFirestoreId);
+    }
+    if (!s) {
+        s = window.studentsData[currentStudentId];
+    }
+    if (!s) {
+        showNotification('Error: Student not found!', 'error');
+        return;
+    }
+
     s.deleted = false;
     delete s.deletedAt;
 
@@ -597,7 +654,24 @@ function restoreStudent() {
 
 // Permanently delete student
 function permanentlyDeleteStudent() {
-    const s = window.studentsData[currentStudentId];
+    // Find student by firestoreId for reliable identification
+    let s;
+    let studentIndex = -1;
+    if (window.currentStudentFirestoreId) {
+        studentIndex = window.studentsData.findIndex(student => student.firestoreId === window.currentStudentFirestoreId);
+        if (studentIndex !== -1) {
+            s = window.studentsData[studentIndex];
+        }
+    }
+    if (!s) {
+        studentIndex = currentStudentId;
+        s = window.studentsData[currentStudentId];
+    }
+    if (!s) {
+        showNotification('Error: Student not found!', 'error');
+        return;
+    }
+
     if (!confirm(`Are you sure you want to PERMANENTLY delete "${s.fullName}"?\n\n⚠️ This action cannot be undone!`)) {
         return;
     }
@@ -607,8 +681,10 @@ function permanentlyDeleteStudent() {
         deleteStudentFromFirestore(s.firestoreId);
     }
 
-    // Remove from local array
-    window.studentsData.splice(currentStudentId, 1);
+    // Remove from local array using the correct index
+    if (studentIndex !== -1) {
+        window.studentsData.splice(studentIndex, 1);
+    }
     localStorage.setItem('studentsData', JSON.stringify(window.studentsData));
 
     // Close modal and refresh
