@@ -17,6 +17,45 @@
 
 <body>
 
+    <!-- Login Overlay -->
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <div class="login-icon">
+                        <i class="bi bi-shield-lock-fill"></i>
+                    </div>
+                    <h2 class="login-title">UniBridge CRM</h2>
+                    <p class="login-subtitle">Secure Access Required</p>
+                </div>
+                <div class="login-challenge">
+                    <span class="challenge-label">HELLO</span>
+                    <span class="challenge-number" id="challengeNumber">0000</span>
+                </div>
+                <div class="login-form">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text bg-transparent border-end-0">
+                            <i class="bi bi-key-fill text-primary"></i>
+                        </span>
+                        <input type="password" class="form-control border-start-0 login-input" id="loginPassword" 
+                            placeholder="Enter access code" autocomplete="off" onkeypress="if(event.key==='Enter')verifyLogin()">
+                    </div>
+                    <button class="btn btn-primary w-100 login-btn" onclick="verifyLogin()">
+                        <i class="bi bi-unlock-fill me-2"></i>Access System
+                    </button>
+                    <div id="loginError" class="login-error" style="display: none;">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        <span>Invalid access code. Try again.</span>
+                    </div>
+                </div>
+                <div class="login-footer">
+                    <i class="bi bi-fingerprint"></i>
+                    <span>Protected by UniBridge Security</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-glass sticky-top">
         <div class="container-fluid">

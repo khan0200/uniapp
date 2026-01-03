@@ -2,6 +2,112 @@
 // UNIBRIDGE CRM - MAIN APPLICATION LOGIC
 // ==========================================
 
+// ==========================================
+// LOGIN SYSTEM - SECURE ACCESS
+// ==========================================
+var loginChallengeNumber = 0;
+var isAuthenticated = false;
+
+// Initialize login system on page load
+function initLoginSystem() {
+    // Check if already authenticated in this session
+    if (sessionStorage.getItem('crm_authenticated') === 'true') {
+        isAuthenticated = true;
+        hideLoginOverlay();
+        return;
+    }
+
+    // Generate random 4-digit number
+    loginChallengeNumber = Math.floor(1000 + Math.random() * 9000);
+
+    // Display the challenge number
+    var challengeElement = document.getElementById('challengeNumber');
+    if (challengeElement) {
+        challengeElement.textContent = loginChallengeNumber;
+    }
+
+    // Focus on password input
+    setTimeout(function () {
+        var passwordInput = document.getElementById('loginPassword');
+        if (passwordInput) {
+            passwordInput.focus();
+        }
+    }, 600);
+}
+
+// Verify login attempt
+function verifyLogin() {
+    var passwordInput = document.getElementById('loginPassword');
+    var errorElement = document.getElementById('loginError');
+
+    if (!passwordInput) return;
+
+    var enteredPassword = parseInt(passwordInput.value, 10);
+    var correctPassword = loginChallengeNumber * 2;
+
+    if (enteredPassword === correctPassword) {
+        // Success - hide login overlay
+        isAuthenticated = true;
+        sessionStorage.setItem('crm_authenticated', 'true');
+
+        // Hide error if showing
+        if (errorElement) {
+            errorElement.style.display = 'none';
+        }
+
+        hideLoginOverlay();
+    } else {
+        // Failed - show error and generate new challenge
+        if (errorElement) {
+            errorElement.style.display = 'block';
+        }
+
+        // Clear input
+        passwordInput.value = '';
+
+        // Generate new challenge after failed attempt
+        setTimeout(function () {
+            loginChallengeNumber = Math.floor(1000 + Math.random() * 9000);
+            var challengeElement = document.getElementById('challengeNumber');
+            if (challengeElement) {
+                challengeElement.textContent = loginChallengeNumber;
+            }
+            if (errorElement) {
+                errorElement.style.display = 'none';
+            }
+            passwordInput.focus();
+        }, 2000);
+    }
+}
+
+// Hide login overlay with animation
+function hideLoginOverlay() {
+    var overlay = document.getElementById('loginOverlay');
+    if (overlay) {
+        overlay.classList.add('hidden');
+        // Remove from DOM after animation
+        setTimeout(function () {
+            overlay.style.display = 'none';
+        }, 500);
+    }
+}
+
+// Logout function (for future use)
+function logout() {
+    sessionStorage.removeItem('crm_authenticated');
+    isAuthenticated = false;
+    location.reload();
+}
+
+// Initialize login when DOM is ready
+document.addEventListener('DOMContentLoaded', function () {
+    initLoginSystem();
+});
+
+// Expose login functions to window
+window.verifyLogin = verifyLogin;
+window.logout = logout;
+
 // Global Data Storage (use window.studentsData set by firebase-config.js)
 if (!window.studentsData) {
     window.studentsData = [];
