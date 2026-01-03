@@ -2818,6 +2818,23 @@ function renderAdmissions() {
     });
 
     admissionsList.innerHTML = html;
+
+    // Populate education level filter dropdown
+    populateAdmissionsLevelFilter();
+}
+
+function populateAdmissionsLevelFilter() {
+    var levelFilter = document.getElementById('admissionsLevelFilter');
+
+    // Only populate if the dropdown exists and only has the default option
+    if (levelFilter && levelFilter.options.length === 1 && window.levelsData) {
+        window.levelsData.forEach(function (level) {
+            var option = document.createElement('option');
+            option.value = level.name;
+            option.textContent = level.name;
+            levelFilter.appendChild(option);
+        });
+    }
 }
 
 function filterAdmissions() {
@@ -2828,16 +2845,6 @@ function filterAdmissions() {
     var admissionsList = document.getElementById('admissionsList');
     var admissionsCounter = document.getElementById('admissionsCounter');
     var admissions = window.admissionsData || [];
-
-    // Populate level filter dropdown if empty (except for the default option)
-    if (levelFilter && levelFilter.options.length === 1 && window.levelsData) {
-        window.levelsData.forEach(function (level) {
-            var option = document.createElement('option');
-            option.value = level.name;
-            option.textContent = level.name;
-            levelFilter.appendChild(option);
-        });
-    }
 
     if (admissions.length === 0) {
         admissionsList.innerHTML = '<div class="col-12 text-center py-5"><i class="bi bi-inbox icon-empty-state"></i><p class="text-secondary mt-3">No admissions yet. Click "Add Admission" to get started.</p></div>';
@@ -3360,6 +3367,7 @@ window.updateAdmissionUniversities = updateAdmissionUniversities;
 window.generateRoundDatePickers = generateRoundDatePickers;
 window.getLatestDate = getLatestDate;
 window.filterAdmissions = filterAdmissions;
+window.populateAdmissionsLevelFilter = populateAdmissionsLevelFilter;
 
 
 window.renderNotifications = renderNotifications;
