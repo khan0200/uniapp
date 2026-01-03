@@ -154,14 +154,16 @@ function renderStudents() {
             <div class="student-card ${s.deleted ? 'deleted-student' : ''}" onclick="viewStudentDetails('${uniqueId}')">
                 ${importanceColor ? `<div class="importance-indicator" style="background: ${importanceColor};"></div>` : ''}
                 <div class="student-card-body">
-                    <div class="student-name mb-2">${s.deleted ? '<i class="bi bi-trash text-danger me-2"></i>' : ''}${s.fullName}</div>
-                    <div class="student-pills">
-                        <span class="pill pill-id">${s.id}</span>
-                        <span class="pill pill-level">${s.level}</span>
-                        <span class="pill pill-tariff">${s.tariff}</span>
-                        ${s.group ? `<span class="pill pill-group">${s.group}</span>` : ''}
+                    <div class="student-card-header">
+                        <div class="student-name">${s.deleted ? '<i class="bi bi-trash text-danger me-2"></i>' : ''}${s.fullName}</div>
+                        <span class="student-id-pill">${s.id}</span>
                     </div>
-                    ${s.notes ? `<div class="student-notes">${s.notes}</div>` : ''}
+                    <div class="student-pills">
+                        <span class="pill pill-tariff"><i class="bi bi-tag-fill"></i> ${s.tariff}</span>
+                        <span class="pill pill-level"><i class="bi bi-mortarboard-fill"></i> ${s.level}</span>
+                        ${s.languageCertificate && s.languageCertificate !== 'NO CERTIFICATE' ? `<span class="pill pill-certificate"><i class="bi bi-award-fill"></i> ${s.languageCertificate}${s.certificateScore ? ': ' + s.certificateScore : ''}</span>` : ''}
+                    </div>
+                    ${s.university1 ? `<div class="student-university"><i class="bi bi-building"></i> ${s.university1}</div>` : ''}
                 </div>
             </div>
         </div>
@@ -866,17 +868,30 @@ function applyFilters() {
 
     container.innerHTML = filtered.map((s) => {
         const uniqueId = s.firestoreId || s.id;
+
+        // Get importance color
+        const importanceColors = {
+            'GREEN': '#28a745',
+            'YELLOW': '#ffc107',
+            'RED': '#dc3545'
+        };
+        const importanceColor = s.noteImportance ? importanceColors[s.noteImportance] : null;
+
         return `
         <div class="col-12 col-md-6 col-lg-4">
             <div class="student-card ${s.deleted ? 'deleted-student' : ''}" onclick="viewStudentDetails('${uniqueId}')">
+                ${importanceColor ? `<div class="importance-indicator" style="background: ${importanceColor};"></div>` : ''}
                 <div class="student-card-body">
-                    <div class="student-name mb-2">${s.deleted ? '<i class="bi bi-trash text-danger me-2"></i>' : ''}${s.fullName}</div>
-                    <div class="student-pills">
-                        <span class="pill pill-id">${s.id}</span>
-                        <span class="pill pill-level">${s.level}</span>
-                        <span class="pill pill-tariff">${s.tariff}</span>
-                        ${s.group ? `<span class="pill pill-group">${s.group}</span>` : ''}
+                    <div class="student-card-header">
+                        <div class="student-name">${s.deleted ? '<i class="bi bi-trash text-danger me-2"></i>' : ''}${s.fullName}</div>
+                        <span class="student-id-pill">${s.id}</span>
                     </div>
+                    <div class="student-pills">
+                        <span class="pill pill-tariff"><i class="bi bi-tag-fill"></i> ${s.tariff}</span>
+                        <span class="pill pill-level"><i class="bi bi-mortarboard-fill"></i> ${s.level}</span>
+                        ${s.languageCertificate && s.languageCertificate !== 'NO CERTIFICATE' ? `<span class="pill pill-certificate"><i class="bi bi-award-fill"></i> ${s.languageCertificate}${s.certificateScore ? ': ' + s.certificateScore : ''}</span>` : ''}
+                    </div>
+                    ${s.university1 ? `<div class="student-university"><i class="bi bi-building"></i> ${s.university1}</div>` : ''}
                 </div>
             </div>
         </div>

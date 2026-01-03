@@ -217,30 +217,54 @@ body {
 .card-apple {
     background: var(--bg-card);
     border-radius: var(--radius-lg);
-    border: 1px solid var(--border-subtle);
+    border: 1px solid var(--accent-primary);
+    box-shadow: 0 0 3px rgba(0, 120, 212, 0.15), 0 0 10px rgba(0, 120, 212, 0.08);
     transition: var(--transition-base);
     overflow: hidden;
 }
 
 .card-apple:hover {
-    border-color: var(--border-default);
-    box-shadow: var(--shadow-md);
+    border-color: #60a5fa;
+    box-shadow: 0 0 5px rgba(96, 165, 250, 0.2), 0 0 20px rgba(96, 165, 250, 0.1);
 }
+
+/* ==========================================
+   STUDENT CARD - Premium Redesign
+   ========================================== */
 
 .student-card {
     position: relative;
-    background: var(--bg-card);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-subtle);
-    padding: 0.875rem 1rem;
+    background: linear-gradient(145deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--accent-primary);
+    box-shadow: 0 0 3px rgba(0, 120, 212, 0.15), 0 0 10px rgba(0, 120, 212, 0.08);
+    padding: 1.25rem;
     cursor: pointer;
-    transition: var(--transition-base);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.student-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-primary), #60a5fa, var(--accent-success));
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .student-card:hover {
-    border-color: var(--border-default);
-    background: var(--bg-elevated);
-    box-shadow: var(--shadow-sm);
+    border-color: #60a5fa;
+    background: linear-gradient(145deg, var(--bg-elevated) 0%, var(--bg-card) 100%);
+    box-shadow: 0 0 5px rgba(96, 165, 250, 0.2), 0 0 20px rgba(96, 165, 250, 0.1), 0 8px 32px rgba(0, 0, 0, 0.25);
+    transform: translateY(-2px);
+}
+
+.student-card:hover::before {
+    opacity: 1;
 }
 
 .student-card-body {
@@ -248,60 +272,142 @@ body {
     z-index: 1;
 }
 
+/* Card Header - Name and ID in one row */
+.student-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.875rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
 .student-name {
-    font-size: 0.9rem;
-    font-weight: 600;
-    letter-spacing: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
     color: var(--text-primary);
-    line-height: 1.4;
-    margin-bottom: 0.5rem;
+    line-height: 1.3;
+    flex: 1;
+    min-width: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin: 0;
 }
 
-/* Ultra-compact pills layout */
+/* Student ID Pill - Compact badge next to name */
+.student-id-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--accent-primary), #1a86d9);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.7rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: var(--radius-full);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 120, 212, 0.3);
+}
+
+/* Pills container - Modern layout */
 .student-pills {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.375rem;
+    gap: 0.5rem;
+    margin-bottom: 0;
 }
 
+/* Individual pill styling */
 .pill {
-    display: inline-block;
-    padding: 0.125rem 0.5rem;
-    font-size: 0.65rem;
-    font-weight: 500;
-    letter-spacing: 0;
-    border-radius: var(--radius-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.65rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-radius: var(--radius-md);
     text-transform: uppercase;
-    transition: var(--transition-fast);
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.pill i {
+    font-size: 0.6rem;
+    opacity: 0.85;
+}
+
+.pill:hover {
+    transform: scale(1.02);
 }
 
 .pill-id {
     background: var(--bg-elevated);
     color: var(--text-secondary);
+    border-color: var(--border-subtle);
 }
 
 .pill-level {
-    background: rgba(0, 120, 212, 0.15);
+    background: linear-gradient(135deg, rgba(0, 120, 212, 0.12) 0%, rgba(96, 165, 250, 0.18) 100%);
     color: #60a5fa;
+    border-color: rgba(96, 165, 250, 0.25);
 }
 
 .pill-tariff {
-    background: var(--accent-success-bg);
+    background: linear-gradient(135deg, rgba(16, 124, 16, 0.12) 0%, rgba(74, 222, 128, 0.18) 100%);
     color: #4ade80;
+    border-color: rgba(74, 222, 128, 0.25);
+}
+
+.pill-certificate {
+    background: linear-gradient(135deg, rgba(202, 80, 16, 0.12) 0%, rgba(251, 146, 60, 0.18) 100%);
+    color: #fb923c;
+    border-color: rgba(251, 146, 60, 0.25);
 }
 
 .pill-group {
-    background: rgba(139, 92, 246, 0.15);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(167, 139, 250, 0.18) 100%);
     color: #a78bfa;
+    border-color: rgba(167, 139, 250, 0.25);
+}
+
+/* University ghost text - Subtle display at bottom */
+.student-university {
+    margin-top: 0.875rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed var(--border-subtle);
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.student-university i {
+    font-size: 0.85rem;
+    color: var(--text-disabled);
+    flex-shrink: 0;
+}
+
+.student-card:hover .student-university {
+    opacity: 0.5;
 }
 
 /* Student notes ghost text */
 .student-notes {
-    margin-top: 0.5rem;
-    padding-top: 0.5rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
     border-top: 1px solid var(--border-subtle);
     font-size: 0.75rem;
     color: var(--text-tertiary);
@@ -315,15 +421,31 @@ body {
     -webkit-box-orient: vertical;
 }
 
-/* Importance indicator - small rounded badge */
+/* Importance indicator - Animated glow effect */
 .importance-indicator {
     position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    width: 0.5rem;
-    height: 0.5rem;
+    top: 0.875rem;
+    right: 0.875rem;
+    width: 0.625rem;
+    height: 0.625rem;
     border-radius: 50%;
-    box-shadow: 0 0 0 2px var(--bg-card);
+    box-shadow: 0 0 0 3px var(--bg-card), 0 0 12px currentColor;
+    animation: pulse-glow 2s infinite;
+    z-index: 2;
+}
+
+@keyframes pulse-glow {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
 }
 
 /* Deleted student card styling */
@@ -338,14 +460,117 @@ body {
     background: rgba(209, 52, 56, 0.2);
 }
 
-/* Detail modal styles - Compact */
-.detail-group {
-    padding: 0.5rem 0;
+/* Payment Student Card - Compact */
+.payment-student-card-compact {
+    position: relative;
+    background: linear-gradient(145deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--accent-primary);
+    box-shadow: 0 0 3px rgba(0, 120, 212, 0.15), 0 0 10px rgba(0, 120, 212, 0.08);
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.payment-student-card-compact:hover {
+    border-color: #60a5fa;
+    box-shadow: 0 0 5px rgba(96, 165, 250, 0.2), 0 0 20px rgba(96, 165, 250, 0.1);
+    transform: translateY(-2px);
+}
+
+.payment-student-card-compact .student-name-compact {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.payment-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.pill-balance {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    font-weight: 600;
+}
+
+.pill-balance.bal-positive { color: var(--accent-success); border-color: rgba(16, 124, 16, 0.3); }
+.pill-balance.bal-negative { color: var(--accent-danger); border-color: rgba(209, 52, 56, 0.3); }
+
+/* Payment History Card */
+.payment-history-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--accent-primary);
+    box-shadow: 0 0 3px rgba(0, 120, 212, 0.15), 0 0 10px rgba(0, 120, 212, 0.08);
+    padding: 1rem;
+    position: relative;
+    transition: var(--transition-base);
+}
+
+.payment-history-card:hover {
+    border-color: #60a5fa;
+    box-shadow: 0 0 5px rgba(96, 165, 250, 0.2), 0 0 20px rgba(96, 165, 250, 0.1);
+}
+
+.payment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
     border-bottom: 1px solid var(--border-subtle);
 }
 
-.detail-group:last-child {
-    border-bottom: none;
+.payment-amount { font-weight: 700; font-size: 1.1rem; }
+.payment-timestamp { font-size: 0.75rem; color: var(--text-tertiary); }
+
+.payment-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.payment-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--radius-sm);
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+}
+
+.payment-method { color: var(--accent-primary); border-color: rgba(0, 120, 212, 0.2); }
+.payment-player { color: var(--text-primary); } #receiver
+
+.payment-notes {
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+    font-style: italic;
+    background: var(--bg-elevated);
+    padding: 0.5rem;
+    border-radius: var(--radius-sm);
+    margin-top: 0.5rem;
+}
+
+/* Detail modal styles - Compact */
+.detail-group {
+    padding: 0.5rem;
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-elevated);
+    box-shadow: 0 0 3px rgba(0, 135, 180, 0.15), 0 0 10px rgba(0, 176, 173, 0.08);
+    height: 100%;
+    
+
 }
 
 .detail-group .detail-label {
@@ -650,9 +875,10 @@ body {
 
 .filters-card {
     background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
+    border: 1px solid var(--accent-primary);
     border-radius: var(--radius-lg);
     padding: 1rem;
+    box-shadow: 0 0 3px rgba(0, 120, 212, 0.15), 0 0 10px rgba(0, 120, 212, 0.08);
 }
 
 .filters-row {
@@ -759,11 +985,11 @@ body {
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     .filter-item {
         min-width: 100%;
     }
-    
+
     .filter-actions {
         margin-left: 0;
         justify-content: flex-end;
@@ -1676,14 +1902,16 @@ body {
     justify-content: space-between;
     padding: 0.875rem 1rem;
     background: var(--bg-elevated);
-    border: 1px solid var(--border-subtle);
+    border: 1px solid var(--accent-primary);
     border-radius: var(--radius-md);
+    box-shadow: 0 0 3px rgba(0, 120, 212, 0.15), 0 0 10px rgba(0, 120, 212, 0.08);
     transition: var(--transition-base);
 }
 
 .settings-item:hover {
-    border-color: var(--border-medium);
+    border-color: #60a5fa;
     background: var(--bg-card);
+    box-shadow: 0 0 5px rgba(96, 165, 250, 0.2), 0 0 20px rgba(96, 165, 250, 0.1);
 }
 
 .settings-item-info {
@@ -1832,17 +2060,74 @@ body {
 }
 
 [data-bs-theme="light"] .student-card {
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 0 3px rgba(0, 120, 212, 0.15), 0 0 10px rgba(0, 120, 212, 0.08);
+    background: linear-gradient(145deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+}
+
+[data-bs-theme="light"] .student-card:hover {
+    box-shadow: 0 0 5px rgba(96, 165, 250, 0.2), 0 0 20px rgba(96, 165, 250, 0.1), 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+[data-bs-theme="light"] .card-apple {
+    box-shadow: 0 0 3px rgba(0, 120, 212, 0.15), 0 0 10px rgba(0, 120, 212, 0.08);
+}
+
+[data-bs-theme="light"] .card-apple:hover {
+    box-shadow: 0 0 5px rgba(96, 165, 250, 0.2), 0 0 20px rgba(96, 165, 250, 0.1);
+}
+
+[data-bs-theme="light"] .filters-card {
+    box-shadow: 0 0 3px rgba(0, 120, 212, 0.15), 0 0 10px rgba(0, 120, 212, 0.08);
+}
+
+[data-bs-theme="light"] .settings-item {
+    box-shadow: 0 0 3px rgba(0, 120, 212, 0.15), 0 0 10px rgba(0, 120, 212, 0.08);
+}
+
+[data-bs-theme="light"] .settings-item:hover {
+    box-shadow: 0 0 5px rgba(96, 165, 250, 0.2), 0 0 20px rgba(96, 165, 250, 0.1);
+}
+
+[data-bs-theme="light"] .payment-student-card-compact,
+[data-bs-theme="light"] .payment-history-card {
+    box-shadow: 0 0 3px rgba(0, 120, 212, 0.15), 0 0 10px rgba(0, 120, 212, 0.08);
+}
+
+[data-bs-theme="light"] .payment-student-card-compact:hover,
+[data-bs-theme="light"] .payment-history-card:hover {
+    box-shadow: 0 0 5px rgba(96, 165, 250, 0.2), 0 0 20px rgba(96, 165, 250, 0.1);
+}
+
+[data-bs-theme="light"] .student-card::before {
+    background: linear-gradient(90deg, #0078d4, #60a5fa, #107c10);
+}
+
+[data-bs-theme="light"] .student-id-pill {
+    box-shadow: 0 2px 8px rgba(0, 120, 212, 0.2);
 }
 
 [data-bs-theme="light"] .pill-level {
-    background: rgba(0, 120, 212, 0.12);
+    background: linear-gradient(135deg, rgba(0, 120, 212, 0.1) 0%, rgba(96, 165, 250, 0.15) 100%);
     color: #0078d4;
+    border-color: rgba(0, 120, 212, 0.2);
 }
 
 [data-bs-theme="light"] .pill-tariff {
-    background: var(--accent-success-bg);
+    background: linear-gradient(135deg, rgba(16, 124, 16, 0.1) 0%, rgba(74, 222, 128, 0.15) 100%);
     color: #107c10;
+    border-color: rgba(16, 124, 16, 0.2);
+}
+
+[data-bs-theme="light"] .pill-certificate {
+    background: linear-gradient(135deg, rgba(202, 80, 16, 0.1) 0%, rgba(251, 146, 60, 0.15) 100%);
+    color: #ca5010;
+    border-color: rgba(202, 80, 16, 0.2);
+}
+
+[data-bs-theme="light"] .pill-group {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(167, 139, 250, 0.15) 100%);
+    color: #7c3aed;
+    border-color: rgba(139, 92, 246, 0.2);
 }
 
 [data-bs-theme="light"] .badge-level {
