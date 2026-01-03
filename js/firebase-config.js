@@ -935,6 +935,88 @@ async function deleteUniversityFromFirestore(firestoreId) {
 }
 
 // ==========================================
+// GROUPS FIRESTORE FUNCTIONS
+// ==========================================
+
+async function saveGroupToFirestore(groupData) {
+    if (!firebaseInitialized) {
+        console.log('Firebase not available');
+        showNotification('Error: Firebase not available', 'error');
+        return;
+    }
+
+    try {
+        groupData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        const docRef = await db.collection('groups').add(groupData);
+        console.log('✅ Group saved with ID:', docRef.id);
+        showNotification('Group saved successfully!', 'success');
+    } catch (error) {
+        console.error('❌ Error saving group:', error);
+        showNotification('Error saving group: ' + error.message, 'error');
+    }
+}
+
+async function loadGroupsFromFirestore() {
+    if (!firebaseInitialized) {
+        console.log('Firebase not available, using empty groups');
+        window.groupsData = [];
+        if (typeof renderGroupsList === 'function') renderGroupsList();
+        if (typeof updateGroupDropdowns === 'function') updateGroupDropdowns();
+        return;
+    }
+
+    db.collection('groups')
+        .orderBy('name')
+        .onSnapshot((snapshot) => {
+            window.groupsData = [];
+
+            snapshot.forEach((doc) => {
+                window.groupsData.push({
+                    firestoreId: doc.id,
+                    ...doc.data()
+                });
+            });
+
+            // Remove duplicates by firestoreId
+            window.groupsData = Array.from(new Map(window.groupsData.map(g => [g.firestoreId, g])).values());
+
+            console.log(`✅ Loaded ${window.groupsData.length} groups from Firestore`);
+
+            if (typeof renderGroupsList === 'function') renderGroupsList();
+            if (typeof updateGroupDropdowns === 'function') updateGroupDropdowns();
+        }, (error) => {
+            console.error('❌ Error loading groups:', error);
+        });
+}
+
+async function updateGroupInFirestore(firestoreId, updatedData) {
+    if (!firebaseInitialized || !firestoreId) return;
+
+    try {
+        updatedData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+        await db.collection('groups').doc(firestoreId).update(updatedData);
+        console.log('✅ Group updated');
+        showNotification('Group updated successfully!', 'success');
+    } catch (error) {
+        console.error('❌ Error updating group:', error);
+        showNotification('Error updating group: ' + error.message, 'error');
+    }
+}
+
+async function deleteGroupFromFirestore(firestoreId) {
+    if (!firebaseInitialized || !firestoreId) return;
+
+    try {
+        await db.collection('groups').doc(firestoreId).delete();
+        console.log('✅ Group deleted');
+        showNotification('Group deleted successfully!', 'success');
+    } catch (error) {
+        console.error('❌ Error deleting group:', error);
+        showNotification('Error deleting group: ' + error.message, 'error');
+    }
+}
+
+// ==========================================
 // INITIALIZE ALL DATA ON PAGE LOAD
 // ==========================================
 
@@ -954,6 +1036,7 @@ document.addEventListener('DOMContentLoaded', function () {
             loadTariffsFromFirestore();
             loadLevelsFromFirestore();
             loadUniversitiesFromFirestore();
+            loadGroupsFromFirestore();
         }
     } else {
         console.log('📦 Using localStorage mode');
@@ -987,3 +1070,7 @@ window.saveUniversityToFirestore = saveUniversityToFirestore;
 window.loadUniversitiesFromFirestore = loadUniversitiesFromFirestore;
 window.updateUniversityInFirestore = updateUniversityInFirestore;
 window.deleteUniversityFromFirestore = deleteUniversityFromFirestore;
+window.saveGroupToFirestore = saveGroupToFirestore;
+window.loadGroupsFromFirestore = loadGroupsFromFirestore;
+window.updateGroupInFirestore = updateGroupInFirestore;
+window.deleteGroupFromFirestore = deleteGroupFromFirestore;

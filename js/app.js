@@ -59,6 +59,7 @@ function showTab(tabName) {
         if (typeof renderTariffsList === 'function') renderTariffsList();
         if (typeof renderLevelsList === 'function') renderLevelsList();
         if (typeof renderUniversitiesList === 'function') renderUniversitiesList();
+        if (typeof renderGroupsList === 'function') renderGroupsList();
     }
 }
 
@@ -158,6 +159,7 @@ function renderStudents() {
                         <span class="pill pill-id">${s.id}</span>
                         <span class="pill pill-level">${s.level}</span>
                         <span class="pill pill-tariff">${s.tariff}</span>
+                        ${s.group ? `<span class="pill pill-group">${s.group}</span>` : ''}
                     </div>
                     ${s.notes ? `<div class="student-notes">${s.notes}</div>` : ''}
                 </div>
@@ -204,9 +206,15 @@ function viewStudentDetails(uniqueId) {
         .map(l => `<option value="${l.name}" ${s.level === l.name ? 'selected' : ''}>${l.name}</option>`)
         .join('');
 
+    // Generate group options from dynamic data
+    const groupOptions = (window.groupsData || [])
+        .map(g => `<option value="${g.name}" ${s.group === g.name ? 'selected' : ''}>${g.name}</option>`)
+        .join('');
+
     const detailsHtml = `
         <div class="row g-2">
-            <div class="col-md-6">
+            <!-- Row: Student ID (30%) and Full Name (70%) -->
+            <div class="col-md-4">
                 <div class="detail-group editable" data-field="id">
                     <label class="detail-label">Student ID</label>
                     <div class="detail-value-wrap">
@@ -219,7 +227,7 @@ function viewStudentDetails(uniqueId) {
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-8">
                 <div class="detail-group editable" data-field="fullName">
                     <label class="detail-label">Full Name</label>
                     <div class="detail-value-wrap">
@@ -235,7 +243,9 @@ function viewStudentDetails(uniqueId) {
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+
+            <!-- Row: Phone 1, Phone 2, Email -->
+            <div class="col-md-4">
                 <div class="detail-group editable" data-field="phone1">
                     <label class="detail-label">Phone 1</label>
                     <div class="detail-value-wrap">
@@ -251,7 +261,7 @@ function viewStudentDetails(uniqueId) {
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="detail-group editable" data-field="phone2">
                     <label class="detail-label">Phone 2</label>
                     <div class="detail-value-wrap">
@@ -267,7 +277,7 @@ function viewStudentDetails(uniqueId) {
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="detail-group editable" data-field="email">
                     <label class="detail-label">Email</label>
                     <div class="detail-value-wrap">
@@ -283,7 +293,9 @@ function viewStudentDetails(uniqueId) {
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+
+            <!-- Row: Birthday, Passport Number, Tariff -->
+            <div class="col-md-4">
                 <div class="detail-group editable" data-field="birthday">
                     <label class="detail-label">Birthday</label>
                     <div class="detail-value-wrap">
@@ -299,7 +311,7 @@ function viewStudentDetails(uniqueId) {
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="detail-group editable" data-field="passport">
                     <label class="detail-label">Passport Number</label>
                     <div class="detail-value-wrap">
@@ -315,22 +327,7 @@ function viewStudentDetails(uniqueId) {
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="detail-group editable" data-field="level">
-                    <label class="detail-label">Education Level</label>
-                    <div class="detail-value-wrap">
-                        <span class="detail-value"><span class="badge badge-level">${s.level}</span></span>
-                        <button class="edit-btn" onclick="startEdit('level', 'select'); event.stopPropagation();"><i class="bi bi-pencil"></i></button>
-                    </div>
-                    <div class="edit-field" style="display:none;">
-                        <select class="form-select ios-input form-control-sm" id="edit-level">
-                            ${levelOptions}
-                        </select>
-                        <div class="edit-actions"><button class="save-btn" onclick="saveEdit('level')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('level')"><i class="bi bi-x"></i></button></div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="detail-group editable" data-field="tariff">
                     <label class="detail-label">Tariff</label>
                     <div class="detail-value-wrap">
@@ -345,7 +342,40 @@ function viewStudentDetails(uniqueId) {
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+
+            <!-- Row: Group, Education Level, Language Certificate -->
+            <div class="col-md-4">
+                <div class="detail-group editable" data-field="group">
+                    <label class="detail-label">Group</label>
+                    <div class="detail-value-wrap">
+                        <span class="detail-value"><span class="badge badge-group">${s.group || 'No Group'}</span></span>
+                        <button class="edit-btn" onclick="startEdit('group', 'select'); event.stopPropagation();"><i class="bi bi-pencil"></i></button>
+                    </div>
+                    <div class="edit-field" style="display:none;">
+                        <select class="form-select ios-input form-control-sm" id="edit-group">
+                            <option value="">No Group</option>
+                            ${groupOptions}
+                        </select>
+                        <div class="edit-actions"><button class="save-btn" onclick="saveEdit('group')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('group')"><i class="bi bi-x"></i></button></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="detail-group editable" data-field="level">
+                    <label class="detail-label">Education Level</label>
+                    <div class="detail-value-wrap">
+                        <span class="detail-value"><span class="badge badge-level">${s.level}</span></span>
+                        <button class="edit-btn" onclick="startEdit('level', 'select'); event.stopPropagation();"><i class="bi bi-pencil"></i></button>
+                    </div>
+                    <div class="edit-field" style="display:none;">
+                        <select class="form-select ios-input form-control-sm" id="edit-level">
+                            ${levelOptions}
+                        </select>
+                        <div class="edit-actions"><button class="save-btn" onclick="saveEdit('level')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('level')"><i class="bi bi-x"></i></button></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
                 <div class="detail-group editable" data-field="languageCertificate">
                     <label class="detail-label">Language Certificate</label>
                     <div class="detail-value-wrap">
@@ -367,6 +397,8 @@ function viewStudentDetails(uniqueId) {
                     </div>
                 </div>
             </div>
+
+            <!-- Row: University 1, University 2 -->
             <div class="col-md-6">
                 <div class="detail-group editable" data-field="university1">
                     <label class="detail-label">University 1</label>
@@ -399,6 +431,8 @@ function viewStudentDetails(uniqueId) {
                     </div>
                 </div>
             </div>
+
+            <!-- Address - Full Width -->
             <div class="col-12">
                 <div class="detail-group editable" data-field="address">
                     <label class="detail-label">Address</label>
@@ -415,6 +449,8 @@ function viewStudentDetails(uniqueId) {
                     </div>
                 </div>
             </div>
+
+            <!-- Notes - Full Width -->
             <div class="col-12">
                 <div class="detail-group editable" data-field="notes">
                     <label class="detail-label">Notes ${s.noteImportance ? `<span class="badge rounded-pill ms-2" style="background: ${s.noteImportance === 'GREEN' ? '#28a745' : s.noteImportance === 'YELLOW' ? '#ffc107' : '#dc3545'}; color: white; font-size: 0.7rem;">${s.noteImportance}</span>` : ''}</label>
@@ -565,6 +601,30 @@ function saveEdit(field) {
     // Refresh the student list
     applyFilters();
     showNotification('Field updated!', 'success');
+}
+
+// Toggle Student ID edit mode in modal header
+function toggleIdEdit() {
+    const idBadge = document.querySelector('.student-id-badge');
+    const idEditGroup = document.querySelector('[data-field="id"]');
+
+    if (idBadge && idEditGroup) {
+        if (idEditGroup.style.display === 'none') {
+            // Show edit field
+            idBadge.style.display = 'none';
+            idEditGroup.style.display = 'block';
+            document.getElementById('edit-id').focus();
+        } else {
+            // Hide edit field and save
+            const newId = document.getElementById('edit-id').value.trim();
+            if (newId) {
+                saveEdit('id');
+                idBadge.textContent = newId;
+            }
+            idBadge.style.display = 'inline-flex';
+            idEditGroup.style.display = 'none';
+        }
+    }
 }
 
 // Confirm delete student (soft delete)
@@ -761,6 +821,9 @@ function applyFilters() {
     const levelDropdown = document.getElementById('filterLevel');
     const levelFilter = levelDropdown ? levelDropdown.value : '';
 
+    const groupDropdown = document.getElementById('filterGroup');
+    const groupFilter = groupDropdown ? groupDropdown.value : '';
+
     const filtered = window.studentsData.filter(s => {
         // Handle deleted students filter
         if (levelFilter === 'DELETED') {
@@ -785,7 +848,10 @@ function applyFilters() {
         // Level filter
         const matchesLevel = !levelFilter || s.level === levelFilter;
 
-        return matchesSearch && matchesTariff && matchesLevel;
+        // Group filter
+        const matchesGroup = !groupFilter || s.group === groupFilter;
+
+        return matchesSearch && matchesTariff && matchesLevel && matchesGroup;
     });
 
     // Render filtered data directly (don't replace window.studentsData)
@@ -809,6 +875,7 @@ function applyFilters() {
                         <span class="pill pill-id">${s.id}</span>
                         <span class="pill pill-level">${s.level}</span>
                         <span class="pill pill-tariff">${s.tariff}</span>
+                        ${s.group ? `<span class="pill pill-group">${s.group}</span>` : ''}
                     </div>
                 </div>
             </div>
@@ -840,6 +907,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const levelFilter = document.getElementById('filterLevel');
     if (levelFilter) {
         levelFilter.addEventListener('change', applyFilters);
+    }
+
+    // Group filter listener
+    const groupFilter = document.getElementById('filterGroup');
+    if (groupFilter) {
+        groupFilter.addEventListener('change', applyFilters);
     }
 
     // Initialize Excel modal when opened
@@ -1915,6 +1988,137 @@ function confirmDeleteLevel(levelId) {
 }
 
 // ==========================================
+// GROUPS MANAGEMENT
+// ==========================================
+
+// Global groups data
+window.groupsData = [];
+
+function renderGroupsList() {
+    const container = document.getElementById('groupsListContainer');
+    if (!container) return;
+
+    if (window.groupsData.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-4 text-secondary">
+                <i class="bi bi-people" style="font-size: 2rem; opacity: 0.5;"></i>
+                <p class="mt-2 mb-0">No groups configured. Add your first group.</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = window.groupsData.map(g => `
+        <div class="settings-item">
+            <div class="settings-item-info">
+                <span class="settings-item-name">${g.name}</span>
+            </div>
+            <div class="settings-item-actions">
+                <button class="settings-item-btn edit-btn" onclick="editGroup('${g.firestoreId}')" title="Edit">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="settings-item-btn delete-btn" onclick="confirmDeleteGroup('${g.firestoreId}')" title="Delete">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function openGroupModal(groupId = null) {
+    const modal = new bootstrap.Modal(document.getElementById('groupModal'));
+    const form = document.getElementById('groupForm');
+    const title = document.getElementById('groupModalTitle');
+
+    form.reset();
+    document.getElementById('groupEditId').value = '';
+
+    if (groupId) {
+        const group = window.groupsData.find(g => g.firestoreId === groupId);
+        if (group) {
+            title.innerHTML = '<i class="bi bi-people-fill me-2"></i>Edit Group';
+            document.getElementById('groupEditId').value = groupId;
+            document.getElementById('groupName').value = group.name;
+        }
+    } else {
+        title.innerHTML = '<i class="bi bi-people-fill me-2"></i>Add Group';
+    }
+
+    modal.show();
+}
+
+function editGroup(groupId) {
+    openGroupModal(groupId);
+}
+
+function saveGroup() {
+    const name = document.getElementById('groupName').value.trim().toUpperCase();
+    const editId = document.getElementById('groupEditId').value;
+
+    if (!name) {
+        showNotification('Please enter a group name!', 'error');
+        return;
+    }
+
+    const groupData = {
+        name
+    };
+
+    if (editId) {
+        if (typeof updateGroupInFirestore === 'function') {
+            updateGroupInFirestore(editId, groupData);
+        }
+    } else {
+        if (typeof saveGroupToFirestore === 'function') {
+            saveGroupToFirestore(groupData);
+        }
+    }
+
+    const modal = bootstrap.Modal.getInstance(document.getElementById('groupModal'));
+    if (modal) modal.hide();
+}
+
+function confirmDeleteGroup(groupId) {
+    const group = window.groupsData.find(g => g.firestoreId === groupId);
+    if (!group) return;
+
+    pendingSettingsDelete = {
+        type: 'group',
+        id: groupId
+    };
+
+    document.getElementById('confirmSettingsDeleteTitle').textContent = 'Delete Group';
+    document.getElementById('confirmSettingsDeleteMessage').textContent =
+        `Are you sure you want to delete "${group.name}"?`;
+
+    const modal = new bootstrap.Modal(document.getElementById('confirmSettingsDeleteModal'));
+    modal.show();
+}
+
+// Update group filter dropdown
+function updateGroupDropdowns() {
+    const groupSelects = document.querySelectorAll('#filterGroup');
+
+    groupSelects.forEach(select => {
+        const currentValue = select.value;
+
+        select.innerHTML = '<option value="">All Groups</option>';
+
+        (window.groupsData || []).forEach(g => {
+            const option = document.createElement('option');
+            option.value = g.name;
+            option.textContent = g.name;
+            select.appendChild(option);
+        });
+
+        // Restore previous selection if it still exists
+        if (currentValue) {
+            select.value = currentValue;
+        }
+    });
+}
+
+// ==========================================
 // UNIVERSITIES MANAGEMENT
 // ==========================================
 
@@ -2107,6 +2311,11 @@ function executeSettingsDelete() {
                 deleteUniversityFromFirestore(id);
             }
             break;
+        case 'group':
+            if (typeof deleteGroupFromFirestore === 'function') {
+                deleteGroupFromFirestore(id);
+            }
+            break;
     }
 
     pendingSettingsDelete = null;
@@ -2237,6 +2446,12 @@ window.executeSettingsDelete = executeSettingsDelete;
 window.updateTariffDropdowns = updateTariffDropdowns;
 window.updateLevelDropdowns = updateLevelDropdowns;
 window.updateUniversityDropdowns = updateUniversityDropdowns;
+window.openGroupModal = openGroupModal;
+window.editGroup = editGroup;
+window.saveGroup = saveGroup;
+window.confirmDeleteGroup = confirmDeleteGroup;
+window.renderGroupsList = renderGroupsList;
+window.updateGroupDropdowns = updateGroupDropdowns;
 
 window.showTab = showTab;
 window.saveStudent = saveStudent;
@@ -2269,3 +2484,4 @@ window.downloadPaymentHistoryAsExcel = downloadPaymentHistoryAsExcel;
 window.editPayment = editPayment;
 window.savePaymentEdit = savePaymentEdit;
 window.deletePayment = deletePayment;
+window.toggleIdEdit = toggleIdEdit;

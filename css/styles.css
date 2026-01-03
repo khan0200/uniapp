@@ -8,7 +8,7 @@
 /* CSS Variables - Windows 11 Fluent Design System */
 :root {
     /* === DARK THEME (Default) === */
-    
+
     /* Background Colors - Deep Neutral Grays */
     --bg-primary: #202020;
     --bg-secondary: #272727;
@@ -24,7 +24,7 @@
     --accent-primary: #0078d4;
     --accent-primary-hover: #1a86d9;
     --accent-primary-active: #006cbe;
-    
+
     /* Semantic Colors - Muted */
     --accent-success: #107c10;
     --accent-success-bg: rgba(16, 124, 16, 0.15);
@@ -293,6 +293,11 @@ body {
     color: #4ade80;
 }
 
+.pill-group {
+    background: rgba(139, 92, 246, 0.15);
+    color: #a78bfa;
+}
+
 /* Student notes ghost text */
 .student-notes {
     margin-top: 0.5rem;
@@ -542,6 +547,30 @@ body {
     color: #60a5fa;
 }
 
+/* Student Modal Header Styles */
+.student-modal-header {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.student-id-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-primary);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-full);
+    letter-spacing: 0.02em;
+}
+
+/* Student Details Modal - wider */
+#viewStudentModal .modal-dialog {
+    max-width: 990px;
+}
+
 .badge-tariff {
     background: var(--accent-success-bg);
     color: #4ade80;
@@ -550,6 +579,11 @@ body {
 .badge-language {
     background: rgba(202, 80, 16, 0.15);
     color: #fb923c;
+}
+
+.badge-group {
+    background: rgba(139, 92, 246, 0.15);
+    color: #a78bfa;
 }
 
 /* ==========================================
@@ -610,6 +644,133 @@ body {
     display: block;
 }
 
+/* ==========================================
+   FILTERS CARD - Students Menu
+   ========================================== */
+
+.filters-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+}
+
+.filters-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.filter-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-width: 140px;
+}
+
+.filter-item.filter-search {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-icon {
+    position: absolute;
+    left: 0.875rem;
+    color: var(--text-tertiary);
+    font-size: 0.9rem;
+    z-index: 2;
+    pointer-events: none;
+    transition: var(--transition-fast);
+}
+
+.filter-item:focus-within .filter-icon {
+    color: var(--accent-primary);
+}
+
+.filter-input {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: var(--transition-base);
+    width: 100%;
+}
+
+.filter-input:hover {
+    border-color: var(--border-default);
+    background: var(--bg-card);
+}
+
+.filter-input:focus {
+    background: var(--bg-card);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
+    outline: none;
+}
+
+.filter-input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.form-select.filter-input {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23a8a9b4' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 12px 10px;
+    padding-right: 2rem;
+    cursor: pointer;
+    appearance: none;
+}
+
+.filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+.btn-filter-action {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    color: var(--accent-success);
+    font-size: 1rem;
+    transition: var(--transition-base);
+}
+
+.btn-filter-action:hover {
+    background: var(--accent-success);
+    border-color: var(--accent-success);
+    color: #ffffff;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .filters-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-item {
+        min-width: 100%;
+    }
+    
+    .filter-actions {
+        margin-left: 0;
+        justify-content: flex-end;
+    }
+}
+
+/* Legacy search wrapper (keep for backward compatibility) */
 .search-wrapper {
     position: relative;
 }

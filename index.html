@@ -58,43 +58,62 @@
 
         <!-- STUDENTS TAB -->
         <div id="students-tab" class="tab-content-section">
-            <!-- Search and Actions Bar -->
-            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-                <div class="d-flex gap-2 flex-grow-1 search-wrapper-lg">
-                    <div class="search-wrapper flex-grow-1">
-                        <i class="bi bi-search search-icon"></i>
-                        <input type="text" id="searchInput" class="form-control ios-input ps-5"
-                            placeholder="Search students...">
+            <!-- Search and Filters Card -->
+            <div class="filters-card mb-4">
+                <div class="filters-row">
+                    <!-- Search Input -->
+                    <div class="filter-item filter-search">
+                        <i class="bi bi-search filter-icon"></i>
+                        <input type="text" id="searchInput" class="form-control filter-input"
+                            placeholder="Search by name, ID, phone...">
                     </div>
-                    <select class="form-select ios-input filter-select-tariff" id="filterTariff"
-                        aria-label="Filter by tariff">
-                        <option value="">All Tariffs</option>
-                        <option value="STANDART">STANDART</option>
-                        <option value="PREMIUM">PREMIUM</option>
-                        <option value="VISA PLUS">VISA PLUS</option>
-                        <option value="E-VISA">E-VISA</option>
-                        <option value="REGIONAL VISA">REGIONAL VISA</option>
-                    </select>
-                    <select class="form-select ios-input filter-select-level" id="filterLevel"
-                        aria-label="Filter by education level">
-                        <option value="">All Levels</option>
-                        <option value="COLLEGE">COLLEGE</option>
-                        <option value="BACHELOR">BACHELOR</option>
-                        <option value="MASTERS">MASTERS</option>
-                        <option value="MASTER NO CERTIFICATE">MASTER NO CERTIFICATE</option>
-                        <option value="LANGUAGE COURSE">LANGUAGE COURSE</option>
-                        <option value="DELETED" class="option-deleted">Deleted students</option>
-                    </select>
-                    <!-- Download as Excel Button -->
-                    <button class="btn btn-outline-success rounded-pill px-3" data-bs-toggle="modal"
-                        data-bs-target="#downloadExcelModal">
-                        <i class="bi bi-file-earmark-excel me-2"></i>Excel
-                    </button>
+                    
+                    <!-- Tariff Filter -->
+                    <div class="filter-item">
+                        <i class="bi bi-tag filter-icon"></i>
+                        <select class="form-select filter-input" id="filterTariff" aria-label="Filter by tariff">
+                            <option value="">All Tariffs</option>
+                            <option value="STANDART">STANDART</option>
+                            <option value="PREMIUM">PREMIUM</option>
+                            <option value="VISA PLUS">VISA PLUS</option>
+                            <option value="E-VISA">E-VISA</option>
+                            <option value="REGIONAL VISA">REGIONAL VISA</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Level Filter -->
+                    <div class="filter-item">
+                        <i class="bi bi-mortarboard filter-icon"></i>
+                        <select class="form-select filter-input" id="filterLevel" aria-label="Filter by education level">
+                            <option value="">All Levels</option>
+                            <option value="COLLEGE">COLLEGE</option>
+                            <option value="BACHELOR">BACHELOR</option>
+                            <option value="MASTERS">MASTERS</option>
+                            <option value="MASTER NO CERTIFICATE">MASTER NO CERTIFICATE</option>
+                            <option value="LANGUAGE COURSE">LANGUAGE COURSE</option>
+                            <option value="DELETED" class="option-deleted">🗑️ Deleted students</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Group Filter -->
+                    <div class="filter-item">
+                        <i class="bi bi-people filter-icon"></i>
+                        <select class="form-select filter-input" id="filterGroup" aria-label="Filter by group">
+                            <option value="">All Groups</option>
+                            <!-- Groups will be populated dynamically -->
+                        </select>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="filter-actions">
+                        <button class="btn btn-filter-action" data-bs-toggle="modal" data-bs-target="#downloadExcelModal" title="Export to Excel">
+                            <i class="bi bi-file-earmark-excel"></i>
+                        </button>
+                        <button class="btn btn-primary-apple rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                            <i class="bi bi-plus-circle me-2"></i>Add Student
+                        </button>
+                    </div>
                 </div>
-                <button class="btn btn-primary-apple rounded-pill px-4 shadow-apple" data-bs-toggle="modal"
-                    data-bs-target="#addStudentModal">
-                    <i class="bi bi-plus-circle me-2"></i> Add Student
-                </button>
             </div>
 
             <!-- Student Cards Container (Grid Layout) -->
@@ -229,10 +248,10 @@
                 </div>
             </div>
 
-            <!-- Tariff & Education Levels Row (Side by Side on Desktop) -->
+            <!-- Tariff, Education Levels & Groups Row (Side by Side on Desktop) -->
             <div class="row g-4 mb-4">
                 <!-- Tariff Management Section -->
-                <div class="col-lg-6">
+                <div class="col-lg-4">
                     <div class="card-apple p-4 h-100">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div>
@@ -252,7 +271,7 @@
                 </div>
 
                 <!-- Education Levels Section -->
-                <div class="col-lg-6">
+                <div class="col-lg-4">
                     <div class="card-apple p-4 h-100">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div>
@@ -266,6 +285,26 @@
                         <div id="levelsListContainer" class="settings-list">
                             <div class="text-center py-4 text-secondary">
                                 <i class="bi bi-hourglass-split"></i> Loading levels...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Groups Section -->
+                <div class="col-lg-4">
+                    <div class="card-apple p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="mb-1"><i class="bi bi-people-fill me-2"></i>Student Groups</h5>
+                                <p class="text-secondary mb-0 small">Manage student groups</p>
+                            </div>
+                            <button class="btn btn-primary-apple rounded-pill px-3" onclick="openGroupModal()">
+                                <i class="bi bi-plus-circle me-1"></i> Add
+                            </button>
+                        </div>
+                        <div id="groupsListContainer" class="settings-list">
+                            <div class="text-center py-4 text-secondary">
+                                <i class="bi bi-hourglass-split"></i> Loading groups...
                             </div>
                         </div>
                     </div>
@@ -606,29 +645,33 @@
                     <form id="withdrawPaymentForm">
                         <!-- Amount -->
                         <div class="mb-3">
-                            <label for="withdrawAmount" class="form-label">Amount <span class="text-danger">*</span></label>
+                            <label for="withdrawAmount" class="form-label">Amount <span
+                                    class="text-danger">*</span></label>
                             <div class="input-group">
-                                <input type="text" class="form-control ios-input" id="withdrawAmount" 
-                                       placeholder="0" required>
+                                <input type="text" class="form-control ios-input" id="withdrawAmount" placeholder="0"
+                                    required>
                                 <span class="input-group-text input-group-text-styled">UZS</span>
                             </div>
                         </div>
-                        
+
                         <!-- Student Selection (Optional) -->
                         <div class="mb-3">
-                            <label for="withdrawStudent" class="form-label">Choose Student <span class="text-secondary small">(Optional)</span></label>
+                            <label for="withdrawStudent" class="form-label">Choose Student <span
+                                    class="text-secondary small">(Optional)</span></label>
                             <select class="form-select ios-input" id="withdrawStudent">
                                 <option value="">No student (General withdrawal)</option>
                                 <!-- Students will be populated here -->
                             </select>
-                            <small class="text-secondary">Select a student if this withdrawal is for student refund or extra service</small>
+                            <small class="text-secondary">Select a student if this withdrawal is for student refund or
+                                extra service</small>
                         </div>
-                        
+
                         <!-- Reason -->
                         <div class="mb-3">
-                            <label for="withdrawReason" class="form-label">Reason <span class="text-danger">*</span></label>
-                            <textarea class="form-control ios-input text-uppercase-input" id="withdrawReason" rows="3" 
-                                      placeholder="REASON FOR WITHDRAWAL..." required></textarea>
+                            <label for="withdrawReason" class="form-label">Reason <span
+                                    class="text-danger">*</span></label>
+                            <textarea class="form-control ios-input text-uppercase-input" id="withdrawReason" rows="3"
+                                placeholder="REASON FOR WITHDRAWAL..." required></textarea>
                         </div>
                     </form>
                 </div>
@@ -811,6 +854,39 @@
                         data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary-apple rounded-pill px-4" onclick="saveLevel()">
                         <i class="bi bi-check-circle me-2"></i>Save Level
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Group Modal (Add/Edit) -->
+    <div class="modal fade" id="groupModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-glass">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title fw-bold" id="groupModalTitle">
+                        <i class="bi bi-people-fill me-2"></i>Add Group
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="groupForm">
+                        <input type="hidden" id="groupEditId">
+                        <div class="mb-3">
+                            <label for="groupName" class="form-label">Group Name <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control ios-input text-uppercase-input" id="groupName"
+                                placeholder="e.g., GROUP 1" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary-apple rounded-pill px-4" onclick="saveGroup()">
+                        <i class="bi bi-check-circle me-2"></i>Save Group
                     </button>
                 </div>
             </div>
