@@ -1030,6 +1030,10 @@ document.addEventListener('DOMContentLoaded', function () {
         loadStudentsFromFirestore();
         loadPaymentsFromFirestore();
 
+        // Load admissions and notifications
+        loadAdmissionsFromFirestore();
+        loadNotificationsFromFirestore();
+
         // Load settings data (only once)
         if (!settingsDataLoaded) {
             settingsDataLoaded = true;
@@ -1042,6 +1046,8 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('📦 Using localStorage mode');
         loadFromLocalStorage();
         loadPaymentsFromLocalStorage();
+        loadAdmissionsFromLocalStorage();
+        loadNotificationsFromLocalStorage();
     }
 });
 
@@ -1074,3 +1080,353 @@ window.saveGroupToFirestore = saveGroupToFirestore;
 window.loadGroupsFromFirestore = loadGroupsFromFirestore;
 window.updateGroupInFirestore = updateGroupInFirestore;
 window.deleteGroupFromFirestore = deleteGroupFromFirestore;
+
+// ==========================================
+// ADMISSIONS FIRESTORE FUNCTIONS
+// ==========================================
+
+async function saveAdmissionToFirestore(admissionData) {
+    if (!firebaseInitialized) {
+        console.log('Firebase not available, saving admission to localStorage');
+        saveAdmissionToLocalStorage(admissionData);
+        return;
+    }
+
+    try {
+        admissionData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        admissionData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+
+        const docRef = await db.collection('admissions').add(admissionData);
+        console.log('✅ Admission saved to Firestore with ID:', docRef.id);
+
+        if (typeof showNotification === 'function') {
+            showNotification('Admission saved successfully!', 'success');
+        }
+
+        // Close modal and reset form
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addAdmissionModal'));
+        if (modal) {
+            modal.hide();
+        }
+        document.getElementById('addAdmissionForm').reset();
+        document.getElementById('admissionEditId').value = '';
+        document.getElementById('admissionModalTitle').textContent = 'Add Admission Record';
+
+        // Reload admissions
+        loadAdmissionsFromFirestore();
+    } catch (error) {
+        console.error('❌ Error saving admission to Firestore:', error);
+        if (typeof showNotification === 'function') {
+            showNotification('Error saving admission: ' + error.message, 'error');
+        }
+        saveAdmissionToLocalStorage(admissionData);
+    }
+}
+
+function loadAdmissionsFromFirestore() {
+    if (!firebaseInitialized) {
+        console.log('Firebase not available, loading admissions from localStorage');
+        loadAdmissionsFromLocalStorage();
+        return;
+    }
+
+    db.collection('admissions')
+        .orderBy('createdAt', 'desc')
+        .onSnapshot((snapshot) => {
+            window.admissionsData = [];
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.createdAt && data.createdAt.toDate) {
+                    data.createdAt = data.createdAt.toDate().toISOString();
+                }
+                if (data.updatedAt && data.updatedAt.toDate) {
+                    data.updatedAt = data.updatedAt.toDate().toISOString();
+                }
+
+                window.admissionsData.push({
+                    firestoreId: doc.id,
+                    ...data
+                });
+            });
+
+            console.log(`✅ Loaded ${window.admissionsData.length} admissions from Firestore`);
+
+            if (typeof renderAdmissions === 'function') {
+                renderAdmissions();
+            }
+
+            localStorage.setItem('admissionsData', JSON.stringify(window.admissionsData));
+        }, (error) => {
+            console.error('❌ Error loading admissions from Firestore:', error);
+            loadAdmissionsFromLocalStorage();
+        });
+}
+
+async function updateAdmissionInFirestore(firestoreId, updatedData) {
+    if (!firebaseInitialized || !firestoreId) {
+        console.log('Firebase not available or no ID provided');
+        return;
+    }
+
+    try {
+        updatedData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+        await db.collection('admissions').doc(firestoreId).update(updatedData);
+        console.log('✅ Admission updated successfully');
+
+        if (typeof showNotification === 'function') {
+            showNotification('Admission updated successfully!', 'success');
+        }
+    } catch (error) {
+        console.error('❌ Error updating admission:', error);
+        if (typeof showNotification === 'function') {
+            showNotification('Error updating admission: ' + error.message, 'error');
+        }
+    }
+}
+
+async function deleteAdmissionFromFirestore(firestoreId) {
+    if (!firebaseInitialized || !firestoreId) {
+        console.log('Firebase not available or no ID provided');
+        return;
+    }
+
+    try {
+        await db.collection('admissions').doc(firestoreId).delete();
+        console.log('✅ Admission deleted successfully');
+
+        if (typeof showNotification === 'function') {
+            showNotification('Admission deleted successfully!', 'success');
+        }
+    } catch (error) {
+        console.error('❌ Error deleting admission:', error);
+        if (typeof showNotification === 'function') {
+            showNotification('Error deleting admission: ' + error.message, 'error');
+        }
+    }
+}
+
+function saveAdmissionToLocalStorage(admissionData) {
+    let admissions = [];
+    const savedData = localStorage.getItem('admissionsData');
+
+    if (savedData) {
+        admissions = JSON.parse(savedData);
+    }
+
+    admissionData.createdAt = new Date().toISOString();
+    admissions.unshift(admissionData);
+    localStorage.setItem('admissionsData', JSON.stringify(admissions));
+
+    window.admissionsData = admissions;
+
+    if (typeof showNotification === 'function') {
+        showNotification('Admission saved to local storage!', 'success');
+    }
+
+    if (typeof renderAdmissions === 'function') {
+        renderAdmissions();
+    }
+
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addAdmissionModal'));
+    if (modal) {
+        modal.hide();
+    }
+    document.getElementById('addAdmissionForm').reset();
+}
+
+function loadAdmissionsFromLocalStorage() {
+    const savedData = localStorage.getItem('admissionsData');
+
+    if (savedData) {
+        window.admissionsData = JSON.parse(savedData);
+        console.log(`📦 Loaded ${window.admissionsData.length} admissions from localStorage`);
+    } else {
+        window.admissionsData = [];
+    }
+
+    if (typeof renderAdmissions === 'function') {
+        renderAdmissions();
+    }
+}
+
+// ==========================================
+// NOTIFICATIONS FIRESTORE FUNCTIONS
+// ==========================================
+
+async function saveNotificationToFirestore(notificationData) {
+    if (!firebaseInitialized) {
+        console.log('Firebase not available, saving notification to localStorage');
+        saveNotificationToLocalStorage(notificationData);
+        return;
+    }
+
+    try {
+        notificationData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        notificationData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+
+        const docRef = await db.collection('notifications').add(notificationData);
+        console.log('✅ Notification saved to Firestore with ID:', docRef.id);
+
+        if (typeof showNotification === 'function') {
+            showNotification('Notification saved successfully!', 'success');
+        }
+
+        // Close modal and reset form
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addNotificationModal'));
+        if (modal) {
+            modal.hide();
+        }
+        document.getElementById('addNotificationForm').reset();
+        document.getElementById('notificationEditId').value = '';
+        document.getElementById('notificationModalTitle').textContent = 'Add Notification';
+
+        // Reload notifications
+        loadNotificationsFromFirestore();
+    } catch (error) {
+        console.error('❌ Error saving notification to Firestore:', error);
+        if (typeof showNotification === 'function') {
+            showNotification('Error saving notification: ' + error.message, 'error');
+        }
+        saveNotificationToLocalStorage(notificationData);
+    }
+}
+
+function loadNotificationsFromFirestore() {
+    if (!firebaseInitialized) {
+        console.log('Firebase not available, loading notifications from localStorage');
+        loadNotificationsFromLocalStorage();
+        return;
+    }
+
+    db.collection('notifications')
+        .orderBy('createdAt', 'desc')
+        .onSnapshot((snapshot) => {
+            window.notificationsData = [];
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.createdAt && data.createdAt.toDate) {
+                    data.createdAt = data.createdAt.toDate().toISOString();
+                }
+                if (data.updatedAt && data.updatedAt.toDate) {
+                    data.updatedAt = data.updatedAt.toDate().toISOString();
+                }
+
+                window.notificationsData.push({
+                    firestoreId: doc.id,
+                    ...data
+                });
+            });
+
+            console.log(`✅ Loaded ${window.notificationsData.length} notifications from Firestore`);
+
+            if (typeof renderNotifications === 'function') {
+                renderNotifications();
+            }
+
+            localStorage.setItem('notificationsData', JSON.stringify(window.notificationsData));
+        }, (error) => {
+            console.error('❌ Error loading notifications from Firestore:', error);
+            loadNotificationsFromLocalStorage();
+        });
+}
+
+async function updateNotificationInFirestore(firestoreId, updatedData) {
+    if (!firebaseInitialized || !firestoreId) {
+        console.log('Firebase not available or no ID provided');
+        return;
+    }
+
+    try {
+        updatedData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+        await db.collection('notifications').doc(firestoreId).update(updatedData);
+        console.log('✅ Notification updated successfully');
+
+        if (typeof showNotification === 'function') {
+            showNotification('Notification updated successfully!', 'success');
+        }
+    } catch (error) {
+        console.error('❌ Error updating notification:', error);
+        if (typeof showNotification === 'function') {
+            showNotification('Error updating notification: ' + error.message, 'error');
+        }
+    }
+}
+
+async function deleteNotificationFromFirestore(firestoreId) {
+    if (!firebaseInitialized || !firestoreId) {
+        console.log('Firebase not available or no ID provided');
+        return;
+    }
+
+    try {
+        await db.collection('notifications').doc(firestoreId).delete();
+        console.log('✅ Notification deleted successfully');
+
+        if (typeof showNotification === 'function') {
+            showNotification('Notification deleted successfully!', 'success');
+        }
+    } catch (error) {
+        console.error('❌ Error deleting notification:', error);
+        if (typeof showNotification === 'function') {
+            showNotification('Error deleting notification: ' + error.message, 'error');
+        }
+    }
+}
+
+function saveNotificationToLocalStorage(notificationData) {
+    let notifications = [];
+    const savedData = localStorage.getItem('notificationsData');
+
+    if (savedData) {
+        notifications = JSON.parse(savedData);
+    }
+
+    notificationData.createdAt = new Date().toISOString();
+    notifications.unshift(notificationData);
+    localStorage.setItem('notificationsData', JSON.stringify(notifications));
+
+    window.notificationsData = notifications;
+
+    if (typeof showNotification === 'function') {
+        showNotification('Notification saved to local storage!', 'success');
+    }
+
+    if (typeof renderNotifications === 'function') {
+        renderNotifications();
+    }
+
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addNotificationModal'));
+    if (modal) {
+        modal.hide();
+    }
+    document.getElementById('addNotificationForm').reset();
+}
+
+function loadNotificationsFromLocalStorage() {
+    const savedData = localStorage.getItem('notificationsData');
+
+    if (savedData) {
+        window.notificationsData = JSON.parse(savedData);
+        console.log(`📦 Loaded ${window.notificationsData.length} notifications from localStorage`);
+    } else {
+        window.notificationsData = [];
+    }
+
+    if (typeof renderNotifications === 'function') {
+        renderNotifications();
+    }
+}
+
+// Export admissions functions
+window.saveAdmissionToFirestore = saveAdmissionToFirestore;
+window.loadAdmissionsFromFirestore = loadAdmissionsFromFirestore;
+window.updateAdmissionInFirestore = updateAdmissionInFirestore;
+window.deleteAdmissionFromFirestore = deleteAdmissionFromFirestore;
+
+// Export notifications functions
+window.saveNotificationToFirestore = saveNotificationToFirestore;
+window.loadNotificationsFromFirestore = loadNotificationsFromFirestore;
+window.updateNotificationInFirestore = updateNotificationInFirestore;
+window.deleteNotificationFromFirestore = deleteNotificationFromFirestore;

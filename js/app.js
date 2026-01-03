@@ -1,4 +1,4 @@
-// ==========================================
+﻿// ==========================================
 // UNIBRIDGE CRM - MAIN APPLICATION LOGIC
 // ==========================================
 
@@ -93,6 +93,8 @@ const tariffAmounts = {
 function showTab(tabName) {
     document.getElementById('students-tab').style.display = 'none';
     document.getElementById('payments-tab').style.display = 'none';
+    document.getElementById('admissions-tab').style.display = 'none';
+    document.getElementById('notifications-tab').style.display = 'none';
     document.getElementById('settings-tab').style.display = 'none';
     document.querySelectorAll('.nav-link-apple').forEach(link => link.classList.remove('active'));
     document.getElementById(`${tabName}-tab`).style.display = 'block';
@@ -101,6 +103,16 @@ function showTab(tabName) {
     // Render payment students when payments tab is activated
     if (tabName === 'payments' && typeof renderPaymentStudents === 'function') {
         renderPaymentStudents();
+    }
+
+    // Render admissions when admissions tab is activated
+    if (tabName === 'admissions') {
+        renderAdmissions();
+    }
+
+    // Render notifications when notifications tab is activated
+    if (tabName === 'notifications') {
+        renderNotifications();
     }
 
     // Render settings lists when settings tab is activated
@@ -460,9 +472,9 @@ function viewStudentDetails(uniqueId) {
                         <textarea class="form-control ios-input form-control-sm mb-2" id="edit-notes" rows="2">${s.notes || ''}</textarea>
                         <select class="form-select ios-input form-control-sm mb-2" id="edit-noteImportance">
                             <option value="">No Priority</option>
-                            <option value="GREEN" ${s.noteImportance === 'GREEN' ? 'selected' : ''}>🟢 GREEN (Low)</option>
-                            <option value="YELLOW" ${s.noteImportance === 'YELLOW' ? 'selected' : ''}>🟡 YELLOW (Medium)</option>
-                            <option value="RED" ${s.noteImportance === 'RED' ? 'selected' : ''}>🔴 RED (High)</option>
+                            <option value="GREEN" ${s.noteImportance === 'GREEN' ? 'selected' : ''}>ðŸŸ¢ GREEN (Low)</option>
+                            <option value="YELLOW" ${s.noteImportance === 'YELLOW' ? 'selected' : ''}>ðŸŸ¡ YELLOW (Medium)</option>
+                            <option value="RED" ${s.noteImportance === 'RED' ? 'selected' : ''}>ðŸ”´ RED (High)</option>
                         </select>
                         <div class="edit-actions"><button class="save-btn" onclick="saveEdit('notes')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('notes')"><i class="bi bi-x"></i></button></div>
                     </div>
@@ -741,7 +753,7 @@ function permanentlyDeleteStudent() {
         return;
     }
 
-    if (!confirm(`Are you sure you want to PERMANENTLY delete "${s.fullName}"?\n\n⚠️ This action cannot be undone!`)) {
+    if (!confirm(`Are you sure you want to PERMANENTLY delete "${s.fullName}"?\n\nâš ï¸ This action cannot be undone!`)) {
         return;
     }
 
@@ -2583,3 +2595,775 @@ window.editPayment = editPayment;
 window.savePaymentEdit = savePaymentEdit;
 window.deletePayment = deletePayment;
 window.toggleIdEdit = toggleIdEdit;
+
+// ==========================================
+// ADMISSIONS & NOTIFICATIONS MANAGEMENT
+// ==========================================
+
+// Global data storage
+if (!window.admissionsData) {
+    window.admissionsData = [];
+}
+if (!window.notificationsData) {
+    window.notificationsData = [];
+}
+
+let currentAdmissionId = null;
+let currentNotificationId = null;
+
+// Format date for display (DD.MM.YYYY)
+function formatDisplayDate(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}.${month}.${year}`;
+}
+
+// ==========================================
+// ADMISSIONS FUNCTIONS
+// ==========================================
+
+// Populate education level dropdown when modal opens
+function populateAdmissionEducationLevels() {
+    const levelSelect = document.getElementById('admissionEducationLevel');
+    if (!levelSelect) return;
+
+    const levels = window.levelsData || [];
+    let html = '<option value="">Choose Education Level...</option>';
+
+    levels.forEach(level => {
+        html += `<option value="${level.name}">${level.name}</option>`;
+    });
+
+    levelSelect.innerHTML = html;
+}
+
+// Update universities based on selected education level
+function updateAdmissionUniversities() {
+    const levelSelect = document.getElementById('admissionEducationLevel');
+    const universitySelect = document.getElementById('admissionUniversity');
+
+    if (!levelSelect || !universitySelect) return;
+
+    const selectedLevel = levelSelect.value;
+    universitySelect.innerHTML = '<option value="">Choose University...</option>';
+
+    if (!selectedLevel) return;
+
+    const universities = getUniversitiesForLevel(selectedLevel);
+    universities.forEach(uni => {
+        universitySelect.innerHTML += `<option value="${uni}">${uni}</option>`;
+    });
+}
+
+// Generate round date pickers based on selected number of rounds
+function generateRoundDatePickers() {
+    const roundsCount = parseInt(document.getElementById('admissionRounds').value);
+    const container = document.getElementById('roundsContainer');
+
+    if (!roundsCount || !container) {
+        container.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+
+    for (let i = 1; i <= roundsCount; i++) {
+        html += `
+            <div class="round-card-elite">
+                <div class="round-header">
+                    <span class="round-badge">${i}</span>
+                    <span class="round-title">Round ${i}</span>
+                </div>
+                <div class="round-dates">
+                    <div class="date-field date-field-range">
+                        <label class="date-label">Online Application Period</label>
+                        <div class="date-range-inputs">
+                            <div class="date-range-item">
+                                <label class="date-sublabel">From</label>
+                                <input type="date" class="date-input" id="round${i}OnlineAppFrom">
+                            </div>
+                            <div class="date-range-item">
+                                <label class="date-sublabel">To</label>
+                                <input type="date" class="date-input" id="round${i}OnlineAppTo">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="date-field">
+                        <label class="date-label">Document Submission</label>
+                        <input type="date" class="date-input" id="round${i}DocSubmission">
+                    </div>
+                    <div class="date-field">
+                        <label class="date-label">Interview</label>
+                        <input type="date" class="date-input" id="round${i}Interview">
+                    </div>
+                    <div class="date-field">
+                        <label class="date-label">Announcement</label>
+                        <input type="date" class="date-input" id="round${i}Announcement">
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    container.innerHTML = html;
+}
+
+// Helper function to get the latest date from rounds
+function getLatestDate(rounds) {
+    let latestDate = null;
+    rounds.forEach(round => {
+        const dates = [round.onlineApplication, round.documentSubmission, round.interview, round.announcement];
+        dates.forEach(date => {
+            if (date && (!latestDate || new Date(date) > new Date(latestDate))) {
+                latestDate = date;
+            }
+        });
+    });
+    return latestDate;
+}
+
+function renderAdmissions() {
+    const admissionsList = document.getElementById('admissionsList');
+    const admissionsCounter = document.getElementById('admissionsCounter');
+    const admissions = window.admissionsData || [];
+
+    if (admissions.length === 0) {
+        admissionsList.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-inbox icon-empty-state"></i>
+                <p class="text-secondary mt-3">No admissions yet. Click "Add Admission" to get started.</p>
+            </div>
+        `;
+        admissionsCounter.textContent = 'No admissions';
+        return;
+    }
+
+    admissionsCounter.textContent = `${admissions.length} admission${admissions.length > 1 ? 's' : ''}`;
+
+    let html = '';
+    admissions.forEach((admission, index) => {
+        const roundsCount = admission.rounds && admission.rounds.length > 0 ? admission.rounds.length : 0;
+
+        // Build application periods display
+        let roundsHtml = '';
+        if (admission.rounds && admission.rounds.length > 0) {
+            roundsHtml = admission.rounds.map(round => {
+                const fromDate = round.onlineApplicationFrom ? formatDisplayDate(round.onlineApplicationFrom) :
+                    (round.onlineApplication ? formatDisplayDate(round.onlineApplication) : '?');
+                const toDate = round.onlineApplicationTo ? formatDisplayDate(round.onlineApplicationTo) : '?';
+
+                if (round.onlineApplicationFrom || round.onlineApplicationTo) {
+                    return `
+                        <div class="d-flex align-items-center justify-content-between py-2 px-3 mb-2 rounded-2" style="background: rgba(var(--bs-primary-rgb), 0.05); border-left: 3px solid var(--bs-primary);">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2 py-1" style="font-size: 0.7rem;">R${round.roundNumber}</span>
+                                <span class="text-body fw-medium" style="font-size: 0.85rem;">${fromDate}</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-arrow-right text-primary" style="font-size: 0.75rem;"></i>
+                                <span class="text-body fw-medium" style="font-size: 0.85rem;">${toDate}</span>
+                            </div>
+                        </div>
+                    `;
+                } else if (round.onlineApplication) {
+                    return `
+                        <div class="d-flex align-items-center gap-2 py-2 px-3 mb-2 rounded-2" style="background: rgba(var(--bs-primary-rgb), 0.05); border-left: 3px solid var(--bs-primary);">
+                            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2 py-1" style="font-size: 0.7rem;">R${round.roundNumber}</span>
+                            <span class="text-body fw-medium" style="font-size: 0.85rem;">${fromDate}</span>
+                        </div>
+                    `;
+                }
+                return '';
+            }).join('');
+        }
+
+        html += `
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card-apple h-100 cursor-pointer hover-lift" onclick="viewAdmissionDetails(${index})" style="padding: 0; overflow: hidden;">
+                    <!-- Header Section -->
+                    <div class="p-3 pb-2" style="background: linear-gradient(135deg, rgba(var(--bs-primary-rgb), 0.08) 0%, rgba(var(--bs-info-rgb), 0.05) 100%); border-bottom: 1px solid rgba(var(--bs-border-color-rgb), 0.1);">
+                        <div class="d-flex align-items-start justify-content-between mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; min-width: 36px;">
+                                    <i class="bi bi-building text-primary" style="font-size: 1rem;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-bold text-body" style="font-size: 0.95rem; line-height: 1.3;">${admission.universityName}</h6>
+                                </div>
+                            </div>
+                            <span class="badge rounded-pill px-2 py-1" style="background: var(--bs-info); color: white; font-size: 0.7rem;">${roundsCount} ${roundsCount === 1 ? 'Round' : 'Rounds'}</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 mt-2">
+                            <i class="bi bi-mortarboard text-secondary" style="font-size: 0.85rem;"></i>
+                            <span class="text-secondary" style="font-size: 0.85rem;">${admission.educationLevel || '-'}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Rounds Section -->
+                    ${roundsHtml ? `
+                        <div class="p-3" style="max-height: 200px; overflow-y: auto;">
+                            ${roundsHtml}
+                        </div>
+                    ` : `
+                        <div class="p-3 text-center">
+                            <span class="text-secondary fst-italic" style="font-size: 0.85rem;">No application periods set</span>
+                        </div>
+                    `}
+                </div>
+            </div>
+        `;
+    });
+
+    admissionsList.innerHTML = html;
+}
+
+function filterAdmissions() {
+    var searchInput = document.getElementById('admissionsSearchInput');
+    var levelFilter = document.getElementById('admissionsLevelFilter');
+    var searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    var selectedLevel = levelFilter ? levelFilter.value : '';
+    var admissionsList = document.getElementById('admissionsList');
+    var admissionsCounter = document.getElementById('admissionsCounter');
+    var admissions = window.admissionsData || [];
+
+    // Populate level filter dropdown if empty (except for the default option)
+    if (levelFilter && levelFilter.options.length === 1 && window.levelsData) {
+        window.levelsData.forEach(function (level) {
+            var option = document.createElement('option');
+            option.value = level.name;
+            option.textContent = level.name;
+            levelFilter.appendChild(option);
+        });
+    }
+
+    if (admissions.length === 0) {
+        admissionsList.innerHTML = '<div class="col-12 text-center py-5"><i class="bi bi-inbox icon-empty-state"></i><p class="text-secondary mt-3">No admissions yet. Click "Add Admission" to get started.</p></div>';
+        admissionsCounter.textContent = 'No admissions';
+        return;
+    }
+
+    // Filter admissions based on search term and education level
+    var filteredAdmissions = admissions.filter(function (admission, index) {
+        admission._originalIndex = index;
+
+        // Search filter
+        var matchesSearch = true;
+        if (searchTerm) {
+            var universityName = (admission.universityName || '').toLowerCase();
+            var educationLevel = (admission.educationLevel || '').toLowerCase();
+            matchesSearch = universityName.includes(searchTerm) || educationLevel.includes(searchTerm);
+        }
+
+        // Level filter
+        var matchesLevel = true;
+        if (selectedLevel) {
+            matchesLevel = admission.educationLevel === selectedLevel;
+        }
+
+        return matchesSearch && matchesLevel;
+    });
+
+    if (filteredAdmissions.length === 0) {
+        var message = 'No admissions found';
+        if (searchTerm && selectedLevel) {
+            message += ' matching "' + searchTerm + '" in ' + selectedLevel;
+        } else if (searchTerm) {
+            message += ' matching "' + searchTerm + '"';
+        } else if (selectedLevel) {
+            message += ' for ' + selectedLevel;
+        }
+        admissionsList.innerHTML = '<div class="col-12 text-center py-5"><i class="bi bi-search icon-empty-state" style="font-size: 3rem; opacity: 0.5;"></i><p class="text-secondary mt-3">' + message + '</p></div>';
+        admissionsCounter.textContent = '0 results';
+        return;
+    }
+
+    if (searchTerm || selectedLevel) {
+        admissionsCounter.textContent = filteredAdmissions.length + ' of ' + admissions.length + ' admission' + (admissions.length > 1 ? 's' : '');
+    } else {
+        admissionsCounter.textContent = admissions.length + ' admission' + (admissions.length > 1 ? 's' : '');
+    }
+
+    var html = '';
+    filteredAdmissions.forEach(function (admission) {
+        var index = admission._originalIndex;
+        var roundsCount = admission.rounds && admission.rounds.length > 0 ? admission.rounds.length : 0;
+
+        var roundsHtml = '';
+        if (admission.rounds && admission.rounds.length > 0) {
+            admission.rounds.forEach(function (round) {
+                var fromDate = round.onlineApplicationFrom ? formatDisplayDate(round.onlineApplicationFrom) :
+                    (round.onlineApplication ? formatDisplayDate(round.onlineApplication) : '?');
+                var toDate = round.onlineApplicationTo ? formatDisplayDate(round.onlineApplicationTo) : '?';
+
+                if (round.onlineApplicationFrom || round.onlineApplicationTo) {
+                    roundsHtml += '<div class="d-flex align-items-center justify-content-between py-2 px-3 mb-2 rounded-2" style="background: rgba(var(--bs-primary-rgb), 0.05); border-left: 3px solid var(--bs-primary);"><div class="d-flex align-items-center gap-2"><span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2 py-1" style="font-size: 0.7rem;">R' + round.roundNumber + '</span><span class="text-body fw-medium" style="font-size: 0.85rem;">' + fromDate + '</span></div><div class="d-flex align-items-center gap-2"><i class="bi bi-arrow-right text-primary" style="font-size: 0.75rem;"></i><span class="text-body fw-medium" style="font-size: 0.85rem;">' + toDate + '</span></div></div>';
+                } else if (round.onlineApplication) {
+                    roundsHtml += '<div class="d-flex align-items-center gap-2 py-2 px-3 mb-2 rounded-2" style="background: rgba(var(--bs-primary-rgb), 0.05); border-left: 3px solid var(--bs-primary);"><span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2 py-1" style="font-size: 0.7rem;">R' + round.roundNumber + '</span><span class="text-body fw-medium" style="font-size: 0.85rem;">' + fromDate + '</span></div>';
+                }
+            });
+        }
+
+        html += '<div class="col-md-6 col-lg-4 mb-3"><div class="card-apple h-100 cursor-pointer hover-lift" onclick="viewAdmissionDetails(' + index + ')" style="padding: 0; overflow: hidden;"><div class="p-3 pb-2" style="background: linear-gradient(135deg, rgba(var(--bs-primary-rgb), 0.08) 0%, rgba(var(--bs-info-rgb), 0.05) 100%); border-bottom: 1px solid rgba(var(--bs-border-color-rgb), 0.1);"><div class="d-flex align-items-start justify-content-between mb-2"><div class="d-flex align-items-center gap-2"><div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; min-width: 36px;"><i class="bi bi-building text-primary" style="font-size: 1rem;"></i></div><div><h6 class="mb-0 fw-bold text-body" style="font-size: 0.95rem; line-height: 1.3;">' + admission.universityName + '</h6></div></div><span class="badge rounded-pill px-2 py-1" style="background: var(--bs-info); color: white; font-size: 0.7rem;">' + roundsCount + ' ' + (roundsCount === 1 ? 'Round' : 'Rounds') + '</span></div><div class="d-flex align-items-center gap-2 mt-2"><i class="bi bi-mortarboard text-secondary" style="font-size: 0.85rem;"></i><span class="text-secondary" style="font-size: 0.85rem;">' + (admission.educationLevel || '-') + '</span></div></div>' + (roundsHtml ? '<div class="p-3" style="max-height: 200px; overflow-y: auto;">' + roundsHtml + '</div>' : '<div class="p-3 text-center"><span class="text-secondary fst-italic" style="font-size: 0.85rem;">No application periods set</span></div>') + '</div></div>';
+    });
+
+    admissionsList.innerHTML = html;
+}
+
+function saveAdmission() {
+    const educationLevel = document.getElementById('admissionEducationLevel').value;
+    const university = document.getElementById('admissionUniversity').value;
+    const roundsCount = parseInt(document.getElementById('admissionRounds').value);
+    const editId = document.getElementById('admissionEditId').value;
+
+    // Validate required fields
+    if (!educationLevel || !university || !roundsCount) {
+        showNotification('Please fill in all required fields!', 'error');
+        return;
+    }
+
+    // Collect round data
+    const rounds = [];
+    for (let i = 1; i <= roundsCount; i++) {
+        const onlineAppFromEl = document.getElementById(`round${i}OnlineAppFrom`);
+        const onlineAppToEl = document.getElementById(`round${i}OnlineAppTo`);
+        const docSubmissionEl = document.getElementById(`round${i}DocSubmission`);
+        const interviewEl = document.getElementById(`round${i}Interview`);
+        const announcementEl = document.getElementById(`round${i}Announcement`);
+
+        const onlineAppFrom = onlineAppFromEl ? onlineAppFromEl.value : '';
+        const onlineAppTo = onlineAppToEl ? onlineAppToEl.value : '';
+        const docSubmission = docSubmissionEl ? docSubmissionEl.value : '';
+        const interview = interviewEl ? interviewEl.value : '';
+        const announcement = announcementEl ? announcementEl.value : '';
+
+        rounds.push({
+            roundNumber: i,
+            onlineApplicationFrom: onlineAppFrom,
+            onlineApplicationTo: onlineAppTo,
+            documentSubmission: docSubmission,
+            interview: interview,
+            announcement: announcement
+        });
+    }
+
+    const information = document.getElementById('admissionInformation').value.trim();
+
+    const admissionData = {
+        educationLevel: educationLevel,
+        universityName: university,
+        roundsCount: roundsCount,
+        rounds: rounds,
+        information: information,
+        createdAt: new Date().toISOString()
+    };
+
+    if (editId) {
+        // Edit existing admission
+        const index = parseInt(editId);
+        const admissionRecord = window.admissionsData[index];
+        const firestoreId = admissionRecord ? admissionRecord.firestoreId : null;
+        window.admissionsData[index] = {
+            ...window.admissionsData[index],
+            ...admissionData
+        };
+
+        if (typeof updateAdmissionInFirestore === 'function' && firestoreId) {
+            updateAdmissionInFirestore(firestoreId, admissionData);
+        } else {
+            localStorage.setItem('admissionsData', JSON.stringify(window.admissionsData));
+        }
+        showNotification('Admission updated successfully!', 'success');
+    } else {
+        // Add new admission
+        if (typeof saveAdmissionToFirestore === 'function') {
+            saveAdmissionToFirestore(admissionData);
+        } else {
+            window.admissionsData.push(admissionData);
+            localStorage.setItem('admissionsData', JSON.stringify(window.admissionsData));
+            showNotification('Admission saved successfully!', 'success');
+        }
+    }
+
+    renderAdmissions();
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addAdmissionModal'));
+    modal.hide();
+    document.getElementById('addAdmissionForm').reset();
+    document.getElementById('admissionEditId').value = '';
+    document.getElementById('admissionModalTitle').textContent = 'Add Admission Record';
+    document.getElementById('roundsContainer').innerHTML = '';
+}
+
+function viewAdmissionDetails(index) {
+    const admission = window.admissionsData[index];
+    if (!admission) return;
+    currentAdmissionId = index;
+    let detailsHtml = '<div class="d-flex align-items-center mb-4 ps-1"><div class="bg-primary bg-opacity-10 p-3 rounded-4 me-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 56px; height: 56px; min-width: 56px;"><i class="bi bi-building text-primary fs-3"></i></div><div><h4 class="mb-1 fw-bold text-body tracking-wide">' + admission.universityName + '</h4><div class="d-flex align-items-center gap-2"><span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-10 fw-medium px-2 py-1">' + admission.educationLevel + '</span></div></div></div>';
+    if (admission.rounds && admission.rounds.length > 0) {
+        detailsHtml += '<div class="card border border-light-subtle mb-4 overflow-hidden rounded-3 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0" style="font-size: 0.9rem;"><thead class="bg-body-secondary text-secondary text-uppercase small"><tr><th class="ps-4 py-3 fw-bold" style="width: 80px;">Round</th><th class="py-3 fw-bold" style="min-width: 140px;">Application</th><th class="py-3 fw-bold" style="min-width: 110px;">Docs</th><th class="py-3 fw-bold" style="min-width: 110px;">Interview</th><th class="pe-4 py-3 fw-bold" style="min-width: 110px;">Result</th></tr></thead><tbody>';
+        admission.rounds.forEach(function (round) {
+            var onlineAppDisplay = '<span class="text-secondary opacity-50">-</span>';
+            if (round.onlineApplicationFrom || round.onlineApplicationTo) {
+                var fromDate = round.onlineApplicationFrom ? formatDisplayDate(round.onlineApplicationFrom) : '?';
+                var toDate = round.onlineApplicationTo ? formatDisplayDate(round.onlineApplicationTo) : '?';
+                onlineAppDisplay = '<div class="d-flex flex-column" style="line-height: 1.2;"><span class="fw-medium text-body">' + fromDate + '</span><span class="text-secondary small" style="font-size: 0.75em; margin-top: 2px;">to ' + toDate + '</span></div>';
+            } else if (round.onlineApplication) {
+                onlineAppDisplay = '<span class="fw-medium text-body">' + formatDisplayDate(round.onlineApplication) + '</span>';
+            }
+            var docDisplay = round.documentSubmission ? formatDisplayDate(round.documentSubmission) : '<span class="text-secondary opacity-50">-</span>';
+            var interviewDisplay = round.interview ? formatDisplayDate(round.interview) : '<span class="text-secondary opacity-50">-</span>';
+            var resultDisplay = round.announcement ? formatDisplayDate(round.announcement) : '<span class="text-secondary opacity-50">-</span>';
+            detailsHtml += '<tr><td class="ps-4 py-3"><span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2 border border-primary border-opacity-10">R' + round.roundNumber + '</span></td><td class="py-3">' + onlineAppDisplay + '</td><td class="py-3 text-body opacity-75">' + docDisplay + '</td><td class="py-3 text-body opacity-75">' + interviewDisplay + '</td><td class="pe-4 py-3 text-body opacity-75">' + resultDisplay + '</td></tr>';
+        });
+        detailsHtml += '</tbody></table></div></div>';
+    } else {
+        detailsHtml += '<div class="text-center py-4 text-secondary fst-italic border border-dashed border-light-subtle rounded-3 mb-4">No rounds configured</div>';
+    }
+    if (admission.information) {
+        detailsHtml += '<div class="card bg-info bg-opacity-10 border border-info border-opacity-25 p-4 rounded-3 shadow-sm"><div class="d-flex gap-3"><i class="bi bi-info-circle text-info fs-5 mt-1"></i><div><h6 class="text-info fw-bold mb-2 small text-uppercase tracking-wider" style="font-size: 0.8em;">Information</h6><p class="mb-0 text-body opacity-90" style="white-space: pre-wrap; line-height: 1.6; font-size: 0.8em;">' + admission.information + '</p></div></div></div>';
+    }
+    document.getElementById('admissionDetailsContent').innerHTML = detailsHtml;
+    var modal = new bootstrap.Modal(document.getElementById('viewAdmissionModal'));
+    modal.show();
+}
+
+function editAdmission() {
+    if (currentAdmissionId === null) return;
+
+    const admission = window.admissionsData[currentAdmissionId];
+    if (!admission) return;
+
+    // Close view modal
+    const viewModal = bootstrap.Modal.getInstance(document.getElementById('viewAdmissionModal'));
+    viewModal.hide();
+
+    // Populate education levels first
+    populateAdmissionEducationLevels();
+
+    // Small delay to ensure dropdown is populated
+    setTimeout(() => {
+        // Populate edit form
+        document.getElementById('admissionEducationLevel').value = admission.educationLevel;
+        updateAdmissionUniversities();
+
+        setTimeout(() => {
+            document.getElementById('admissionUniversity').value = admission.universityName;
+            document.getElementById('admissionRounds').value = admission.roundsCount;
+            generateRoundDatePickers();
+
+            // Populate round dates
+            setTimeout(() => {
+                if (admission.rounds) {
+                    admission.rounds.forEach(round => {
+                        const i = round.roundNumber;
+                        if (document.getElementById(`round${i}OnlineAppFrom`)) {
+                            document.getElementById(`round${i}OnlineAppFrom`).value = round.onlineApplicationFrom || round.onlineApplication || '';
+                            document.getElementById(`round${i}OnlineAppTo`).value = round.onlineApplicationTo || '';
+                            document.getElementById(`round${i}DocSubmission`).value = round.documentSubmission || '';
+                            document.getElementById(`round${i}Interview`).value = round.interview || '';
+                            document.getElementById(`round${i}Announcement`).value = round.announcement || '';
+                        }
+                    });
+                }
+            }, 100);
+        }, 100);
+
+        document.getElementById('admissionEditId').value = currentAdmissionId;
+        document.getElementById('admissionInformation').value = admission.information || '';
+        document.getElementById('admissionModalTitle').textContent = 'Edit Admission Record';
+
+        // Open add/edit modal
+        const addModal = new bootstrap.Modal(document.getElementById('addAdmissionModal'));
+        addModal.show();
+    }, 100);
+}
+
+function deleteAdmission() {
+    if (currentAdmissionId === null) return;
+
+    const admission = window.admissionsData[currentAdmissionId];
+    if (!admission) return;
+
+    if (!confirm(`Are you sure you want to delete this admission record for "${admission.universityName}"?`)) {
+        return;
+    }
+
+    if (typeof deleteAdmissionFromFirestore === 'function' && admission.firestoreId) {
+        deleteAdmissionFromFirestore(admission.firestoreId);
+    } else {
+        window.admissionsData.splice(currentAdmissionId, 1);
+        localStorage.setItem('admissionsData', JSON.stringify(window.admissionsData));
+    }
+
+    renderAdmissions();
+    showNotification('Admission deleted successfully!', 'success');
+
+    const modal = bootstrap.Modal.getInstance(document.getElementById('viewAdmissionModal'));
+    modal.hide();
+    currentAdmissionId = null;
+}
+
+// ==========================================
+// NOTIFICATIONS FUNCTIONS
+// ==========================================
+
+function renderNotifications() {
+    const notificationsList = document.getElementById('notificationsList');
+    const notificationsCounter = document.getElementById('notificationsCounter');
+    const notifications = window.notificationsData || [];
+
+    if (notifications.length === 0) {
+        notificationsList.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-inbox icon-empty-state"></i>
+                <p class="text-secondary mt-3">No notifications yet. Click "Add Notification" to get started.</p>
+            </div>
+        `;
+        notificationsCounter.textContent = 'No notifications';
+
+        // Update badge
+        const badge = document.getElementById('notificationsBadge');
+        if (badge) {
+            badge.style.display = 'none';
+        }
+        return;
+    }
+
+    notificationsCounter.textContent = `${notifications.length} notification${notifications.length > 1 ? 's' : ''}`;
+
+    // Update badge
+    const badge = document.getElementById('notificationsBadge');
+    if (badge) {
+        badge.textContent = notifications.length;
+        badge.style.display = 'inline-block';
+    }
+
+    let html = '';
+    notifications.forEach((notification, index) => {
+        const hasDuration = notification.durationFrom || notification.durationTo;
+
+        html += `
+            <div class="col-md-6 col-lg-4">
+                <div class="card-apple p-3 h-100 cursor-pointer hover-lift" onclick="viewNotificationDetails(${index})">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <i class="bi bi-bell-fill text-primary fs-5 me-2"></i>
+                        <span class="badge bg-info">${formatDisplayDate(notification.date)}</span>
+                    </div>
+                    <p class="mb-2 fw-500" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                        ${notification.text}
+                    </p>
+                    ${hasDuration ? `
+                        <p class="text-secondary small mb-0">
+                            <i class="bi bi-clock me-1"></i>Duration: ${formatDisplayDate(notification.durationFrom)} - ${formatDisplayDate(notification.durationTo)}
+                        </p>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    });
+
+    notificationsList.innerHTML = html;
+}
+
+function saveNotification() {
+    const text = document.getElementById('notificationText').value.trim();
+    const date = document.getElementById('notificationDate').value;
+    const durationFrom = document.getElementById('notificationDurationFrom').value;
+    const durationTo = document.getElementById('notificationDurationTo').value;
+    const editId = document.getElementById('notificationEditId').value;
+
+    // Validate required fields
+    if (!text || !date) {
+        showNotification('Please fill in all required fields!', 'error');
+        return;
+    }
+
+    const notificationData = {
+        text: text,
+        date: date,
+        durationFrom: durationFrom,
+        durationTo: durationTo,
+        createdAt: new Date().toISOString()
+    };
+
+    if (editId) {
+        // Edit existing notification
+        const index = parseInt(editId);
+        window.notificationsData[index] = {
+            ...window.notificationsData[index],
+            ...notificationData
+        };
+        showNotification('Notification updated successfully!', 'success');
+    } else {
+        // Add new notification
+        if (typeof saveNotificationToFirestore === 'function') {
+            saveNotificationToFirestore(notificationData);
+        } else {
+            window.notificationsData.push(notificationData);
+            localStorage.setItem('notificationsData', JSON.stringify(window.notificationsData));
+            showNotification('Notification saved successfully!', 'success');
+        }
+    }
+
+    renderNotifications();
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addNotificationModal'));
+    modal.hide();
+    document.getElementById('addNotificationForm').reset();
+    document.getElementById('notificationEditId').value = '';
+    document.getElementById('notificationModalTitle').textContent = 'Add Notification';
+}
+
+function viewNotificationDetails(index) {
+    const notification = window.notificationsData[index];
+    if (!notification) return;
+
+    currentNotificationId = index;
+
+    const hasDuration = notification.durationFrom || notification.durationTo;
+
+    const detailsHtml = `
+        <div class="mb-3">
+            <label class="detail-label">Notification</label>
+            <p class="mb-0 fs-5" style="white-space: pre-wrap;">${notification.text}</p>
+        </div>
+        <div class="mb-3">
+            <label class="detail-label">Date</label>
+            <p class="mb-0"><i class="bi bi-calendar me-2"></i><span class="fs-6 fw-bold">${formatDisplayDate(notification.date)}</span></p>
+        </div>
+        ${hasDuration ? `
+        <div class="mb-3">
+            <label class="detail-label">Notification Duration Period</label>
+            <p class="mb-0">
+                <i class="bi bi-clock me-2"></i>
+                ${notification.durationFrom ? `From: ${formatDisplayDate(notification.durationFrom)}` : ''} 
+                ${notification.durationTo ? `To: ${formatDisplayDate(notification.durationTo)}` : ''}
+            </p>
+        </div>
+        ` : `
+        <div class="mb-3">
+            <label class="detail-label">Notification Duration Period</label>
+            <p class="mb-0 text-secondary">-</p>
+        </div>
+        `}
+    `;
+
+    document.getElementById('notificationDetailsContent').innerHTML = detailsHtml;
+    const modal = new bootstrap.Modal(document.getElementById('viewNotificationModal'));
+    modal.show();
+}
+
+function editNotification() {
+    if (currentNotificationId === null) return;
+
+    const notification = window.notificationsData[currentNotificationId];
+    if (!notification) return;
+
+    // Close view modal
+    const viewModal = bootstrap.Modal.getInstance(document.getElementById('viewNotificationModal'));
+    viewModal.hide();
+
+    // Populate edit form
+    document.getElementById('notificationText').value = notification.text;
+    document.getElementById('notificationDate').value = notification.date;
+    document.getElementById('notificationDurationFrom').value = notification.durationFrom || '';
+    document.getElementById('notificationDurationTo').value = notification.durationTo || '';
+    document.getElementById('notificationEditId').value = currentNotificationId;
+    document.getElementById('notificationModalTitle').textContent = 'Edit Notification';
+
+    // Open add/edit modal
+    const addModal = new bootstrap.Modal(document.getElementById('addNotificationModal'));
+    addModal.show();
+}
+
+function deleteNotification() {
+    if (currentNotificationId === null) return;
+
+    const notification = window.notificationsData[currentNotificationId];
+    if (!notification) return;
+
+    if (!confirm(`Are you sure you want to delete this notification?`)) {
+        return;
+    }
+
+    if (typeof deleteNotificationFromFirestore === 'function' && notification.firestoreId) {
+        deleteNotificationFromFirestore(notification.firestoreId);
+    } else {
+        window.notificationsData.splice(currentNotificationId, 1);
+        localStorage.setItem('notificationsData', JSON.stringify(window.notificationsData));
+    }
+
+    renderNotifications();
+    showNotification('Notification deleted successfully!', 'success');
+
+    const modal = bootstrap.Modal.getInstance(document.getElementById('viewNotificationModal'));
+    modal.hide();
+    currentNotificationId = null;
+}
+
+// Expose core functions to window for global access
+window.showTab = showTab;
+window.saveStudent = saveStudent;
+window.viewStudentDetails = viewStudentDetails;
+window.downloadStudentExcel = downloadStudentExcel;
+window.renderStudents = renderStudents;
+window.copyToClipboard = copyToClipboard;
+window.startEdit = startEdit;
+window.cancelEdit = cancelEdit;
+window.saveEdit = saveEdit;
+window.confirmDeleteStudent = confirmDeleteStudent;
+window.restoreStudent = restoreStudent;
+window.permanentlyDeleteStudent = permanentlyDeleteStudent;
+window.filterExcelStudents = filterExcelStudents;
+window.toggleSelectAll = toggleSelectAll;
+window.updateSelectedCount = updateSelectedCount;
+window.downloadSelectedAsExcel = downloadSelectedAsExcel;
+window.showPaymentTab = showPaymentTab;
+window.renderPaymentStudents = renderPaymentStudents;
+window.renderPaymentHistory = renderPaymentHistory;
+window.filterPaymentStudents = filterPaymentStudents;
+window.filterPaymentHistory = filterPaymentHistory;
+window.populateStudentDropdown = populateStudentDropdown;
+window.selectStudentForPayment = selectStudentForPayment;
+window.addQuickNote = addQuickNote;
+window.submitPayment = submitPayment;
+window.downloadPaymentHistoryAsExcel = downloadPaymentHistoryAsExcel;
+window.editPayment = editPayment;
+window.savePaymentEdit = savePaymentEdit;
+window.deletePayment = deletePayment;
+window.toggleIdEdit = toggleIdEdit;
+
+// Expose functions to window
+window.renderAdmissions = renderAdmissions;
+window.saveAdmission = saveAdmission;
+window.viewAdmissionDetails = viewAdmissionDetails;
+window.editAdmission = editAdmission;
+window.deleteAdmission = deleteAdmission;
+
+// Setup modal event listeners to populate dropdowns when opened
+document.addEventListener('DOMContentLoaded', function () {
+    const admissionModal = document.getElementById('addAdmissionModal');
+    if (admissionModal) {
+        admissionModal.addEventListener('show.bs.modal', function () {
+            // Only populate if not editing (editId is empty)
+            if (!document.getElementById('admissionEditId').value) {
+                populateAdmissionEducationLevels();
+            }
+        });
+    }
+});
+
+// Expose new functions to window
+window.populateAdmissionEducationLevels = populateAdmissionEducationLevels;
+window.updateAdmissionUniversities = updateAdmissionUniversities;
+window.generateRoundDatePickers = generateRoundDatePickers;
+window.getLatestDate = getLatestDate;
+window.filterAdmissions = filterAdmissions;
+
+
+window.renderNotifications = renderNotifications;
+window.saveNotification = saveNotification;
+window.viewNotificationDetails = viewNotificationDetails;
+window.editNotification = editNotification;
+window.deleteNotification = deleteNotification;
