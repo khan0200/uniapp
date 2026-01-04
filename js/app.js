@@ -1314,10 +1314,10 @@ function downloadPaymentHistoryAsExcel() {
 
     // Prepare data for Excel
     const excelData = payments.map((p, index) => {
-        // Format timestamp
+        // Format timestamp - use createdAt instead of timestamp
         let timestamp = '';
-        if (p.timestamp) {
-            const date = p.timestamp.toDate ? p.timestamp.toDate() : new Date(p.timestamp);
+        if (p.createdAt) {
+            const date = p.createdAt.toDate ? p.createdAt.toDate() : new Date(p.createdAt);
             timestamp = date.toLocaleString('uz-UZ', {
                 year: 'numeric',
                 month: '2-digit',
@@ -1333,7 +1333,7 @@ function downloadPaymentHistoryAsExcel() {
             'Student ID': p.studentId || 'N/A',
             'Student Name': p.studentName || 'General Payment',
             'Amount (UZS)': p.amount || 0,
-            'Payment Method': p.paymentMethod || '',
+            'Payment Method': p.method || '', // Changed from p.paymentMethod to p.method
             'Received By': p.receivedBy || '',
             'Notes': p.notes || ''
         };
