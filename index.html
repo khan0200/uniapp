@@ -4,8 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="UniBridge CRM - Modern student management system with Apple iOS design">
-    <title>UniBridge CRM - Student Management</title>
+    <meta name="description" content="UNIAPP - Modern student management system with Apple iOS design">
+    <title>UNIAPP - Student Management</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="Logo.png">
 
     <!-- Bootstrap 5.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -23,9 +26,9 @@
             <div class="login-card">
                 <div class="login-header">
                     <div class="login-icon">
-                        <i class="bi bi-shield-lock-fill"></i>
+                        <img src="Logo.png" alt="UNIAPP Logo" style="width: 80px; height: 80px; object-fit: contain;">
                     </div>
-                    <h2 class="login-title">UniBridge CRM</h2>
+                    <h2 class="login-title">UNIAPP</h2>
                     <p class="login-subtitle">Secure Access Required</p>
                 </div>
                 <div class="login-challenge">
@@ -50,7 +53,7 @@
                 </div>
                 <div class="login-footer">
                     <i class="bi bi-fingerprint"></i>
-                    <span>Protected by UniBridge Security</span>
+                    <span>Protected by UNIAPP Security</span>
                 </div>
             </div>
         </div>
@@ -60,8 +63,8 @@
     <nav class="navbar navbar-expand-lg navbar-glass sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
-                <i class="bi bi-grid-3x3-gap-fill me-2 icon-brand"></i>
-                UniBridge CRM
+                <img src="Logo.png" alt="UNIAPP Logo" style="width: 32px; height: 32px; object-fit: contain;" class="me-2">
+                UNIAPP
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-label="Toggle navigation">
@@ -153,6 +156,7 @@
                         <i class="bi bi-people filter-icon"></i>
                         <select class="form-select filter-input" id="filterGroup" aria-label="Filter by group">
                             <option value="">All Groups</option>
+                            <option value="NO_GROUP">No Group</option>
                             <!-- Groups will be populated dynamically -->
                         </select>
                     </div>
@@ -234,6 +238,17 @@
                         <option value="VISA PLUS">VISA PLUS</option>
                         <option value="E-VISA">E-VISA</option>
                         <option value="REGIONAL VISA">REGIONAL VISA</option>
+                    </select>
+                    <select class="form-select ios-input filter-select-compact" id="paymentBalanceFilter"
+                        aria-label="Filter by balance" onchange="filterPaymentStudents()">
+                        <option value="">All Balances</option>
+                        <option value="NEGATIVE">Balance < 0 (Debt)</option>
+                        <option value="ZERO">Balance = 0 (Fully Paid)</option>
+                        <option value="GT_500K">Balance > 500,000</option>
+                        <option value="GT_1M">Balance > 1,000,000</option>
+                        <option value="GT_2M">Balance > 2,000,000</option>
+                        <option value="GT_5M">Balance > 5,000,000</option>
+                        <option value="GT_10M">Balance > 10,000,000</option>
                     </select>
                 </div>
 
@@ -721,6 +736,7 @@
                                     <option value="Naqd">Naqd</option>
                                     <option value="Karta M.A">Karta M.A</option>
                                     <option value="Bank">Bank</option>
+                                    <option value="Discount">Discount</option>
                                 </select>
                             </div>
                         </div>
@@ -737,6 +753,7 @@
                                     <option value="Muhammadali">Muhammadali</option>
                                     <option value="Muslihiddin">Muslihiddin</option>
                                     <option value="Admin">Admin</option>
+                                    <option value="Discount">Discount</option>
                                 </select>
                             </div>
                             <div class="col-md-6">

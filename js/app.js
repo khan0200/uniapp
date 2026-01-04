@@ -982,8 +982,18 @@ function applyFilters(resetPage = true) {
         // Level filter
         const matchesLevel = !levelFilter || s.level === levelFilter;
 
-        // Group filter
-        const matchesGroup = !groupFilter || s.group === groupFilter;
+        // Group filter - handle "No Group" special case
+        let matchesGroup;
+        if (!groupFilter) {
+            // No filter selected - show all
+            matchesGroup = true;
+        } else if (groupFilter === 'NO_GROUP') {
+            // Show students with no group (undefined, null, or empty string)
+            matchesGroup = !s.group || s.group === '';
+        } else {
+            // Show students matching the selected group
+            matchesGroup = s.group === groupFilter;
+        }
 
         return matchesSearch && matchesTariff && matchesLevel && matchesGroup;
     });
@@ -1410,8 +1420,9 @@ function renderPaymentStudents(filteredData = null) {
         // Check if filters are active by checking input values
         const searchTerm = document.getElementById('paymentSearchInput') ? document.getElementById('paymentSearchInput').value : '';
         const tariffFilter = document.getElementById('paymentTariffFilter') ? document.getElementById('paymentTariffFilter').value : '';
+        const balanceFilter = document.getElementById('paymentBalanceFilter') ? document.getElementById('paymentBalanceFilter').value : '';
 
-        if (searchTerm || tariffFilter) {
+        if (searchTerm || tariffFilter || balanceFilter) {
             counterEl.textContent = `Found ${students.length} student${students.length !== 1 ? 's' : ''}`;
         } else {
             counterEl.textContent = `Total ${students.length} student${students.length !== 1 ? 's' : ''}`;
@@ -1555,6 +1566,7 @@ function filterPaymentStudents(resetPage = true) {
 
     const searchTerm = document.getElementById('paymentSearchInput').value.toLowerCase();
     const tariffFilter = document.getElementById('paymentTariffFilter').value;
+    const balanceFilter = document.getElementById('paymentBalanceFilter') ? document.getElementById('paymentBalanceFilter').value : '';
 
     let filtered = window.studentsData.filter(s => !s.deleted);
 
@@ -1570,6 +1582,32 @@ function filterPaymentStudents(resetPage = true) {
     // Apply tariff filter
     if (tariffFilter) {
         filtered = filtered.filter(s => s.tariff === tariffFilter);
+    }
+
+    // Apply balance filter
+    if (balanceFilter) {
+        filtered = filtered.filter(s => {
+            const balance = parseFloat(s.balance) || 0;
+
+            switch (balanceFilter) {
+                case 'NEGATIVE':
+                    return balance < 0;
+                case 'ZERO':
+                    return balance === 0;
+                case 'GT_500K':
+                    return balance > 500000;
+                case 'GT_1M':
+                    return balance > 1000000;
+                case 'GT_2M':
+                    return balance > 2000000;
+                case 'GT_5M':
+                    return balance > 5000000;
+                case 'GT_10M':
+                    return balance > 10000000;
+                default:
+                    return true;
+            }
+        });
     }
 
     renderPaymentStudents(filtered);
@@ -1653,6 +1691,20 @@ function addQuickNote(note) {
         textarea.value += ', ' + note;
     } else {
         textarea.value = note;
+    }
+
+    // If DISCOUNT is selected, automatically set Payment Method and Received By to "Discount"
+    if (note === 'DISCOUNT') {
+        const paymentMethodDropdown = document.getElementById('paymentMethod');
+        const receivedByDropdown = document.getElementById('receivedBy');
+
+        if (paymentMethodDropdown) {
+            paymentMethodDropdown.value = 'Discount';
+        }
+
+        if (receivedByDropdown) {
+            receivedByDropdown.value = 'Discount';
+        }
     }
 }
 
@@ -2319,6 +2371,12 @@ function updateGroupDropdowns() {
         const currentValue = select.value;
 
         select.innerHTML = '<option value="">All Groups</option>';
+
+        // Add "No Group" option for filtering students without a group
+        const noGroupOption = document.createElement('option');
+        noGroupOption.value = 'NO_GROUP';
+        noGroupOption.textContent = 'No Group';
+        select.appendChild(noGroupOption);
 
         (window.groupsData || []).forEach(g => {
             const option = document.createElement('option');
@@ -3421,6 +3479,7 @@ window.saveStudent = saveStudent;
 window.viewStudentDetails = viewStudentDetails;
 window.downloadStudentExcel = downloadStudentExcel;
 window.renderStudents = renderStudents;
+window.applyFilters = applyFilters;
 window.copyToClipboard = copyToClipboard;
 window.startEdit = startEdit;
 window.cancelEdit = cancelEdit;

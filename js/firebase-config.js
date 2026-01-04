@@ -1049,6 +1049,44 @@ document.addEventListener('DOMContentLoaded', function () {
         loadAdmissionsFromLocalStorage();
         loadNotificationsFromLocalStorage();
     }
+
+    // Setup filter event listeners for Students tab
+    const searchInput = document.getElementById('searchInput');
+    const filterTariff = document.getElementById('filterTariff');
+    const filterLevel = document.getElementById('filterLevel');
+    const filterGroup = document.getElementById('filterGroup');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            if (typeof applyFilters === 'function') {
+                applyFilters();
+            }
+        });
+    }
+
+    if (filterTariff) {
+        filterTariff.addEventListener('change', function () {
+            if (typeof applyFilters === 'function') {
+                applyFilters();
+            }
+        });
+    }
+
+    if (filterLevel) {
+        filterLevel.addEventListener('change', function () {
+            if (typeof applyFilters === 'function') {
+                applyFilters();
+            }
+        });
+    }
+
+    if (filterGroup) {
+        filterGroup.addEventListener('change', function () {
+            if (typeof applyFilters === 'function') {
+                applyFilters();
+            }
+        });
+    }
 });
 
 // Export functions for global use
