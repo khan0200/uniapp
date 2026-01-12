@@ -924,6 +924,159 @@
             transform: none;
         }
 
+        /* Video Button */
+        .btn-video {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.6rem 1rem;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border: none;
+            border-radius: var(--radius-full);
+            color: white;
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition-base);
+        }
+
+        .btn-video:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Video Section */
+        .video-section {
+            display: none;
+            width: 100%;
+            max-width: 700px;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .video-header {
+            text-align: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .video-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .video-title i {
+            color: #ef4444;
+        }
+
+        /* Warning Banner */
+        .warning-banner {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.08));
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .warning-banner i {
+            font-size: 1.5rem;
+            color: #fbbf24;
+            flex-shrink: 0;
+            margin-top: 0.1rem;
+        }
+
+        .warning-banner p {
+            margin: 0;
+            color: #fbbf24;
+            font-size: 0.9rem;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        /* Video Buttons Container */
+        .video-buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .video-link-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.25rem;
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: var(--transition-base);
+            cursor: pointer;
+        }
+
+        .video-link-btn:hover {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
+            transform: translateY(-2px);
+            color: var(--text-primary);
+        }
+
+        .video-link-btn i:first-child {
+            font-size: 1.5rem;
+            color: #ef4444;
+        }
+
+        .video-link-btn span {
+            flex: 1;
+        }
+
+        .video-link-btn i:last-child {
+            font-size: 0.9rem;
+            color: var(--text-tertiary);
+        }
+
+        .video-link-btn:hover i:last-child {
+            color: #ef4444;
+        }
+
+        /* Video Action Buttons */
+        .video-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .btn-video-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.6rem 1.25rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-full);
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition-base);
+        }
+
+        .btn-video-back:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border-color: var(--accent-primary);
+        }
+
         /* Utility */
         .section-hidden {
             display: none !important;
@@ -1109,11 +1262,15 @@
             <div class="action-buttons">
                 <button class="btn-back" onclick="goBack()">
                     <i class="bi bi-arrow-left"></i>
-                    <span>Search Again</span>
+                    <span>Back</span>
                 </button>
                 <button class="btn-jarayon" onclick="showJarayon()">
                     <i class="bi bi-list-check"></i>
                     <span>Jarayon</span>
+                </button>
+                <button class="btn-video" onclick="showVideo()">
+                    <i class="bi bi-play-circle-fill"></i>
+                    <span>Video</span>
                 </button>
             </div>
         </div>
@@ -1220,6 +1377,44 @@
                 <button class="btn-jarayon-save" onclick="saveJarayon()">
                     <i class="bi bi-check-lg"></i>
                     <span>Save</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Video Section (Hidden by default) -->
+        <div id="videoSection" class="video-section">
+            <div class="video-header">
+                <h2 class="video-title">
+                    <i class="bi bi-play-circle-fill"></i>
+                    Video Qo'llanmalar
+                </h2>
+            </div>
+
+            <!-- Warning Banner -->
+            <div class="warning-banner">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <p>⚠️ Elchixonaga taqdim etiladigan hujjatlar my.gov portalidan olinganiga <strong>1 oydan oshmagan</strong> bo'lishi lozim!</p>
+            </div>
+
+            <!-- Video Buttons -->
+            <div class="video-buttons-container">
+                <a href="https://youtube.com/shorts/yjl4f1BVgEE?si=Vexz6TbX_aXiVfsA" target="_blank" class="video-link-btn">
+                    <i class="bi bi-play-btn-fill"></i>
+                    <span>NIKOH HOLATI MA'LUMOTNOMASINI OLISH</span>
+                    <i class="bi bi-box-arrow-up-right"></i>
+                </a>
+                <a href="https://youtu.be/ViKiiLUPq1g?si=ge0ZEZmTYGDSgD0W" target="_blank" class="video-link-btn">
+                    <i class="bi bi-play-btn-fill"></i>
+                    <span>OTA-ONA DAROMADINI MA'LUMOTNOMASINI OLISH</span>
+                    <i class="bi bi-box-arrow-up-right"></i>
+                </a>
+            </div>
+
+            <!-- Video Action Buttons -->
+            <div class="video-actions">
+                <button class="btn-video-back" onclick="hideVideo()">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Orqaga</span>
                 </button>
             </div>
         </div>
@@ -1465,6 +1660,7 @@
             document.getElementById('searchSection').style.display = 'block';
             document.getElementById('profileSection').style.display = 'none';
             document.getElementById('jarayonSection').style.display = 'none';
+            document.getElementById('videoSection').style.display = 'none';
             document.getElementById('passportInput').value = '';
             document.getElementById('errorMessage').style.display = 'none';
             document.getElementById('passportInput').focus();
@@ -1581,6 +1777,26 @@
                     saveBtn.style.background = '';
                 }, 2000);
             }
+        }
+
+        // ==========================================
+        // Video Functions
+        // ==========================================
+        function showVideo() {
+            // Hide profile section
+            document.getElementById('profileSection').style.display = 'none';
+            
+            // Show video section
+            const videoSection = document.getElementById('videoSection');
+            videoSection.style.display = 'block';
+        }
+
+        function hideVideo() {
+            // Hide video section
+            document.getElementById('videoSection').style.display = 'none';
+            
+            // Show profile section
+            document.getElementById('profileSection').style.display = 'block';
         }
     </script>
 
