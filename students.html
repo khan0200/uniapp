@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="UNIBRIDGE - Check your student profile and application status">
+    <title>Student Status Portal - UNIBRIDGE</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="Logo.png">
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* ==========================================
+           CSS Variables - Premium Dark Theme
+           ========================================== */
+        :root {
+            /* Background Colors */
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-elevated: #1a1a24;
+            --bg-card: #1e1e2a;
+            --bg-glass: rgba(30, 30, 42, 0.8);
+
+            /* Accent Colors - Elegant Blue-Purple Gradient */
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+
+            /* Text Colors */
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --text-tertiary: #71717a;
+
+            /* Borders */
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-default: rgba(255, 255, 255, 0.12);
+
+            /* Shadows */
+            --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.15);
+            --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+            /* Border Radius */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --radius-full: 9999px;
+
+            /* Transitions */
+            --transition-fast: all 0.2s ease;
+            --transition-base: all 0.3s ease;
+        }
+
+        /* Reset & Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated Background Gradient */
+        .bg-gradient-animated {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 70%),
+                var(--bg-primary);
+            animation: gradientShift 15s ease-in-out infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { 
+                background-position: 0% 0%, 100% 100%, 50% 50%; 
+            }
+            50% { 
+                background-position: 100% 100%, 0% 0%, 50% 50%; 
+            }
+        }
+
+        /* Main Container */
+        .main-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        /* Logo Section */
+        .logo-section {
+            text-align: center;
+            margin-bottom: 1.25rem;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .logo-image {
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            margin-bottom: 0.5rem;
+            filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.4));
+            animation: floatLogo 3s ease-in-out infinite;
+        }
+
+        @keyframes floatLogo {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .brand-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.25rem;
+        }
+
+        .brand-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 400;
+        }
+
+        /* Search Card */
+        .search-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: var(--shadow-card), var(--shadow-glow);
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .search-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 0.35rem;
+        }
+
+        .search-subtitle {
+            color: var(--text-secondary);
+            text-align: center;
+            font-size: 0.8rem;
+            margin-bottom: 1.25rem;
+        }
+
+        /* Input Styling */
+        .passport-input-wrapper {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .passport-input-wrapper i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-tertiary);
+            font-size: 1rem;
+            transition: var(--transition-fast);
+            z-index: 2;
+        }
+
+        .passport-input {
+            width: 100%;
+            padding: 0.85rem 1rem 0.85rem 2.75rem;
+            font-size: 1rem;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            background: var(--bg-elevated);
+            border: 2px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            transition: var(--transition-base);
+            outline: none;
+        }
+
+        .passport-input::placeholder {
+            color: var(--text-tertiary);
+            text-transform: none;
+            letter-spacing: 0;
+            font-size: 0.85rem;
+        }
+
+        .passport-input:focus {
+            border-color: var(--accent-primary);
+            background: var(--bg-card);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        .passport-input:focus + i,
+        .passport-input-wrapper:focus-within i {
+            color: var(--accent-primary);
+        }
+
+        /* Search Button */
+        .btn-search {
+            width: 100%;
+            padding: 0.85rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border: none;
+            border-radius: var(--radius-md);
+            color: white;
+            cursor: pointer;
+            transition: var(--transition-base);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-search::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .btn-search:hover::before {
+            left: 100%;
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-search:active {
+            transform: translateY(0);
+        }
+
+        .btn-search:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Error Message */
+        .error-message {
+            display: none;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-top: 1.5rem;
+            text-align: center;
+            color: #fca5a5;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        .error-message i {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        /* Student Profile Card */
+        .profile-section {
+            display: none;
+            width: 100%;
+            max-width: 900px;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        /* Cards Row Layout for bigger screens */
+        .cards-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        @media (min-width: 768px) {
+            .cards-row {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .cards-row .profile-card {
+                margin-bottom: 0 !important;
+            }
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .profile-id-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            margin-bottom: 0.35rem;
+            font-size: 0.8rem;
+        }
+
+        .profile-label {
+            color: var(--text-tertiary);
+            font-weight: 500;
+        }
+
+        .profile-id-line #profileId {
+            color: var(--accent-primary);
+            font-weight: 700;
+        }
+
+        .profile-name {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0;
+            line-height: 1.3;
+        }
+
+        /* Info Rows Layout */
+        .info-row-3, .info-row-2, .info-row-1 {
+            display: grid;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-row-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .info-row-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .info-row-1 {
+            grid-template-columns: 1fr;
+        }
+
+        .info-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Payment Status Display */
+        .payment-status-display {
+            text-align: center;
+            padding: 0.5rem;
+        }
+
+        .payment-label {
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--text-tertiary);
+            margin-bottom: 0.25rem;
+        }
+
+        .payment-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .payment-value.positive {
+            color: var(--accent-success);
+        }
+
+        @media (max-width: 400px) {
+            .info-row-3 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .info-row-3 .info-item:last-child {
+                grid-column: 1 / -1;
+            }
+        }
+
+        /* Profile Card */
+        .profile-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-card);
+        }
+
+        .profile-card-header {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .profile-card-header i {
+            font-size: 1rem;
+            color: var(--accent-primary);
+        }
+
+        .profile-card-header h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .profile-card-body {
+            padding: 0.75rem;
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        .info-item {
+            background: var(--bg-elevated);
+            border-radius: var(--radius-sm);
+            padding: 0.6rem 0.75rem;
+            border: 1px solid var(--border-subtle);
+            transition: var(--transition-base);
+        }
+
+        .info-item:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .info-label {
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--text-tertiary);
+            margin-bottom: 0.2rem;
+        }
+
+        .info-value {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            word-break: break-word;
+        }
+
+        .info-value.highlight {
+            color: var(--accent-primary);
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: var(--radius-full);
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .status-inactive {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* Financial Card */
+        .financial-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+
+        .financial-item {
+            background: var(--bg-elevated);
+            border-radius: var(--radius-sm);
+            padding: 0.6rem 0.5rem;
+            text-align: center;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .financial-label {
+            font-size: 0.55rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--text-tertiary);
+            margin-bottom: 0.25rem;
+        }
+
+        .financial-value {
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .financial-value.positive {
+            color: var(--accent-success);
+        }
+
+        .financial-value.negative {
+            color: var(--accent-danger);
+        }
+
+        .financial-value.neutral {
+            color: var(--text-secondary);
+        }
+
+        /* Universities Section */
+        .universities-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .university-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: var(--bg-elevated);
+            border-radius: var(--radius-sm);
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-subtle);
+            transition: var(--transition-base);
+        }
+
+        .university-item:hover {
+            border-color: var(--accent-secondary);
+        }
+
+        .university-number {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.7rem;
+            flex-shrink: 0;
+        }
+
+        .university-name {
+            font-weight: 500;
+            font-size: 0.8rem;
+            flex: 1;
+        }
+
+        /* Back Button */
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.6rem 1rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-full);
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition-base);
+            margin-top: 1rem;
+        }
+
+        .btn-back:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border-color: var(--accent-primary);
+        }
+
+        /* Footer */
+        .portal-footer {
+            text-align: center;
+            padding: 1rem;
+            color: var(--text-tertiary);
+            font-size: 0.75rem;
+        }
+
+        .portal-footer a {
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+
+        .portal-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .telegram-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            color: #26a5e4;
+        }
+
+        .telegram-link:hover {
+            color: #1d8cbf;
+        }
+
+        /* Responsive - Already mobile-first */
+        @media (max-width: 400px) {
+            .main-container {
+                padding: 0.75rem;
+            }
+
+            .search-card {
+                padding: 1.25rem;
+            }
+
+            .brand-title {
+                font-size: 1.5rem;
+            }
+
+            .profile-name {
+                font-size: 1rem;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .mb-3 {
+            margin-bottom: 0.75rem !important;
+        }
+
+        .mb-4 {
+            margin-bottom: 0.75rem !important;
+        }
+
+        /* Action Buttons Container */
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* Jarayon Button */
+        .btn-jarayon {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.6rem 1rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border: none;
+            border-radius: var(--radius-full);
+            color: white;
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition-base);
+        }
+
+        .btn-jarayon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Jarayon Section */
+        .jarayon-section {
+            display: none;
+            width: 100%;
+            max-width: 600px;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .jarayon-header {
+            text-align: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .jarayon-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .jarayon-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Jarayon Card */
+        .jarayon-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+        }
+
+        .jarayon-card-header {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            padding: 0.6rem 0.85rem;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+
+        .jarayon-card-header i {
+            font-size: 0.9rem;
+        }
+
+        .jarayon-card-body {
+            padding: 0.75rem;
+        }
+
+        .jarayon-uni-name {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+
+        /* Jarayon Select */
+        .jarayon-select {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-base);
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a1a1aa' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            padding-right: 2rem;
+        }
+
+        .jarayon-select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+        }
+
+        .jarayon-select option {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+        }
+
+        /* Jarayon Row for smaller cards */
+        .jarayon-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .jarayon-card-small {
+            margin-bottom: 0;
+        }
+
+        .jarayon-card-small .jarayon-card-header {
+            padding: 0.5rem 0.65rem;
+            font-size: 0.7rem;
+        }
+
+        .jarayon-card-small .jarayon-card-body {
+            padding: 0.5rem;
+        }
+
+        .jarayon-card-small .jarayon-select {
+            padding: 0.5rem 0.6rem;
+            font-size: 0.75rem;
+            padding-right: 1.5rem;
+            background-position: right 0.5rem center;
+        }
+
+        @media (max-width: 500px) {
+            .jarayon-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Jarayon Action Buttons */
+        .jarayon-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .btn-jarayon-cancel, .btn-jarayon-save {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.6rem 1.25rem;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition-base);
+            border: none;
+        }
+
+        .btn-jarayon-cancel {
+            background: var(--bg-elevated);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-default);
+        }
+
+        .btn-jarayon-cancel:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .btn-jarayon-save {
+            background: linear-gradient(135deg, var(--accent-success), #059669);
+            color: white;
+        }
+
+        .btn-jarayon-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-jarayon-save:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Utility */
+        .section-hidden {
+            display: none !important;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Animated Background -->
+    <div class="bg-gradient-animated"></div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Search Section -->
+        <div id="searchSection">
+            <!-- Logo -->
+            <div class="logo-section">
+                <img src="Logo.png" alt="UNIBRIDGE Logo" class="logo-image">
+                <h1 class="brand-title">UNIBRIDGE</h1>
+                <p class="brand-subtitle">Student Status Portal</p>
+            </div>
+
+            <!-- Search Card -->
+            <div class="search-card">
+                <h2 class="search-title">Check Your Status</h2>
+                <p class="search-subtitle">Enter your passport number to view your profile and application status</p>
+
+                <div class="passport-input-wrapper">
+                    <input 
+                        type="text" 
+                        id="passportInput" 
+                        class="passport-input" 
+                        placeholder="Enter passport number (e.g., AC1234567)"
+                        autocomplete="off"
+                        maxlength="15"
+                    >
+                    <i class="bi bi-passport"></i>
+                </div>
+
+                <button id="searchBtn" class="btn-search" onclick="searchStudent()">
+                    <i class="bi bi-search"></i>
+                    <span>Search Profile</span>
+                </button>
+
+                <div id="errorMessage" class="error-message">
+                    <i class="bi bi-exclamation-circle"></i>
+                    <span id="errorText">No student found with this passport number</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Section (Hidden by default) -->
+        <div id="profileSection" class="profile-section">
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <div class="profile-id-line">
+                    <span class="profile-label">Student ID:</span>
+                    <span id="profileId">D000</span>
+                </div>
+                <h2 class="profile-name" id="profileName">Student Name</h2>
+            </div>
+
+            <!-- Row 1: Personal Information & Education Information -->
+            <div class="cards-row">
+                <!-- Personal Information Card -->
+                <div class="profile-card mb-4">
+                    <div class="profile-card-header">
+                        <i class="bi bi-person-circle"></i>
+                        <h3>Personal Information</h3>
+                    </div>
+                    <div class="profile-card-body">
+                        <!-- Row 1: Passport, Phone 1, Phone 2 -->
+                        <div class="info-row-3">
+                            <div class="info-item">
+                                <div class="info-label">Passport Number</div>
+                                <div class="info-value highlight" id="infoPassport">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Phone 1</div>
+                                <div class="info-value" id="infoPhone1">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Phone 2</div>
+                                <div class="info-value" id="infoPhone2">-</div>
+                            </div>
+                        </div>
+                        <!-- Row 2: Email, Birthday -->
+                        <div class="info-row-2">
+                            <div class="info-item">
+                                <div class="info-label">Email</div>
+                                <div class="info-value" id="infoEmail">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Birthday</div>
+                                <div class="info-value" id="infoBirthday">-</div>
+                            </div>
+                        </div>
+                        <!-- Row 3: Address -->
+                        <div class="info-row-1">
+                            <div class="info-item full-width">
+                                <div class="info-label">Address</div>
+                                <div class="info-value" id="infoAddress">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Education Information Card -->
+                <div class="profile-card mb-4">
+                    <div class="profile-card-header">
+                        <i class="bi bi-mortarboard-fill"></i>
+                        <h3>Education Information</h3>
+                    </div>
+                    <div class="profile-card-body">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">Education Level</div>
+                                <div class="info-value highlight" id="infoLevel">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Tariff Plan</div>
+                                <div class="info-value" id="infoTariff">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Group</div>
+                                <div class="info-value" id="infoGroup">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Language Certificate</div>
+                                <div class="info-value" id="infoCertificate">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2: Universities & Payment Status -->
+            <div class="cards-row">
+                <!-- Universities Card -->
+                <div class="profile-card mb-4" id="universitiesCard">
+                    <div class="profile-card-header">
+                        <i class="bi bi-building"></i>
+                        <h3>Applied Universities</h3>
+                    </div>
+                    <div class="profile-card-body">
+                        <div class="universities-list" id="universitiesList">
+                            <!-- Universities will be populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Status Card -->
+                <div class="profile-card mb-4">
+                    <div class="profile-card-header">
+                        <i class="bi bi-wallet2"></i>
+                        <h3>Payment Status</h3>
+                    </div>
+                    <div class="profile-card-body">
+                        <div class="payment-status-display">
+                            <div class="payment-label">Total Paid</div>
+                            <div class="payment-value positive" id="financePaid">0 UZS</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes Card (if any) -->
+            <div class="profile-card mb-4" id="notesCard" style="display: none;">
+                <div class="profile-card-header">
+                    <i class="bi bi-sticky"></i>
+                    <h3>Notes</h3>
+                </div>
+                <div class="profile-card-body">
+                    <div class="info-value" id="infoNotes" style="font-style: italic; color: var(--text-secondary);">-</div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn-back" onclick="goBack()">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Search Again</span>
+                </button>
+                <button class="btn-jarayon" onclick="showJarayon()">
+                    <i class="bi bi-list-check"></i>
+                    <span>Jarayon</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Jarayon Section (Hidden by default) -->
+        <div id="jarayonSection" class="jarayon-section">
+            <div class="jarayon-header">
+                <h2 class="jarayon-title">📋 Jarayon (Application Status)</h2>
+                <p class="jarayon-subtitle" id="jarayonStudentName">Student Name</p>
+            </div>
+
+            <!-- Universities Status -->
+            <div class="jarayon-card" id="jarayonUni1Card">
+                <div class="jarayon-card-header">
+                    <i class="bi bi-building"></i>
+                    <span>University 1</span>
+                </div>
+                <div class="jarayon-card-body">
+                    <div class="jarayon-uni-name" id="jarayonUni1Name">-</div>
+                    <select class="jarayon-select" id="jarayonUni1Status">
+                        <option value="Topshiriladi">Topshiriladi</option>
+                        <option value="Topshirildi">Topshirildi</option>
+                        <option value="Suhbat qo'yildi">Suhbat qo'yildi</option>
+                        <option value="Invoice oldim">Invoice oldim</option>
+                        <option value="Invoice berilmadi">Invoice berilmadi</option>
+                        <option value="Bekor qilinsin">Bekor qilinsin</option>
+                        <option value="Boshqa universitetni tanladim">Boshqa universitetni tanladim</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="jarayon-card" id="jarayonUni2Card">
+                <div class="jarayon-card-header">
+                    <i class="bi bi-building"></i>
+                    <span>University 2</span>
+                </div>
+                <div class="jarayon-card-body">
+                    <div class="jarayon-uni-name" id="jarayonUni2Name">-</div>
+                    <select class="jarayon-select" id="jarayonUni2Status">
+                        <option value="Topshiriladi">Topshiriladi</option>
+                        <option value="Topshirildi">Topshirildi</option>
+                        <option value="Suhbat qo'yildi">Suhbat qo'yildi</option>
+                        <option value="Invoice oldim">Invoice oldim</option>
+                        <option value="Invoice berilmadi">Invoice berilmadi</option>
+                        <option value="Bekor qilinsin">Bekor qilinsin</option>
+                        <option value="Boshqa universitetni tanladim">Boshqa universitetni tanladim</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Other Status Fields -->
+            <div class="jarayon-row">
+                <div class="jarayon-card jarayon-card-small">
+                    <div class="jarayon-card-header">
+                        <i class="bi bi-award"></i>
+                        <span>ADMISSION</span>
+                    </div>
+                    <div class="jarayon-card-body">
+                        <select class="jarayon-select" id="jarayonAdmission">
+                            <option value="Olmadim">Olmadim</option>
+                            <option value="Oldim">Oldim</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="jarayon-card jarayon-card-small">
+                    <div class="jarayon-card-header">
+                        <i class="bi bi-bank"></i>
+                        <span>KDB</span>
+                    </div>
+                    <div class="jarayon-card-body">
+                        <select class="jarayon-select" id="jarayonKDB">
+                            <option value="Qo'yilmadi">Qo'yilmadi</option>
+                            <option value="Qo'yildi">Qo'yildi</option>
+                            <option value="Menga shart emas">Menga shart emas</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="jarayon-card jarayon-card-small">
+                    <div class="jarayon-card-header">
+                        <i class="bi bi-passport"></i>
+                        <span>VIZA</span>
+                    </div>
+                    <div class="jarayon-card-body">
+                        <select class="jarayon-select" id="jarayonViza">
+                            <option value="Topshirilmadi">Topshirilmadi</option>
+                            <option value="Topshirildi">Topshirildi</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jarayon Action Buttons -->
+            <div class="jarayon-actions">
+                <button class="btn-jarayon-cancel" onclick="hideJarayon()">
+                    <i class="bi bi-x-lg"></i>
+                    <span>Cancel</span>
+                </button>
+                <button class="btn-jarayon-save" onclick="saveJarayon()">
+                    <i class="bi bi-check-lg"></i>
+                    <span>Save</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="portal-footer">
+        <p>&copy; 2026 <a href="https://unibridge.uz" target="_blank">UNIBRIDGE</a>. All rights reserved.</p>
+        <p style="margin-top: 0.35rem;">Questions? <a href="https://t.me/unibridge_rasmiy" target="_blank" class="telegram-link"><i class="bi bi-telegram"></i> @unibridge_rasmiy</a></p>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // ==========================================
+        // Firebase Configuration
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbtscTvtaAj2UKxCddU-0OeUPoAMhc60c",
+            authDomain: "unibridge-7d530.firebaseapp.com",
+            projectId: "unibridge-7d530",
+            storageBucket: "unibridge-7d530.firebasestorage.app",
+            messagingSenderId: "562821836520",
+            appId: "1:562821836520:web:2f4acaff9428ec3f18235d"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // ==========================================
+        // Global Variables
+        // ==========================================
+        let currentStudent = null;
+
+        // ==========================================
+        // Tariff Prices Mapping
+        // ==========================================
+        const tariffPrices = {
+            'STANDART': 13000000,
+            'PREMIUM': 32500000,
+            'VISA PLUS': 65000000,
+            'E-VISA': 2000000,
+            'REGIONAL VISA': 2000000
+        };
+
+        // ==========================================
+        // Event Listeners
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Focus on input
+            document.getElementById('passportInput').focus();
+
+            // Enter key to search
+            document.getElementById('passportInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    searchStudent();
+                }
+            });
+
+            // Auto-uppercase input
+            document.getElementById('passportInput').addEventListener('input', (e) => {
+                e.target.value = e.target.value.toUpperCase();
+            });
+        });
+
+        // ==========================================
+        // Search Student Function
+        // ==========================================
+        async function searchStudent() {
+            const passport = document.getElementById('passportInput').value.trim().toUpperCase();
+            const searchBtn = document.getElementById('searchBtn');
+            const errorMessage = document.getElementById('errorMessage');
+
+            // Hide previous error
+            errorMessage.style.display = 'none';
+
+            // Validate input
+            if (!passport) {
+                showError('Please enter your passport number');
+                return;
+            }
+
+            if (passport.length < 7) {
+                showError('Please enter a valid passport number');
+                return;
+            }
+
+            // Show loading state
+            searchBtn.disabled = true;
+            searchBtn.innerHTML = '<div class="spinner"></div><span>Searching...</span>';
+
+            try {
+                // Query Firestore for student with matching passport
+                const querySnapshot = await db.collection('students')
+                    .where('passport', '==', passport)
+                    .limit(1)
+                    .get();
+
+                if (querySnapshot.empty) {
+                    showError('No student found with this passport number. Please check and try again.');
+                    resetButton();
+                    return;
+                }
+
+                // Get student data
+                const doc = querySnapshot.docs[0];
+                currentStudent = {
+                    firestoreId: doc.id,
+                    ...doc.data()
+                };
+
+                // Check if student is deleted
+                if (currentStudent.isDeleted) {
+                    showError('This student record is no longer active. Please contact the office.');
+                    resetButton();
+                    return;
+                }
+
+                // Display profile
+                await displayProfile(currentStudent);
+
+            } catch (error) {
+                console.error('Search error:', error);
+                showError('An error occurred. Please try again later.');
+                resetButton();
+            }
+        }
+
+        // ==========================================
+        // Display Profile Function
+        // ==========================================
+        async function displayProfile(student) {
+            // Hide search section
+            document.getElementById('searchSection').style.display = 'none';
+            
+            // Show profile section
+            const profileSection = document.getElementById('profileSection');
+            profileSection.style.display = 'block';
+
+            // Basic info
+            document.getElementById('profileName').textContent = student.fullName || 'N/A';
+            document.getElementById('profileId').textContent = student.id || 'N/A';
+
+            // Personal info
+            document.getElementById('infoPassport').textContent = student.passport || '-';
+            document.getElementById('infoPhone1').textContent = student.phone1 || '-';
+            document.getElementById('infoPhone2').textContent = student.phone2 || '-';
+            document.getElementById('infoEmail').textContent = student.email || '-';
+            document.getElementById('infoBirthday').textContent = student.birthday || '-';
+            document.getElementById('infoAddress').textContent = student.address || '-';
+
+            // Education info - Fixed field name from educationLevel to level
+            document.getElementById('infoLevel').textContent = student.level || '-';
+            document.getElementById('infoTariff').textContent = student.tariff || '-';
+            document.getElementById('infoGroup').textContent = student.group || 'No Group';
+            
+            // Certificate
+            let certText = student.languageCertificate || '-';
+            if (student.certificateScore) {
+                certText += ` (${student.certificateScore})`;
+            }
+            document.getElementById('infoCertificate').textContent = certText;
+
+            // Universities
+            const universitiesContainer = document.getElementById('universitiesList');
+            const universitiesCard = document.getElementById('universitiesCard');
+            const universities = [];
+            
+            if (student.university1) universities.push(student.university1);
+            if (student.university2) universities.push(student.university2);
+
+            if (universities.length > 0) {
+                universitiesCard.style.display = 'block';
+                universitiesContainer.innerHTML = universities.map((uni, index) => `
+                    <div class="university-item">
+                        <div class="university-number">${index + 1}</div>
+                        <div class="university-name">${uni}</div>
+                    </div>
+                `).join('');
+            } else {
+                universitiesCard.style.display = 'none';
+            }
+
+            // Financial info - Calculate Total Paid from payments collection
+            // Query payments for this student to get accurate total paid
+            let totalPaid = 0;
+            try {
+                const paymentsSnapshot = await db.collection('payments')
+                    .where('studentId', '==', student.id)
+                    .get();
+                
+                paymentsSnapshot.forEach(doc => {
+                    const payment = doc.data();
+                    // Only count positive payments (not withdrawals)
+                    if (payment.amount && parseFloat(payment.amount) > 0) {
+                        totalPaid += parseFloat(payment.amount);
+                    }
+                });
+            } catch (err) {
+                console.log('Could not fetch payments:', err);
+                // Fallback to balance field if available (but convert from negative)
+                const balance = parseFloat(student.balance) || 0;
+                // Balance is stored as negative (debt), so paid amount would be tariff + balance
+                const tariffPrice = tariffPrices[student.tariff] || 0;
+                totalPaid = Math.max(0, tariffPrice + balance);
+            }
+
+            document.getElementById('financePaid').textContent = formatCurrency(totalPaid);
+
+            // Notes
+            const notesCard = document.getElementById('notesCard');
+            if (student.notes && student.notes.trim()) {
+                notesCard.style.display = 'block';
+                document.getElementById('infoNotes').textContent = student.notes;
+            } else {
+                notesCard.style.display = 'none';
+            }
+
+            // Reset search button
+            resetButton();
+        }
+
+        // ==========================================
+        // Utility Functions
+        // ==========================================
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            document.getElementById('errorText').textContent = message;
+            errorMessage.style.display = 'block';
+        }
+
+        function resetButton() {
+            const searchBtn = document.getElementById('searchBtn');
+            searchBtn.disabled = false;
+            searchBtn.innerHTML = '<i class="bi bi-search"></i><span>Search Profile</span>';
+        }
+
+        function goBack() {
+            // Reset and show search section
+            document.getElementById('searchSection').style.display = 'block';
+            document.getElementById('profileSection').style.display = 'none';
+            document.getElementById('jarayonSection').style.display = 'none';
+            document.getElementById('passportInput').value = '';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('passportInput').focus();
+            currentStudent = null;
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('uz-UZ', {
+                style: 'decimal',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount) + ' UZS';
+        }
+
+        // ==========================================
+        // Jarayon Functions
+        // ==========================================
+        function showJarayon() {
+            if (!currentStudent) return;
+
+            // Hide profile section
+            document.getElementById('profileSection').style.display = 'none';
+            
+            // Show jarayon section
+            const jarayonSection = document.getElementById('jarayonSection');
+            jarayonSection.style.display = 'block';
+
+            // Set student name
+            document.getElementById('jarayonStudentName').textContent = currentStudent.fullName || 'N/A';
+
+            // University 1
+            const uni1Card = document.getElementById('jarayonUni1Card');
+            if (currentStudent.university1) {
+                uni1Card.style.display = 'block';
+                document.getElementById('jarayonUni1Name').textContent = currentStudent.university1;
+                document.getElementById('jarayonUni1Status').value = currentStudent.uni1Status || 'Topshiriladi';
+            } else {
+                uni1Card.style.display = 'none';
+            }
+
+            // University 2
+            const uni2Card = document.getElementById('jarayonUni2Card');
+            if (currentStudent.university2) {
+                uni2Card.style.display = 'block';
+                document.getElementById('jarayonUni2Name').textContent = currentStudent.university2;
+                document.getElementById('jarayonUni2Status').value = currentStudent.uni2Status || 'Topshiriladi';
+            } else {
+                uni2Card.style.display = 'none';
+            }
+
+            // Other statuses
+            document.getElementById('jarayonAdmission').value = currentStudent.admissionStatus || 'Olmadim';
+            document.getElementById('jarayonKDB').value = currentStudent.kdbStatus || "Qo'yilmadi";
+            document.getElementById('jarayonViza').value = currentStudent.vizaStatus || 'Topshirilmadi';
+        }
+
+        function hideJarayon() {
+            // Hide jarayon section
+            document.getElementById('jarayonSection').style.display = 'none';
+            
+            // Show profile section
+            document.getElementById('profileSection').style.display = 'block';
+        }
+
+        async function saveJarayon() {
+            if (!currentStudent || !currentStudent.firestoreId) {
+                alert('Error: Student data not found!');
+                return;
+            }
+
+            const saveBtn = document.querySelector('.btn-jarayon-save');
+            const originalContent = saveBtn.innerHTML;
+            
+            // Show loading state
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;"></div><span>Saving...</span>';
+
+            try {
+                // Collect all status values
+                const jarayonData = {
+                    uni1Status: document.getElementById('jarayonUni1Status').value,
+                    uni2Status: document.getElementById('jarayonUni2Status').value,
+                    admissionStatus: document.getElementById('jarayonAdmission').value,
+                    kdbStatus: document.getElementById('jarayonKDB').value,
+                    vizaStatus: document.getElementById('jarayonViza').value,
+                    jarayonUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                // Update in Firestore
+                await db.collection('students').doc(currentStudent.firestoreId).update(jarayonData);
+
+                // Update local student data
+                Object.assign(currentStudent, jarayonData);
+
+                // Show success
+                saveBtn.innerHTML = '<i class="bi bi-check-lg"></i><span>Saved!</span>';
+                saveBtn.style.background = 'linear-gradient(135deg, var(--accent-success), #059669)';
+
+                // Go back to profile after short delay
+                setTimeout(() => {
+                    saveBtn.innerHTML = originalContent;
+                    saveBtn.disabled = false;
+                    hideJarayon();
+                }, 1000);
+
+            } catch (error) {
+                console.error('Save error:', error);
+                saveBtn.innerHTML = '<i class="bi bi-x-lg"></i><span>Error!</span>';
+                saveBtn.style.background = 'linear-gradient(135deg, var(--accent-danger), #dc2626)';
+                
+                setTimeout(() => {
+                    saveBtn.innerHTML = originalContent;
+                    saveBtn.disabled = false;
+                    saveBtn.style.background = '';
+                }, 2000);
+            }
+        }
+    </script>
+
+</body>
+</html>

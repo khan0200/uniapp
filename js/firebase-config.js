@@ -878,20 +878,28 @@ async function loadUniversitiesFromFirestore() {
         return;
     }
 
+    // Don't use orderBy so we can load ALL documents including those with missing levelName
     db.collection('universities')
-        .orderBy('levelName')
         .onSnapshot((snapshot) => {
             window.universitiesData = [];
 
             snapshot.forEach((doc) => {
+                const data = doc.data();
                 window.universitiesData.push({
                     firestoreId: doc.id,
-                    ...doc.data()
+                    name: data.name || '',
+                    levelId: data.levelId || '',
+                    // Support both 'levelName' and 'level' field names for backwards compatibility
+                    levelName: data.levelName || data.level || 'Unknown Level',
+                    ...data
                 });
             });
 
             // Remove duplicates by firestoreId
             window.universitiesData = Array.from(new Map(window.universitiesData.map(u => [u.firestoreId, u])).values());
+
+            // Sort by levelName client-side
+            window.universitiesData.sort((a, b) => (a.levelName || '').localeCompare(b.levelName || ''));
 
             console.log(`✅ Loaded ${window.universitiesData.length} universities from Firestore`);
 

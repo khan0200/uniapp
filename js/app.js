@@ -166,9 +166,15 @@ function changePaymentHistoryPage(page) {
 // Dynamic University Data Function - returns universities for a given level from Firestore
 function getUniversitiesForLevel(level) {
     if (!window.universitiesData || !level) return [];
-    return window.universitiesData
-        .filter(u => u.levelName === level)
+    const normalizedLevel = level.trim().toUpperCase();
+    const universities = window.universitiesData
+        .filter(u => u.levelName && u.levelName.trim().toUpperCase() === normalizedLevel)
         .map(u => u.name);
+
+    if (universities.length === 0) {
+        console.log(`ℹ️ No universities found for level "${level}". Please add universities for this level in Settings → Universities.`);
+    }
+    return universities;
 }
 
 // Legacy compatibility: uniData object that dynamically fetches from Firestore
@@ -2400,6 +2406,10 @@ function renderUniversitiesList() {
     const container = document.getElementById('universitiesListContainer');
     if (!container) return;
 
+    // Debug: Log all universities and their level names
+    console.log('📚 Universities Data:', window.universitiesData);
+    console.log('📚 Unique levelNames:', [...new Set(window.universitiesData.map(u => u.levelName))]);
+
     if (window.universitiesData.length === 0) {
         container.innerHTML = `
             <div class="text-center py-4 text-secondary">
@@ -2651,8 +2661,9 @@ function updateLevelDropdowns() {
 function updateUniversityDropdowns(selectedLevel) {
     const uniSelects = document.querySelectorAll('#uni1, #uni2, #edit-university1, #edit-university2');
 
-    const filteredUnis = selectedLevel ?
-        window.universitiesData.filter(u => u.levelName === selectedLevel) : [];
+    const normalizedLevel = selectedLevel ? selectedLevel.trim().toUpperCase() : '';
+    const filteredUnis = normalizedLevel ?
+        window.universitiesData.filter(u => u.levelName && u.levelName.trim().toUpperCase() === normalizedLevel) : [];
 
     // Remove duplicates by name using Set
     const uniqueUnis = Array.from(new Map(filteredUnis.map(u => [u.name, u])).values());
