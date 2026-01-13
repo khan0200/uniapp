@@ -2600,6 +2600,11 @@ function executeSettingsDelete() {
                 deleteGroupFromFirestore(id);
             }
             break;
+        case 'video':
+            if (typeof deleteVideoFromFirestore === 'function') {
+                deleteVideoFromFirestore(id);
+            }
+            break;
     }
 
     pendingSettingsDelete = null;
@@ -2737,6 +2742,136 @@ window.saveGroup = saveGroup;
 window.confirmDeleteGroup = confirmDeleteGroup;
 window.renderGroupsList = renderGroupsList;
 window.updateGroupDropdowns = updateGroupDropdowns;
+
+// ==========================================
+// VIDEO TUTORIALS MANAGEMENT
+// ==========================================
+
+// Global videos data
+window.videosData = [];
+
+function renderVideosList() {
+    const container = document.getElementById('videosListContainer');
+    if (!container) return;
+
+    if (!window.videosData || window.videosData.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-4 text-secondary">
+                <i class="bi bi-play-circle" style="font-size: 2rem; opacity: 0.5;"></i>
+                <p class="mt-2 mb-0">No videos configured. Add your first video tutorial.</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = window.videosData.map(v => `
+        <div class="settings-item">
+            <div class="settings-item-info">
+                <span class="settings-item-name">${v.name}</span>
+                <span class="settings-item-meta" style="font-size: 0.7rem; word-break: break-all;">${v.url}</span>
+            </div>
+            <div class="settings-item-actions">
+                <a href="${v.url}" target="_blank" class="settings-item-btn" title="Preview" style="color: #ef4444;">
+                    <i class="bi bi-play-fill"></i>
+                </a>
+                <button class="settings-item-btn edit-btn" onclick="editVideo('${v.firestoreId}')" title="Edit">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="settings-item-btn delete-btn" onclick="confirmDeleteVideo('${v.firestoreId}')" title="Delete">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function openVideoModal(videoId = null) {
+    const modal = new bootstrap.Modal(document.getElementById('videoModal'));
+    const form = document.getElementById('videoForm');
+    const title = document.getElementById('videoModalTitle');
+
+    form.reset();
+    document.getElementById('videoEditId').value = '';
+
+    if (videoId) {
+        const video = window.videosData.find(v => v.firestoreId === videoId);
+        if (video) {
+            title.innerHTML = '<i class="bi bi-play-circle-fill me-2" style="color: #ef4444;"></i>Edit Video';
+            document.getElementById('videoEditId').value = videoId;
+            document.getElementById('videoName').value = video.name;
+            document.getElementById('videoUrl').value = video.url;
+        }
+    } else {
+        title.innerHTML = '<i class="bi bi-play-circle-fill me-2" style="color: #ef4444;"></i>Add Video';
+    }
+
+    modal.show();
+}
+
+function editVideo(videoId) {
+    openVideoModal(videoId);
+}
+
+function saveVideo() {
+    const name = document.getElementById('videoName').value.trim();
+    const url = document.getElementById('videoUrl').value.trim();
+    const editId = document.getElementById('videoEditId').value;
+
+    if (!name || !url) {
+        showNotification('Please fill in all required fields!', 'error');
+        return;
+    }
+
+    // Validate URL format
+    try {
+        new URL(url);
+    } catch (e) {
+        showNotification('Please enter a valid URL!', 'error');
+        return;
+    }
+
+    const videoData = {
+        name,
+        url
+    };
+
+    if (editId) {
+        if (typeof updateVideoInFirestore === 'function') {
+            updateVideoInFirestore(editId, videoData);
+        }
+    } else {
+        if (typeof saveVideoToFirestore === 'function') {
+            saveVideoToFirestore(videoData);
+        }
+    }
+
+    const modal = bootstrap.Modal.getInstance(document.getElementById('videoModal'));
+    if (modal) modal.hide();
+}
+
+function confirmDeleteVideo(videoId) {
+    const video = window.videosData.find(v => v.firestoreId === videoId);
+    if (!video) return;
+
+    pendingSettingsDelete = {
+        type: 'video',
+        id: videoId
+    };
+
+    document.getElementById('confirmSettingsDeleteTitle').textContent = 'Delete Video';
+    document.getElementById('confirmSettingsDeleteMessage').textContent =
+        `Are you sure you want to delete "${video.name}"?`;
+
+    const modal = new bootstrap.Modal(document.getElementById('confirmSettingsDeleteModal'));
+    modal.show();
+}
+
+// Export video functions
+window.renderVideosList = renderVideosList;
+window.openVideoModal = openVideoModal;
+window.editVideo = editVideo;
+window.saveVideo = saveVideo;
+window.confirmDeleteVideo = confirmDeleteVideo;
 
 window.showTab = showTab;
 window.saveStudent = saveStudent;

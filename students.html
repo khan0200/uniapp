@@ -1396,18 +1396,11 @@
                 <p>⚠️ Elchixonaga taqdim etiladigan hujjatlar my.gov portalidan olinganiga <strong>1 oydan oshmagan</strong> bo'lishi lozim!</p>
             </div>
 
-            <!-- Video Buttons -->
-            <div class="video-buttons-container">
-                <a href="https://youtube.com/shorts/yjl4f1BVgEE?si=Vexz6TbX_aXiVfsA" target="_blank" class="video-link-btn">
-                    <i class="bi bi-play-btn-fill"></i>
-                    <span>NIKOH HOLATI MA'LUMOTNOMASINI OLISH</span>
-                    <i class="bi bi-box-arrow-up-right"></i>
-                </a>
-                <a href="https://youtu.be/ViKiiLUPq1g?si=ge0ZEZmTYGDSgD0W" target="_blank" class="video-link-btn">
-                    <i class="bi bi-play-btn-fill"></i>
-                    <span>OTA-ONA DAROMADINI MA'LUMOTNOMASINI OLISH</span>
-                    <i class="bi bi-box-arrow-up-right"></i>
-                </a>
+            <!-- Video Buttons (Dynamically loaded from Firestore) -->
+            <div id="videoButtonsContainer" class="video-buttons-container">
+                <div class="text-center py-4" style="color: var(--text-tertiary);">
+                    <i class="bi bi-hourglass-split"></i> Yuklanmoqda...
+                </div>
             </div>
 
             <!-- Video Action Buttons -->
@@ -1782,6 +1775,68 @@
         // ==========================================
         // Video Functions
         // ==========================================
+        let videosLoaded = false;
+        let videosData = [];
+
+        // Load videos from Firestore
+        function loadVideosFromFirestore() {
+            db.collection('videos')
+                .orderBy('createdAt', 'asc')
+                .onSnapshot((snapshot) => {
+                    videosData = [];
+                    
+                    snapshot.forEach((doc) => {
+                        videosData.push({
+                            firestoreId: doc.id,
+                            ...doc.data()
+                        });
+                    });
+
+                    console.log(`✅ Loaded ${videosData.length} videos`);
+                    videosLoaded = true;
+                    renderVideoButtons();
+                }, (error) => {
+                    console.error('❌ Error loading videos:', error);
+                    // Fallback to default videos
+                    videosData = [
+                        {
+                            name: "NIKOH HOLATI MA'LUMOTNOMASINI OLISH",
+                            url: "https://youtube.com/shorts/yjl4f1BVgEE?si=Vexz6TbX_aXiVfsA"
+                        },
+                        {
+                            name: "OTA-ONA DAROMADINI MA'LUMOTNOMASINI OLISH",
+                            url: "https://youtu.be/ViKiiLUPq1g?si=ge0ZEZmTYGDSgD0W"
+                        }
+                    ];
+                    videosLoaded = true;
+                    renderVideoButtons();
+                });
+        }
+
+        // Render video buttons
+        function renderVideoButtons() {
+            const container = document.getElementById('videoButtonsContainer');
+            if (!container) return;
+
+            if (videosData.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4" style="color: var(--text-tertiary);">
+                        <i class="bi bi-play-circle" style="font-size: 2rem; opacity: 0.5;"></i>
+                        <p class="mt-2 mb-0">Hozircha video qo'llanmalar mavjud emas.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = videosData.map(v => `
+                <a href="${v.url}" target="_blank" class="video-link-btn">
+                    <i class="bi bi-play-btn-fill"></i>
+                    <span>${v.name}</span>
+                    <i class="bi bi-box-arrow-up-right"></i>
+                </a>
+            `).join('');
+        }
+
         function showVideo() {
             // Hide profile section
             document.getElementById('profileSection').style.display = 'none';
@@ -1789,6 +1844,11 @@
             // Show video section
             const videoSection = document.getElementById('videoSection');
             videoSection.style.display = 'block';
+
+            // Load videos if not already loaded
+            if (!videosLoaded) {
+                loadVideosFromFirestore();
+            }
         }
 
         function hideVideo() {
@@ -1798,6 +1858,11 @@
             // Show profile section
             document.getElementById('profileSection').style.display = 'block';
         }
+
+        // Preload videos on page load for faster display
+        document.addEventListener('DOMContentLoaded', function() {
+            loadVideosFromFirestore();
+        });
     </script>
 
 </body>

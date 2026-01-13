@@ -1049,6 +1049,7 @@ document.addEventListener('DOMContentLoaded', function () {
             loadLevelsFromFirestore();
             loadUniversitiesFromFirestore();
             loadGroupsFromFirestore();
+            loadVideosFromFirestore();
         }
     } else {
         console.log('📦 Using localStorage mode');
@@ -1476,3 +1477,115 @@ window.saveNotificationToFirestore = saveNotificationToFirestore;
 window.loadNotificationsFromFirestore = loadNotificationsFromFirestore;
 window.updateNotificationInFirestore = updateNotificationInFirestore;
 window.deleteNotificationFromFirestore = deleteNotificationFromFirestore;
+
+// ==========================================
+// VIDEOS FIRESTORE FUNCTIONS
+// ==========================================
+
+// Default videos to seed Firestore if empty
+const defaultVideos = [{
+        name: "NIKOH HOLATI MA'LUMOTNOMASINI OLISH",
+        url: "https://youtube.com/shorts/yjl4f1BVgEE?si=Vexz6TbX_aXiVfsA"
+    },
+    {
+        name: "OTA-ONA DAROMADINI MA'LUMOTNOMASINI OLISH",
+        url: "https://youtu.be/ViKiiLUPq1g?si=ge0ZEZmTYGDSgD0W"
+    }
+];
+
+async function saveVideoToFirestore(videoData) {
+    if (!firebaseInitialized) {
+        console.log('Firebase not available');
+        showNotification('Error: Firebase not available', 'error');
+        return;
+    }
+
+    try {
+        videoData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        const docRef = await db.collection('videos').add(videoData);
+        console.log('✅ Video saved with ID:', docRef.id);
+        showNotification('Video saved successfully!', 'success');
+    } catch (error) {
+        console.error('❌ Error saving video:', error);
+        showNotification('Error saving video: ' + error.message, 'error');
+    }
+}
+
+async function loadVideosFromFirestore() {
+    if (!firebaseInitialized) {
+        console.log('Firebase not available, using default videos');
+        window.videosData = defaultVideos.map((v, i) => ({
+            ...v,
+            firestoreId: 'local-' + i
+        }));
+        if (typeof renderVideosList === 'function') renderVideosList();
+        return;
+    }
+
+    db.collection('videos')
+        .orderBy('createdAt', 'asc')
+        .onSnapshot(async (snapshot) => {
+            window.videosData = [];
+
+            // If empty, seed with default data
+            if (snapshot.empty) {
+                console.log('📦 Seeding videos collection with defaults...');
+                for (const video of defaultVideos) {
+                    await db.collection('videos').add({
+                        ...video,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                return; // onSnapshot will fire again after seeding
+            }
+
+            snapshot.forEach((doc) => {
+                window.videosData.push({
+                    firestoreId: doc.id,
+                    ...doc.data()
+                });
+            });
+
+            // Remove duplicates by firestoreId
+            window.videosData = Array.from(new Map(window.videosData.map(v => [v.firestoreId, v])).values());
+
+            console.log(`✅ Loaded ${window.videosData.length} videos from Firestore`);
+
+            if (typeof renderVideosList === 'function') renderVideosList();
+        }, (error) => {
+            console.error('❌ Error loading videos:', error);
+        });
+}
+
+async function updateVideoInFirestore(firestoreId, updatedData) {
+    if (!firebaseInitialized || !firestoreId) return;
+
+    try {
+        updatedData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+        await db.collection('videos').doc(firestoreId).update(updatedData);
+        console.log('✅ Video updated');
+        showNotification('Video updated successfully!', 'success');
+    } catch (error) {
+        console.error('❌ Error updating video:', error);
+        showNotification('Error updating video: ' + error.message, 'error');
+    }
+}
+
+async function deleteVideoFromFirestore(firestoreId) {
+    if (!firebaseInitialized || !firestoreId) return;
+
+    try {
+        await db.collection('videos').doc(firestoreId).delete();
+        console.log('✅ Video deleted');
+        showNotification('Video deleted successfully!', 'success');
+    } catch (error) {
+        console.error('❌ Error deleting video:', error);
+        showNotification('Error deleting video: ' + error.message, 'error');
+    }
+}
+
+// Export videos functions
+window.saveVideoToFirestore = saveVideoToFirestore;
+window.loadVideosFromFirestore = loadVideosFromFirestore;
+window.updateVideoInFirestore = updateVideoInFirestore;
+window.deleteVideoFromFirestore = deleteVideoFromFirestore;
