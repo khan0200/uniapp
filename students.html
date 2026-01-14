@@ -1085,6 +1085,475 @@
         .text-center {
             text-align: center;
         }
+
+        /* ==========================================
+           Main Menu Section (After Search)
+           ========================================== */
+        .main-menu-section {
+            display: none;
+            width: 100%;
+            max-width: 500px;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .main-menu-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .main-menu-welcome {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .main-menu-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 0.15rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .main-menu-id {
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+        }
+
+        .main-menu-id span {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        /* Menu Grid */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .menu-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition-base);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            opacity: 0;
+            transition: var(--transition-base);
+        }
+
+        .menu-card:hover {
+            border-color: transparent;
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-card), 0 0 25px rgba(99, 102, 241, 0.15);
+        }
+
+        .menu-card:hover::before {
+            opacity: 1;
+        }
+
+        .menu-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.75rem;
+            font-size: 1.3rem;
+        }
+
+        .menu-card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--text-primary);
+        }
+
+        .menu-card-subtitle {
+            font-size: 0.7rem;
+            color: var(--text-tertiary);
+        }
+
+        /* Menu Card Variants */
+        .menu-card.personal::before {
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+        }
+        .menu-card.personal .menu-card-icon {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+            color: #6366f1;
+        }
+        .menu-card.personal:hover {
+            border-color: #6366f1;
+        }
+
+        .menu-card.jarayon::before {
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+        .menu-card.jarayon .menu-card-icon {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+            color: #10b981;
+        }
+        .menu-card.jarayon:hover {
+            border-color: #10b981;
+        }
+
+        .menu-card.video::before {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+        }
+        .menu-card.video .menu-card-icon {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+            color: #ef4444;
+        }
+        .menu-card.video:hover {
+            border-color: #ef4444;
+        }
+
+        .menu-card.hujjatlar::before {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+        }
+        .menu-card.hujjatlar .menu-card-icon {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.2));
+            color: #f59e0b;
+        }
+        .menu-card.hujjatlar:hover {
+            border-color: #f59e0b;
+        }
+
+        /* Back to Search Button */
+        .btn-menu-back {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            padding: 0.6rem 1.5rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-full);
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition-base);
+            width: 100%;
+            max-width: 200px;
+            margin: 0 auto;
+        }
+
+        .btn-menu-back:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .menu-actions {
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 400px) {
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .menu-card {
+                padding: 1rem;
+            }
+            
+            .menu-card-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+            }
+        }
+
+        /* Hujjatlar Button */
+        .btn-hujjatlar {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.6rem 1rem;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border: none;
+            border-radius: var(--radius-full);
+            color: white;
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition-base);
+        }
+
+        .btn-hujjatlar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(245, 158, 11, 0.3);
+        }
+
+        /* Hujjatlar Section */
+        .hujjatlar-section {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .hujjatlar-header {
+            text-align: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .hujjatlar-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .hujjatlar-title i {
+            color: #f59e0b;
+        }
+
+        /* Tabs */
+        .hujjatlar-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hujjatlar-tab {
+            padding: 0.6rem 1.25rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-full);
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition-base);
+        }
+
+        .hujjatlar-tab:hover {
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+        }
+
+        .hujjatlar-tab.active {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-color: transparent;
+            color: white;
+        }
+
+        /* Hujjatlar Card */
+        .hujjatlar-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .hujjatlar-card-header {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.1));
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #fbbf24;
+        }
+
+        .hujjatlar-card-header i {
+            font-size: 1rem;
+        }
+
+        .hujjatlar-card-body {
+            padding: 1rem;
+        }
+
+        /* Sub Header */
+        .hujjatlar-subheader {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.08));
+            padding: 0.65rem 0.85rem;
+            border-radius: var(--radius-sm);
+            margin-bottom: 0.75rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+            text-align: center;
+        }
+
+        /* Document List */
+        .doc-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 1rem 0;
+        }
+
+        .doc-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .doc-list li:last-child {
+            border-bottom: none;
+        }
+
+        .doc-list li::before {
+            content: "•";
+            color: var(--accent-primary);
+            font-weight: bold;
+            font-size: 1rem;
+            line-height: 1.2;
+        }
+
+        .doc-list.numbered {
+            counter-reset: doc-counter;
+        }
+
+        .doc-list.numbered li::before {
+            counter-increment: doc-counter;
+            content: counter(doc-counter) ".";
+            min-width: 1.5rem;
+            color: var(--accent-secondary);
+            font-weight: 600;
+        }
+
+        /* Important Note Box */
+        .important-note {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0.05));
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: var(--radius-sm);
+            padding: 0.75rem;
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            color: #fbbf24;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .important-note i {
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        /* Warning Note (Red) */
+        .warning-note {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(239, 68, 68, 0.05));
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: var(--radius-sm);
+            padding: 0.75rem;
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            color: #f87171;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            text-align: center;
+            justify-content: center;
+        }
+
+        .warning-note i {
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        /* Hujjatlar Tab Content */
+        .hujjatlar-tab-content {
+            display: none;
+        }
+
+        .hujjatlar-tab-content.active {
+            display: block;
+        }
+
+        /* Category Card (for Visa) */
+        .category-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            margin-bottom: 0.75rem;
+        }
+
+        .category-header {
+            padding: 0.65rem 0.85rem;
+            border-bottom: 1px solid var(--border-subtle);
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--accent-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .category-header i {
+            font-size: 0.9rem;
+        }
+
+        .category-body {
+            padding: 0.75rem;
+        }
+
+        /* Hujjatlar Actions */
+        .hujjatlar-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .btn-hujjatlar-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.6rem 1.25rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-full);
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition-base);
+        }
+
+        .btn-hujjatlar-back:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border-color: var(--accent-primary);
+        }
     </style>
 </head>
 
@@ -1129,6 +1598,60 @@
                     <i class="bi bi-exclamation-circle"></i>
                     <span id="errorText">No student found with this passport number</span>
                 </div>
+            </div>
+        </div>
+
+        <!-- Main Menu Section (Hidden by default) -->
+        <div id="mainMenuSection" class="main-menu-section">
+            <div class="main-menu-header">
+                <p class="main-menu-welcome">Xush kelibsiz!</p>
+                <h2 class="main-menu-name" id="menuStudentName">Student Name</h2>
+                <p class="main-menu-id">ID: <span id="menuStudentId">D000</span></p>
+            </div>
+
+            <div class="menu-grid">
+                <!-- 1. Shahsiy ma'lumotlar -->
+                <div class="menu-card personal" onclick="showProfile()">
+                    <div class="menu-card-icon">
+                        <i class="bi bi-person-vcard-fill"></i>
+                    </div>
+                    <div class="menu-card-title">Shahsiy ma'lumotlar</div>
+                    <div class="menu-card-subtitle">Profil, Ta'lim, To'lov</div>
+                </div>
+
+                <!-- 2. Jarayon -->
+                <div class="menu-card jarayon" onclick="showJarayon()">
+                    <div class="menu-card-icon">
+                        <i class="bi bi-list-check"></i>
+                    </div>
+                    <div class="menu-card-title">Jarayon</div>
+                    <div class="menu-card-subtitle">Ariza holati</div>
+                </div>
+
+                <!-- 3. Video -->
+                <div class="menu-card video" onclick="showVideo()">
+                    <div class="menu-card-icon">
+                        <i class="bi bi-play-circle-fill"></i>
+                    </div>
+                    <div class="menu-card-title">Video</div>
+                    <div class="menu-card-subtitle">Qo'llanmalar</div>
+                </div>
+
+                <!-- 4. Hujjatlar -->
+                <div class="menu-card hujjatlar" onclick="showHujjatlar()">
+                    <div class="menu-card-icon">
+                        <i class="bi bi-file-earmark-text-fill"></i>
+                    </div>
+                    <div class="menu-card-title">Hujjatlar</div>
+                    <div class="menu-card-subtitle">Kerakli hujjatlar</div>
+                </div>
+            </div>
+
+            <div class="menu-actions">
+                <button class="btn-menu-back" onclick="goBackToSearch()">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Bosh sahifa</span>
+                </button>
             </div>
         </div>
 
@@ -1260,17 +1783,9 @@
 
             <!-- Action Buttons -->
             <div class="action-buttons">
-                <button class="btn-back" onclick="goBack()">
+                <button class="btn-back" onclick="goBackToMenu()">
                     <i class="bi bi-arrow-left"></i>
-                    <span>Back</span>
-                </button>
-                <button class="btn-jarayon" onclick="showJarayon()">
-                    <i class="bi bi-list-check"></i>
-                    <span>Jarayon</span>
-                </button>
-                <button class="btn-video" onclick="showVideo()">
-                    <i class="bi bi-play-circle-fill"></i>
-                    <span>Video</span>
+                    <span>Orqaga</span>
                 </button>
             </div>
         </div>
@@ -1411,6 +1926,132 @@
                 </button>
             </div>
         </div>
+
+        <!-- Hujjatlar Section (Hidden by default) -->
+        <div id="hujjatlarSection" class="hujjatlar-section">
+            <div class="hujjatlar-header">
+                <h2 class="hujjatlar-title">
+                    <i class="bi bi-file-earmark-text-fill"></i>
+                    Kerakli Hujjatlar
+                </h2>
+            </div>
+
+            <!-- Tabs -->
+            <div class="hujjatlar-tabs">
+                <button class="hujjatlar-tab active" onclick="switchHujjatlarTab('universitetga')">
+                    <i class="bi bi-mortarboard"></i> Universitetga Topshirish
+                </button>
+                <button class="hujjatlar-tab" onclick="switchHujjatlarTab('viza')">
+                    <i class="bi bi-passport"></i> D-2 Viza
+                </button>
+            </div>
+
+            <!-- Tab Content: Universitetga Topshirish -->
+            <div id="tab-universitetga" class="hujjatlar-tab-content active">
+                <div class="hujjatlar-card">
+                    <div class="hujjatlar-card-header">
+                        <i class="bi bi-mortarboard-fill"></i>
+                        Kasbiy ta'lim, Bakalavr, Magistratura dasturi uchun
+                    </div>
+                    <div class="hujjatlar-card-body">
+                        <div class="hujjatlar-subheader">
+                            📋 Quyidagi skaner varianti yetarli (yoki ofisga aslini olib keling, biz skaner qilib olamiz):
+                        </div>
+                        <ul class="doc-list">
+                            <li>Talabaning pasporti — ID (yoki "yashil")</li>
+                            <li>Xorijiy pasport (zagran)</li>
+                            <li>Ota-onaning pasporti</li>
+                            <li>Ota-onaning nikoh guvohnomasi</li>
+                            <li>IELTS, TOPIK yoki SKA sertifikati</li>
+                            <li>Tug'ilganlik haqida guvohnoma — metrka</li>
+                            <li>Rasm — 3.5 × 4.5 (1 ta elektron rasm, 8 ta chiqarilgan)</li>
+                        </ul>
+
+                        <div class="hujjatlar-subheader">
+                            📄 Aslini olib kelish shart:
+                        </div>
+                        <ul class="doc-list">
+                            <li>Diplom, Shahodatnoma yoki Attestat</li>
+                        </ul>
+
+                        <div class="warning-note">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span>DIQQAT! Shikastlangan, yirtilgan yoki yozuvi ko'rinmaydigan hujjatlar yangi qilib berilishi shart!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: D-2 Viza -->
+            <div id="tab-viza" class="hujjatlar-tab-content">
+                <div class="hujjatlar-card">
+                    <div class="hujjatlar-card-header">
+                        <i class="bi bi-passport-fill"></i>
+                        D-2 Viza uchun kerakli hujjatlar
+                    </div>
+                    <div class="hujjatlar-card-body">
+                        
+                        <!-- TALABA -->
+                        <div class="category-card">
+                            <div class="category-header">
+                                <i class="bi bi-person-fill"></i>
+                                TALABA:
+                            </div>
+                            <div class="category-body">
+                                <ul class="doc-list numbered">
+                                    <li>Zagran passport Asli va Rangli nusxasi 2 ta</li>
+                                    <li>Bio passport yoki ID nusxasi orqa va oldi tomoni</li>
+                                    <li>Admission (Taklifnoma - Universitet beradi)</li>
+                                    <li>Business Registration (Universitet litsenziyasi - Universitet beradi)</li>
+                                    <li>Eng oxirgi o'qish joyidan bitiruv hujjati (Diplom yoki Shahodatnoma apostil bilan, QR-code, imzo, muhr bo'lishi shart)</li>
+                                    <li>Talaba nomidagi 1 oylik KDB bank hisobi ma'lumotnomasi: Shaharga qarab: 12,500-15,500$ (KDB ilovasidan olinadi)</li>
+                                    <li>Til bilish sertifikati (TOPIK 3, Sejong maktabi (SKA) 321 ball, Sejong koreys tili sertifikati 1 dan yuqori, IELTS 5.5 dan yuqori)</li>
+                                    <li>Tug'ilganlik Guvohnomasi (METRKA)-Tarjimasi bilan</li>
+                                    <li>Ota-Onasining Nikoh Guvohnomasi (ZAGS)-Tarjimasi bilan</li>
+                                    <li>Nikohda turganligi yoki turmaganligi haqida hujjat (Tarjima shart)</li>
+                                    <li>3,5 x 4,5 Rasm orqasi oq fonda - 2 ta</li>
+                                    <li>Study Plan (Koreys yoki Ingliz tilida talaba tomonidan qo'lda yoziladi)</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- OTA-ONA -->
+                        <div class="category-card">
+                            <div class="category-header">
+                                <i class="bi bi-people-fill"></i>
+                                OTA-ONA:
+                            </div>
+                            <div class="category-body">
+                                <ul class="doc-list numbered">
+                                    <li>Ota-Ona bio passport yoki ID nusxasi orqa va oldi tomoni</li>
+                                    <li>Mehnat daftarchasidan ko'chirma (My.gov.uz)-Tarjimasi bilan</li>
+                                    <li>Yillik daromad oxirgi 1 yillik (My.gov.uz)-Tarjimasi bilan</li>
+                                    <li>Agar Ota-Ona nomida Yer va Ko'chmas mulk bo'lsa:
+                                        <br>• (Kadastr davreestr.uz portalidan olinishi zarur)-Tarjimasi bilan
+                                        <br>• Shaxsiy transport vositasi bo'lsa ro'yxatdan o'tkazganlik guvohnoma (Texpassport)-Tarjimasi bilan
+                                    </li>
+                                    <li>QR-code ga ega Ota-Ona nomidagi 1 kunlik bank balansidan ko'chirma</li>
+                                </ul>
+
+                                <div class="important-note">
+                                    <i class="bi bi-info-circle-fill"></i>
+                                    <span>Yer va ko'chmas mulk hamda shaxsiy transport vositasini ro'yxatdan o'tkazganligiga <strong>3 oydan ko'p bo'lishi kerak!</strong></span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hujjatlar Actions -->
+            <div class="hujjatlar-actions">
+                <button class="btn-hujjatlar-back" onclick="hideHujjatlar()">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Orqaga</span>
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Footer -->
@@ -1546,9 +2187,13 @@
             // Hide search section
             document.getElementById('searchSection').style.display = 'none';
             
-            // Show profile section
-            const profileSection = document.getElementById('profileSection');
-            profileSection.style.display = 'block';
+            // Show main menu section
+            const mainMenuSection = document.getElementById('mainMenuSection');
+            mainMenuSection.style.display = 'block';
+
+            // Set menu header info
+            document.getElementById('menuStudentName').textContent = student.fullName || 'N/A';
+            document.getElementById('menuStudentId').textContent = student.id || 'N/A';
 
             // Basic info
             document.getElementById('profileName').textContent = student.fullName || 'N/A';
@@ -1649,15 +2294,42 @@
         }
 
         function goBack() {
+            // Legacy function - redirects to goBackToSearch
+            goBackToSearch();
+        }
+
+        function goBackToSearch() {
             // Reset and show search section
             document.getElementById('searchSection').style.display = 'block';
+            document.getElementById('mainMenuSection').style.display = 'none';
             document.getElementById('profileSection').style.display = 'none';
             document.getElementById('jarayonSection').style.display = 'none';
             document.getElementById('videoSection').style.display = 'none';
+            document.getElementById('hujjatlarSection').style.display = 'none';
             document.getElementById('passportInput').value = '';
             document.getElementById('errorMessage').style.display = 'none';
             document.getElementById('passportInput').focus();
             currentStudent = null;
+        }
+
+        function goBackToMenu() {
+            // Hide all sections and show main menu
+            document.getElementById('searchSection').style.display = 'none';
+            document.getElementById('profileSection').style.display = 'none';
+            document.getElementById('jarayonSection').style.display = 'none';
+            document.getElementById('videoSection').style.display = 'none';
+            document.getElementById('hujjatlarSection').style.display = 'none';
+            document.getElementById('mainMenuSection').style.display = 'block';
+        }
+
+        function showProfile() {
+            if (!currentStudent) return;
+            
+            // Hide main menu
+            document.getElementById('mainMenuSection').style.display = 'none';
+            
+            // Show profile section
+            document.getElementById('profileSection').style.display = 'block';
         }
 
         function formatCurrency(amount) {
@@ -1674,8 +2346,8 @@
         function showJarayon() {
             if (!currentStudent) return;
 
-            // Hide profile section
-            document.getElementById('profileSection').style.display = 'none';
+            // Hide main menu section
+            document.getElementById('mainMenuSection').style.display = 'none';
             
             // Show jarayon section
             const jarayonSection = document.getElementById('jarayonSection');
@@ -1714,8 +2386,8 @@
             // Hide jarayon section
             document.getElementById('jarayonSection').style.display = 'none';
             
-            // Show profile section
-            document.getElementById('profileSection').style.display = 'block';
+            // Show main menu section
+            document.getElementById('mainMenuSection').style.display = 'block';
         }
 
         async function saveJarayon() {
@@ -1838,8 +2510,8 @@
         }
 
         function showVideo() {
-            // Hide profile section
-            document.getElementById('profileSection').style.display = 'none';
+            // Hide main menu section
+            document.getElementById('mainMenuSection').style.display = 'none';
             
             // Show video section
             const videoSection = document.getElementById('videoSection');
@@ -1855,14 +2527,64 @@
             // Hide video section
             document.getElementById('videoSection').style.display = 'none';
             
-            // Show profile section
-            document.getElementById('profileSection').style.display = 'block';
+            // Show main menu section
+            document.getElementById('mainMenuSection').style.display = 'block';
         }
 
         // Preload videos on page load for faster display
         document.addEventListener('DOMContentLoaded', function() {
             loadVideosFromFirestore();
         });
+
+        // ==========================================
+        // Hujjatlar Functions
+        // ==========================================
+        function showHujjatlar() {
+            // Hide main menu section
+            document.getElementById('mainMenuSection').style.display = 'none';
+            
+            // Show hujjatlar section
+            const hujjatlarSection = document.getElementById('hujjatlarSection');
+            hujjatlarSection.style.display = 'block';
+        }
+
+        function hideHujjatlar() {
+            // Hide hujjatlar section
+            document.getElementById('hujjatlarSection').style.display = 'none';
+            
+            // Show main menu section
+            document.getElementById('mainMenuSection').style.display = 'block';
+        }
+
+        function switchHujjatlarTab(tabName) {
+            // Update tab buttons
+            const tabs = document.querySelectorAll('.hujjatlar-tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.onclick.toString().includes(tabName)) {
+                    tab.classList.add('active');
+                }
+            });
+
+            // Update tab content
+            const tabContents = document.querySelectorAll('.hujjatlar-tab-content');
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+
+            const activeContent = document.getElementById('tab-' + tabName);
+            if (activeContent) {
+                activeContent.classList.add('active');
+            }
+
+            // Re-set active state for clicked tab based on tabName
+            tabs.forEach(tab => {
+                const onclickStr = tab.getAttribute('onclick');
+                if (onclickStr && onclickStr.includes(tabName)) {
+                    tab.classList.add('active');
+                }
+            });
+        }
     </script>
 
 </body>
