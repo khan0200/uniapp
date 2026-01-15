@@ -3267,6 +3267,8 @@ function saveAdmission() {
     }
 
     const information = document.getElementById('admissionInformation').value.trim();
+    const majors = document.getElementById('admissionMajors').value.trim();
+    const scholarships = document.getElementById('admissionScholarships').value.trim();
 
     const admissionData = {
         educationLevel: educationLevel,
@@ -3274,6 +3276,8 @@ function saveAdmission() {
         roundsCount: roundsCount,
         rounds: rounds,
         information: information,
+        majors: majors,
+        scholarships: scholarships,
         createdAt: new Date().toISOString()
     };
 
@@ -3339,7 +3343,13 @@ function viewAdmissionDetails(index) {
         detailsHtml += '<div class="text-center py-4 text-secondary fst-italic border border-dashed border-light-subtle rounded-3 mb-4">No rounds configured</div>';
     }
     if (admission.information) {
-        detailsHtml += '<div class="card bg-info bg-opacity-10 border border-info border-opacity-25 p-4 rounded-3 shadow-sm"><div class="d-flex gap-3"><i class="bi bi-info-circle text-info fs-5 mt-1"></i><div><h6 class="text-info fw-bold mb-2 small text-uppercase tracking-wider" style="font-size: 0.8em;">Information</h6><p class="mb-0 text-body opacity-90" style="white-space: pre-wrap; line-height: 1.6; font-size: 0.8em;">' + admission.information + '</p></div></div></div>';
+        detailsHtml += '<div class="card bg-info bg-opacity-10 border border-info border-opacity-25 p-4 rounded-3 shadow-sm mb-3"><div class="d-flex gap-3"><i class="bi bi-info-circle text-info fs-5 mt-1"></i><div><h6 class="text-info fw-bold mb-2 small text-uppercase tracking-wider" style="font-size: 0.8em;">Information</h6><p class="mb-0 text-body opacity-90" style="white-space: pre-wrap; line-height: 1.6; font-size: 0.9em;">' + admission.information + '</p></div></div></div>';
+    }
+    if (admission.majors) {
+        detailsHtml += '<div class="card bg-primary bg-opacity-10 border border-primary border-opacity-25 p-4 rounded-3 shadow-sm mb-3"><div class="d-flex gap-3"><i class="bi bi-book text-primary fs-5 mt-1"></i><div><h6 class="text-primary fw-bold mb-2 small text-uppercase tracking-wider" style="font-size: 0.8em;">Majors</h6><p class="mb-0 text-body opacity-90" style="white-space: pre-wrap; line-height: 1.6; font-size: 0.9em;">' + admission.majors + '</p></div></div></div>';
+    }
+    if (admission.scholarships) {
+        detailsHtml += '<div class="card bg-success bg-opacity-10 border border-success border-opacity-25 p-4 rounded-3 shadow-sm mb-3"><div class="d-flex gap-3"><i class="bi bi-award text-success fs-5 mt-1"></i><div><h6 class="text-success fw-bold mb-2 small text-uppercase tracking-wider" style="font-size: 0.8em;">Scholarships Opportunities</h6><p class="mb-0 text-body opacity-90" style="white-space: pre-wrap; line-height: 1.6; font-size: 0.9em;">' + admission.scholarships + '</p></div></div></div>';
     }
     document.getElementById('admissionDetailsContent').innerHTML = detailsHtml;
     var modal = new bootstrap.Modal(document.getElementById('viewAdmissionModal'));
@@ -3389,6 +3399,8 @@ function editAdmission() {
 
         document.getElementById('admissionEditId').value = currentAdmissionId;
         document.getElementById('admissionInformation').value = admission.information || '';
+        document.getElementById('admissionMajors').value = admission.majors || '';
+        document.getElementById('admissionScholarships').value = admission.scholarships || '';
         document.getElementById('admissionModalTitle').textContent = 'Edit Admission Record';
 
         // Open add/edit modal
