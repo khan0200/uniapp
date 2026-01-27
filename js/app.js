@@ -17,8 +17,8 @@ function initLoginSystem() {
         return;
     }
 
-    // Generate random 4-digit number
-    loginChallengeNumber = Math.floor(1000 + Math.random() * 9000);
+    // Generate random 3-digit number
+    loginChallengeNumber = Math.floor(500 + Math.random() * 900);
 
     // Display the challenge number
     var challengeElement = document.getElementById('challengeNumber');
@@ -67,7 +67,7 @@ function verifyLogin() {
 
         // Generate new challenge after failed attempt
         setTimeout(function () {
-            loginChallengeNumber = Math.floor(1000 + Math.random() * 9000);
+            loginChallengeNumber = Math.floor(100 + Math.random() * 900);
             var challengeElement = document.getElementById('challengeNumber');
             if (challengeElement) {
                 challengeElement.textContent = loginChallengeNumber;
