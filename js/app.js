@@ -3884,7 +3884,6 @@ function renderVisaAllStudentsList() {
                 <div class="student-info">
                     <div class="student-name">
                         ${student.fullName || 'Unknown'}
-                        ${hasUnknownStatus ? '<span class="badge badge-unknown-status ms-2">UNKNOWN - Recheck</span>' : ''}
                     </div>
                     <div class="student-details">
                         <span><i class="bi bi-passport"></i>${student.passport || '-'}</span>
@@ -3984,11 +3983,8 @@ async function checkSingleStudentVisa(studentId) {
         const statusChanged = previousStatus && previousStatus !== visaResult.status;
 
         if (statusChanged) {
-            // Status changed - save the new status data and show Move button
+            // Status changed - DO NOT SAVE YET, just show Move button
             console.log(`🔄 Status changed: ${previousStatus} → ${visaResult.status}`);
-
-            // Save the updated status first
-            await saveVisaStatusToFirestore(student.id, statusData);
 
             // Determine target tab and color
             let targetTab = '';
@@ -4003,20 +3999,29 @@ async function checkSingleStudentVisa(studentId) {
                 targetTab = 'cancelled';
                 targetTabName = 'Cancelled';
                 moveButtonColor = 'danger'; // Red
+            } else if (visaResult.status === 'UNKNOWN') {
+                // If changed to UNKNOWN, keep in Students tab
+                targetTab = 'students';
+                targetTabName = 'Students';
+                moveButtonColor = 'secondary'; // Gray
             } else {
                 targetTab = 'received';
                 targetTabName = 'App/Received';
                 moveButtonColor = 'warning'; // Yellow
             }
 
-            // Store pending move data on the card element
+            // Find the card element
             const cardElement = document.querySelector(`.visa-tracker-card [onclick*="recheckStudentVisa('${studentId}')"]`) ?.closest('.visa-tracker-card');
             if (cardElement) {
+                // Store pending data on the card
                 cardElement.dataset.pendingMove = 'true';
                 cardElement.dataset.newStatus = visaResult.status;
                 cardElement.dataset.targetTab = targetTab;
                 cardElement.dataset.targetTabName = targetTabName;
                 cardElement.dataset.moveButtonColor = moveButtonColor;
+
+                // Store the new status data for later save
+                cardElement.dataset.newStatusData = JSON.stringify(statusData);
 
                 // Add Move button to the card actions
                 const actionsDiv = cardElement.querySelector('.card-actions');
@@ -4030,30 +4035,121 @@ async function checkSingleStudentVisa(studentId) {
                     moveBtn.className = `visa-action-btn move-btn move-${moveButtonColor}`;
                     moveBtn.title = `Move to ${targetTabName}`;
                     moveBtn.innerHTML = '<i class="bi bi-arrow-right"></i>';
-                    moveBtn.onclick = () => moveVisaCard(studentId, targetTab);
+                    moveBtn.onclick = () => confirmAndMoveVisaCard(studentId, targetTab, statusData);
 
                     const deleteBtn = actionsDiv.querySelector('.delete');
                     actionsDiv.insertBefore(moveBtn, deleteBtn);
                 }
 
-                // Update status badge to show new status
+                // Update status badge to show new status with visual indicator
                 const statusBadge = cardElement.querySelector('.status-badge');
                 if (statusBadge) {
-                    statusBadge.textContent = visaResult.status;
+                    statusBadge.innerHTML = `${visaResult.status} <span style="font-size: 0.7em;">→ New!</span>`;
                     statusBadge.classList.add('status-changed-badge');
+                    // Add pulsing animation
+                    statusBadge.style.animation = 'pulse 2s infinite';
                 }
             }
 
-            showNotification(`Status changed: ${previousStatus} → ${visaResult.status}. Click Move button to relocate.`, 'info');
+            showNotification(`Status changed: ${previousStatus} → ${visaResult.status}. Click the arrow button to move the card.`, 'info');
 
         } else {
-            // Only save if status is NOT UNKNOWN
-            if (visaResult.status !== 'UNKNOWN') {
+
+            // No status change - but need to differentiate:
+            // 1. First time check (no previousStatus)
+            // 2. Recheck with no change (has previousStatus)
+
+            const isFirstTimeCheck = !previousStatus;
+            const needsManualMove = isFirstTimeCheck && (visaResult.status === 'APPROVED' || visaResult.status === 'CANCELLED' || visaResult.status === 'REJECTED');
+
+            if (needsManualMove) {
+                // First time check with APPROVED/CANCELLED - Save as APP/RECEIVED but show move button
+                console.log(`🆕 First check with ${visaResult.status} status - saving to App/Received with move option`);
+
+                // Temporarily save as APP/RECEIVED
+                const tempStatusData = {
+                    ...statusData,
+                    status: 'APP/RECEIVED',
+                    originalStatus: visaResult.status // Store the real status
+                };
+
+                await saveVisaStatusToFirestore(student.id, tempStatusData);
+                showNotification(`Visa status: ${visaResult.status}. Review and move to appropriate tab.`, 'info');
+
+                // Re-render to show in App/Received tab
+                renderVisaAllStudentsList();
+                renderVisaStatusLists();
+                updateVisaTabCounts();
+
+                // Switch to Processing tab to show the App/Received list
+                showVisaSubTab('processing');
+
+                // Wait for render, then add move button
+                setTimeout(() => {
+                    const cardElement = document.querySelector(`.visa-tracker-card [onclick*="recheckStudentVisa('${studentId}')"]`) ?.closest('.visa-tracker-card');
+                    if (cardElement) {
+                        // Determine target tab
+                        let targetTab = '';
+                        let targetTabName = '';
+                        let moveButtonColor = '';
+
+                        if (visaResult.status === 'APPROVED') {
+                            targetTab = 'approved';
+                            targetTabName = 'Approved';
+                            moveButtonColor = 'success';
+                        } else {
+                            targetTab = 'cancelled';
+                            targetTabName = 'Cancelled';
+                            moveButtonColor = 'danger';
+                        }
+
+                        // Add Move button
+                        const actionsDiv = cardElement.querySelector('.card-actions');
+                        if (actionsDiv) {
+                            const existingMoveBtn = actionsDiv.querySelector('.move-btn');
+                            if (existingMoveBtn) existingMoveBtn.remove();
+
+                            const moveBtn = document.createElement('button');
+                            moveBtn.className = `visa-action-btn move-btn move-${moveButtonColor}`;
+                            moveBtn.title = `Move to ${targetTabName}`;
+                            moveBtn.innerHTML = '<i class="bi bi-arrow-right"></i>';
+                            // Use the original APPROVED/CANCELLED status when moving
+                            const finalStatusData = {
+                                ...statusData,
+                                status: visaResult.status
+                            };
+                            moveBtn.onclick = () => confirmAndMoveVisaCard(studentId, targetTab, finalStatusData);
+
+                            const deleteBtn = actionsDiv.querySelector('.delete');
+                            actionsDiv.insertBefore(moveBtn, deleteBtn);
+                        }
+
+                        // Update status badge with correct color
+                        const statusBadge = cardElement.querySelector('.status-badge');
+                        if (statusBadge) {
+                            // Remove old badge classes
+                            statusBadge.classList.remove('badge-received', 'badge-approved', 'badge-cancelled', 'badge-under-review');
+                            // Add correct badge class
+                            if (visaResult.status === 'APPROVED') {
+                                statusBadge.classList.add('badge-approved');
+                            } else if (visaResult.status === 'CANCELLED' || visaResult.status === 'REJECTED') {
+                                statusBadge.classList.add('badge-cancelled');
+                            }
+                            statusBadge.innerHTML = `${visaResult.status} <span style="font-size: 0.7em;">→ Move?</span>`;
+                            statusBadge.classList.add('status-changed-badge');
+                            statusBadge.style.animation = 'pulse 2s infinite';
+                        }
+                    }
+                }, 300);
+
+            } else if (visaResult.status !== 'UNKNOWN') {
+                // Normal case: Recheck with no change OR first check with APP/RECEIVED/PENDING
                 await saveVisaStatusToFirestore(student.id, statusData);
                 showNotification(`Visa status: ${visaResult.status}`, visaResult.status === 'APPROVED' ? 'success' : 'info');
                 // Re-render the students list only when successfully saved
                 renderVisaAllStudentsList();
                 renderVisaStatusLists();
+
                 updateVisaTabCounts();
             } else {
                 // UNKNOWN status - just show notification, don't save or remove
@@ -4178,6 +4274,65 @@ function renderVisaTrackerCard(statusData, statusClass) {
         }
     }
 
+    // Determine badge color class based on actual status (or originalStatus)
+    const actualStatus = statusData.originalStatus || statusData.status;
+    let badgeClass = 'badge-received'; // Default: orange
+
+    if (actualStatus === 'APPROVED') {
+        badgeClass = 'badge-approved';
+    } else if (actualStatus === 'CANCELLED' || actualStatus === 'REJECTED') {
+        badgeClass = 'badge-cancelled';
+    } else if (actualStatus === 'UNDER REVIEW' || actualStatus === 'PENDING') {
+        badgeClass = 'badge-under-review';
+    }
+
+    // Display status text (use originalStatus if available for clarity)
+    const displayStatus = statusData.originalStatus || statusData.status;
+
+    // Check if we need to show a Move button (has originalStatus that differs from status)
+    let moveButtonHtml = '';
+    let statusSuffix = '';
+    if (statusData.originalStatus && statusData.status === 'APP/RECEIVED') {
+        // This student has a pending move
+        let targetTab = '';
+        let targetTabName = '';
+        let moveButtonColor = '';
+
+        if (statusData.originalStatus === 'APPROVED') {
+            targetTab = 'approved';
+            targetTabName = 'Approved';
+            moveButtonColor = 'success';
+        } else if (statusData.originalStatus === 'CANCELLED' || statusData.originalStatus === 'REJECTED') {
+            targetTab = 'cancelled';
+            targetTabName = 'Cancelled';
+            moveButtonColor = 'danger';
+        }
+
+        if (targetTab) {
+            // Prepare the finalStatusData for the move
+            const finalStatusData = {
+                studentId: statusData.studentId,
+                studentName: statusData.studentName,
+                passport: statusData.passport,
+                birthday: statusData.birthday,
+                status: statusData.originalStatus,
+                message: statusData.message || '',
+                applicationDate: statusData.applicationDate || '',
+                checkedAt: statusData.checkedAt
+            };
+            const encodedStatusData = encodeURIComponent(JSON.stringify(finalStatusData));
+
+            moveButtonHtml = `
+                <button class="visa-action-btn move-btn move-${moveButtonColor}" 
+                        onclick="confirmAndMoveVisaCard('${statusData.studentId}', '${targetTab}', JSON.parse(decodeURIComponent('${encodedStatusData}')))" 
+                        title="Move to ${targetTabName}">
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+            `;
+            statusSuffix = ' <span style="font-size: 0.7em;">→ Move?</span>';
+        }
+    }
+
     return `
         <div class="visa-tracker-card ${statusClass}">
             <div class="card-header">
@@ -4194,6 +4349,7 @@ function renderVisaTrackerCard(statusData, statusClass) {
                             title="Recheck status">
                         <i class="bi bi-arrow-clockwise"></i>
                     </button>
+                    ${moveButtonHtml}
                     <button class="visa-action-btn delete" 
                             onclick="removeVisaStatus('${statusData.studentId}')" 
                             title="Remove from list">
@@ -4203,7 +4359,7 @@ function renderVisaTrackerCard(statusData, statusClass) {
             </div>
             <div class="card-body-compact">
                 <div class="status-info">
-                    <div class="status-badge">${statusData.status}</div>
+                    <div class="status-badge ${badgeClass}" ${statusSuffix ? 'style="animation: pulse 2s infinite;"' : ''}>${displayStatus}${statusSuffix}</div>
                     ${appDateDisplay ? `<span class="app-date"><i class="bi bi-box-arrow-in-right"></i>App: ${appDateDisplay}</span>` : ''}
                 </div>
                 ${checkedTimeDisplay ? `<span class="check-time"><i class="bi bi-clock"></i>Updated: ${checkedTimeDisplay}</span>` : ''}
@@ -4225,7 +4381,50 @@ function removeVisaStatus(studentId) {
     deleteVisaStatusFromFirestore(studentId);
 }
 
-// Move visa card to another tab (called when user clicks Move button)
+// Confirm and move visa card (saves status then moves to target tab)
+async function confirmAndMoveVisaCard(studentId, targetTab, statusData) {
+    try {
+        console.log(`📦 Saving and moving ${studentId} to ${targetTab} tab`);
+
+        // If moving to Students tab (UNKNOWN status), delete the visa status
+        if (targetTab === 'students') {
+            await deleteVisaStatusFromFirestore(studentId);
+            showNotification('Student moved back to Students tab', 'success');
+            renderVisaAllStudentsList();
+            renderVisaStatusLists();
+            updateVisaTabCounts();
+            showVisaSubTab('processing'); // Show the Processing/Students tab
+            return;
+        }
+
+        // Save the new status to Firestore
+        await saveVisaStatusToFirestore(studentId, statusData);
+
+        // Show success notification
+        showNotification(`Student moved to ${targetTab.charAt(0).toUpperCase() + targetTab.slice(1)} tab!`, 'success');
+
+        // Re-render all lists
+        renderVisaStatusLists();
+        renderVisaAllStudentsList();
+        updateVisaTabCounts();
+
+        // Switch to the target tab to show the moved card
+        if (targetTab === 'approved') {
+            showVisaSubTab('approved');
+        } else if (targetTab === 'cancelled') {
+            showVisaSubTab('cancelled');
+        } else if (targetTab === 'received') {
+            showVisaSubTab('processing'); // The Processing tab contains the received list
+        }
+
+    } catch (error) {
+        console.error('Error moving visa card:', error);
+        showNotification('Error moving student card', 'error');
+    }
+}
+
+// Move visa card to another tab (kept for backward compatibility)
+
 function moveVisaCard(studentId, targetTab) {
     console.log(`Moving ${studentId} to ${targetTab} tab`);
 
@@ -4467,6 +4666,7 @@ window.loadVisaStatusFromFirestore = loadVisaStatusFromFirestore;
 window.checkSingleStudentVisa = checkSingleStudentVisa;
 window.recheckStudentVisa = recheckStudentVisa;
 window.removeVisaStatus = removeVisaStatus;
+window.confirmAndMoveVisaCard = confirmAndMoveVisaCard;
 window.moveVisaCard = moveVisaCard;
 window.filterVisaAllStudents = filterVisaAllStudents;
 window.filterVisaReceivedStudents = filterVisaReceivedStudents;
