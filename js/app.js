@@ -206,6 +206,7 @@ function showTab(tabName) {
     document.getElementById('students-tab').style.display = 'none';
     document.getElementById('payments-tab').style.display = 'none';
     document.getElementById('admissions-tab').style.display = 'none';
+    document.getElementById('visastatus-tab').style.display = 'none';
     document.getElementById('notifications-tab').style.display = 'none';
     document.getElementById('settings-tab').style.display = 'none';
     document.querySelectorAll('.nav-link-apple').forEach(link => link.classList.remove('active'));
@@ -220,6 +221,11 @@ function showTab(tabName) {
     // Render admissions when admissions tab is activated
     if (tabName === 'admissions') {
         renderAdmissions();
+    }
+
+    // Initialize visa status tracker when visa status tab is activated
+    if (tabName === 'visastatus') {
+        initializeVisaStatusTab();
     }
 
     // Render notifications when notifications tab is activated
@@ -3698,3 +3704,773 @@ window.saveNotification = saveNotification;
 window.viewNotificationDetails = viewNotificationDetails;
 window.editNotification = editNotification;
 window.deleteNotification = deleteNotification;
+
+// ==========================================
+// VISA STATUS TRACKER FUNCTIONS (REDESIGNED)
+// ==========================================
+
+// Use visaStatusData from window (defined in firebase-config.js)
+// let visaStatusData = {}; -- Now using window.visaStatusData
+
+// Current visa sub-tab
+let currentVisaSubTab = 'processing';
+
+// Show visa sub-tab
+function showVisaSubTab(tabName) {
+    currentVisaSubTab = tabName;
+
+    // Hide all sub-tabs
+    document.querySelectorAll('.visa-subtab').forEach(tab => {
+        tab.classList.add('section-hidden');
+    });
+
+    // Show selected sub-tab
+    const selectedTab = document.getElementById(`visa-${tabName}-subtab`);
+    if (selectedTab) {
+        selectedTab.classList.remove('section-hidden');
+    }
+
+    // Update button states
+    document.querySelectorAll('#visastatus-tab .btn-group button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    const activeBtn = document.getElementById(`visa${tabName.charAt(0).toUpperCase() + tabName.slice(1)}TabBtn`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+}
+
+// Load visa status data from Firestore (wrapper for firebase-config function)
+function loadVisaStatusFromFirestore() {
+    if (typeof loadVisaStatusFromFirestoreConfig === 'function') {
+        loadVisaStatusFromFirestoreConfig();
+    } else {
+        console.warn('loadVisaStatusFromFirestoreConfig not available');
+        // Fallback to localStorage
+        const stored = localStorage.getItem('visaStatusData');
+        if (stored) {
+            window.visaStatusData = JSON.parse(stored);
+        }
+        renderVisaAllStudentsList();
+        renderVisaStatusLists();
+        updateVisaTabCounts();
+    }
+}
+
+// Save visa status to Firestore (wrapper for firebase-config function)
+async function saveVisaStatusToFirestore(studentId, statusData) {
+    if (typeof saveVisaStatusToFirestoreConfig === 'function') {
+        await saveVisaStatusToFirestoreConfig(studentId, statusData);
+    } else {
+        console.warn('saveVisaStatusToFirestoreConfig not available');
+        // Fallback to localStorage
+        window.visaStatusData[studentId] = statusData;
+        localStorage.setItem('visaStatusData', JSON.stringify(window.visaStatusData));
+        renderVisaStatusLists();
+        updateVisaTabCounts();
+    }
+}
+
+// Delete visa status from Firestore (wrapper for firebase-config function)
+async function deleteVisaStatusFromFirestore(studentId) {
+    if (typeof deleteVisaStatusFromFirestoreConfig === 'function') {
+        await deleteVisaStatusFromFirestoreConfig(studentId);
+    } else {
+        console.warn('deleteVisaStatusFromFirestoreConfig not available');
+        // Fallback to localStorage
+        delete window.visaStatusData[studentId];
+        localStorage.setItem('visaStatusData', JSON.stringify(window.visaStatusData));
+        renderVisaStatusLists();
+        updateVisaTabCounts();
+        showNotification('Visa status removed (student data preserved)', 'success');
+    }
+}
+
+
+// Render all students list (left column in Processing tab)
+// Only shows students WITHOUT any visa status and NOT Masters degree
+function renderVisaAllStudentsList() {
+    const container = document.getElementById('visaAllStudentsList');
+    if (!container) return;
+
+    // Filter students:
+    // 1. Not deleted
+    // 2. Don't have any visa status already
+    // 3. Not Masters degree (only show Bachelor/Language students)
+    console.log('🔍 Starting student filter for visa status...');
+    const students = (window.studentsData || []).filter(s => {
+        // Log every student being checked
+        console.log(`\n👤 Checking: ${s.fullName} (${s.id})`);
+        console.log(`   Education Level: "${s.level}"`);
+
+        if (s.isDeleted) {
+            console.log(`   ❌ EXCLUDED - Deleted`);
+            return false;
+        }
+
+        // Exclude students who already have visa status (case-insensitive ID check)
+        // EXCEPTION: Include students with UNKNOWN status (they should be rechecked)
+        const studentId = (s.id || '').toUpperCase();
+        const visaStatusEntry = Object.entries(window.visaStatusData || {}).find(
+            ([key, value]) => key.toUpperCase() === studentId
+        );
+
+        if (visaStatusEntry) {
+            const [, statusData] = visaStatusEntry;
+            // If status is UNKNOWN, include the student (they need to be checked again)
+            if (statusData.status === 'UNKNOWN') {
+                console.log(`   ⚠️ INCLUDED - Has UNKNOWN status, needs recheck`);
+                return true;
+            }
+            // Otherwise, exclude students with known visa status
+            console.log(`   ❌ EXCLUDED - Already has visa status: ${statusData.status}`);
+            return false;
+        }
+
+        // Exclude Masters degree students (including "Master no Certificate")
+        const eduLevel = (s.level || '').toLowerCase().trim();
+        console.log(`   Checking eduLevel: "${eduLevel}" (length: ${eduLevel.length})`);
+        console.log(`   Contains 'master': ${eduLevel.includes('master')}`);
+        console.log(`   Contains 'магистр': ${eduLevel.includes('магистр')}`);
+
+        if (eduLevel.includes('master') || eduLevel.includes('магистр')) {
+            console.log(`   ❌ EXCLUDED - Masters level: "${s.level}"`);
+            return false;
+        }
+
+        console.log(`   ✅ INCLUDED`);
+        return true;
+    });
+
+    // Debug log
+    const totalStudents = (window.studentsData || []).filter(s => !s.isDeleted).length;
+    console.log(`📊 Visa Students Filter: ${students.length}/${totalStudents} students shown (${Object.keys(window.visaStatusData || {}).length} have visa status)`);
+
+    if (students.length === 0) {
+        container.innerHTML = '<div class="text-center py-4 text-secondary"><i class="bi bi-check-circle me-2"></i>All students have been checked or are Masters level</div>';
+        return;
+    }
+
+    // Update count
+    const countElement = document.getElementById('visaStudentsCount');
+    if (countElement) countElement.textContent = students.length;
+
+    let html = '';
+    students.forEach(student => {
+        // Format birthday
+        let displayBirthday = '-';
+        if (student.birthday) {
+            const parts = student.birthday.split('-');
+            if (parts.length === 3) {
+                displayBirthday = `${parts[2]}.${parts[1]}.${parts[0]}`;
+            } else {
+                displayBirthday = student.birthday;
+            }
+        }
+
+        // Check if student has required data
+        const hasRequiredData = student.passport && student.fullName && student.birthday;
+
+        // Check if this student has UNKNOWN status
+        const studentId = (student.id || '').toUpperCase();
+        const visaStatusEntry = Object.entries(window.visaStatusData || {}).find(
+            ([key, value]) => key.toUpperCase() === studentId
+        );
+        const hasUnknownStatus = visaStatusEntry && visaStatusEntry[1].status === 'UNKNOWN';
+
+        html += `
+            <div class="visa-student-check-card ${hasUnknownStatus ? 'has-unknown-status' : ''}" data-student-id="${student.id}" 
+                 data-search-text="${(student.fullName || '').toLowerCase()} ${(student.id || '').toLowerCase()}">
+                <div class="student-info">
+                    <div class="student-name">
+                        ${student.fullName || 'Unknown'}
+                        ${hasUnknownStatus ? '<span class="badge badge-unknown-status ms-2">UNKNOWN - Recheck</span>' : ''}
+                    </div>
+                    <div class="student-details">
+                        <span><i class="bi bi-passport"></i>${student.passport || '-'}</span>
+                        <span><i class="bi bi-calendar"></i>${displayBirthday}</span>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-primary-apple rounded-pill check-btn" 
+                        data-student-id="${student.id}"
+                        onclick="checkSingleStudentVisa('${student.id}')"
+                        ${!hasRequiredData ? 'disabled title="Missing passport, name, or birthday"' : ''}>
+                    <i class="bi bi-${hasUnknownStatus ? 'arrow-clockwise' : 'search'} me-1"></i>${hasUnknownStatus ? 'Recheck' : 'Check'}
+                </button>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+// Get badge color based on status
+function getVisaStatusBadgeColor(status) {
+    switch (status) {
+        case 'APPROVED':
+            return 'success';
+        case 'CANCELLED':
+            return 'danger';
+        case 'APP/RECEIVED':
+            return 'warning text-dark';
+        case 'UNDER REVIEW':
+            return 'info';
+        default:
+            return 'secondary';
+    }
+}
+
+// Filter all students list
+function filterVisaAllStudents() {
+    const searchInput = document.getElementById('visaAllStudentsSearch');
+    const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const cards = document.querySelectorAll('#visaAllStudentsList .visa-student-check-card');
+
+    cards.forEach(card => {
+        const searchText = card.getAttribute('data-search-text') || '';
+        card.style.display = searchText.includes(searchTerm) ? 'block' : 'none';
+    });
+}
+
+// Check visa status for a single student
+async function checkSingleStudentVisa(studentId) {
+    const students = window.studentsData || [];
+    const student = students.find(s => s.id === studentId);
+
+    if (!student) {
+        showNotification('Student not found!', 'error');
+        return;
+    }
+
+    // Check if student has required data
+    if (!student.passport || !student.fullName || !student.birthday) {
+        showNotification('Missing required data (passport, name, or birthday)', 'error');
+        return;
+    }
+
+    // Get existing status if any
+    const existingStatus = window.visaStatusData ? window.visaStatusData[studentId] : null;
+    const previousStatus = existingStatus ? existingStatus.status : null;
+
+    // Find the button and show loading state with animation
+    let card = document.querySelector(`.visa-student-check-card[data-student-id="${studentId}"] .check-btn`);
+    if (!card) {
+        card = document.querySelector(`.visa-tracker-card .recheck[onclick*="${studentId}"]`);
+    }
+    let originalButtonContent = '';
+    if (card) {
+        originalButtonContent = card.innerHTML;
+        card.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        card.disabled = true;
+        card.classList.add('checking-animation');
+    }
+
+    try {
+        const visaResult = await fetchVisaStatus(student);
+        const checkedAt = new Date().toISOString();
+
+        const statusData = {
+            studentId: student.id,
+            studentName: student.fullName,
+            passport: student.passport,
+            birthday: student.birthday,
+            status: visaResult.status,
+            message: visaResult.message || '',
+            applicationDate: visaResult.applicationDate || '',
+            checkedAt: checkedAt
+        };
+
+        // Check if status changed
+        const statusChanged = previousStatus && previousStatus !== visaResult.status;
+
+        if (statusChanged) {
+            // Status changed - save the new status data and show Move button
+            console.log(`🔄 Status changed: ${previousStatus} → ${visaResult.status}`);
+
+            // Save the updated status first
+            await saveVisaStatusToFirestore(student.id, statusData);
+
+            // Determine target tab and color
+            let targetTab = '';
+            let targetTabName = '';
+            let moveButtonColor = '';
+
+            if (visaResult.status === 'APPROVED') {
+                targetTab = 'approved';
+                targetTabName = 'Approved';
+                moveButtonColor = 'success'; // Green
+            } else if (visaResult.status === 'CANCELLED' || visaResult.status === 'REJECTED') {
+                targetTab = 'cancelled';
+                targetTabName = 'Cancelled';
+                moveButtonColor = 'danger'; // Red
+            } else {
+                targetTab = 'received';
+                targetTabName = 'App/Received';
+                moveButtonColor = 'warning'; // Yellow
+            }
+
+            // Store pending move data on the card element
+            const cardElement = document.querySelector(`.visa-tracker-card [onclick*="recheckStudentVisa('${studentId}')"]`) ?.closest('.visa-tracker-card');
+            if (cardElement) {
+                cardElement.dataset.pendingMove = 'true';
+                cardElement.dataset.newStatus = visaResult.status;
+                cardElement.dataset.targetTab = targetTab;
+                cardElement.dataset.targetTabName = targetTabName;
+                cardElement.dataset.moveButtonColor = moveButtonColor;
+
+                // Add Move button to the card actions
+                const actionsDiv = cardElement.querySelector('.card-actions');
+                if (actionsDiv) {
+                    // Remove existing move button if any
+                    const existingMoveBtn = actionsDiv.querySelector('.move-btn');
+                    if (existingMoveBtn) existingMoveBtn.remove();
+
+                    // Create and insert move button before delete button
+                    const moveBtn = document.createElement('button');
+                    moveBtn.className = `visa-action-btn move-btn move-${moveButtonColor}`;
+                    moveBtn.title = `Move to ${targetTabName}`;
+                    moveBtn.innerHTML = '<i class="bi bi-arrow-right"></i>';
+                    moveBtn.onclick = () => moveVisaCard(studentId, targetTab);
+
+                    const deleteBtn = actionsDiv.querySelector('.delete');
+                    actionsDiv.insertBefore(moveBtn, deleteBtn);
+                }
+
+                // Update status badge to show new status
+                const statusBadge = cardElement.querySelector('.status-badge');
+                if (statusBadge) {
+                    statusBadge.textContent = visaResult.status;
+                    statusBadge.classList.add('status-changed-badge');
+                }
+            }
+
+            showNotification(`Status changed: ${previousStatus} → ${visaResult.status}. Click Move button to relocate.`, 'info');
+
+        } else {
+            // Only save if status is NOT UNKNOWN
+            if (visaResult.status !== 'UNKNOWN') {
+                await saveVisaStatusToFirestore(student.id, statusData);
+                showNotification(`Visa status: ${visaResult.status}`, visaResult.status === 'APPROVED' ? 'success' : 'info');
+                // Re-render the students list only when successfully saved
+                renderVisaAllStudentsList();
+                renderVisaStatusLists();
+                updateVisaTabCounts();
+            } else {
+                // UNKNOWN status - just show notification, don't save or remove
+                showNotification('Visa status: UNKNOWN - Student will remain in the list', 'warning');
+            }
+        }
+
+    } catch (error) {
+        console.error('Error checking visa status:', error);
+        showNotification('Error checking visa status', 'error');
+    }
+
+    // Restore button
+    if (card) {
+        card.innerHTML = originalButtonContent || '<i class="bi bi-arrow-clockwise"></i>';
+        card.disabled = false;
+        card.classList.remove('checking-animation');
+    }
+}
+
+// Render visa status lists (Received, Cancelled, Approved)
+function renderVisaStatusLists() {
+    const receivedList = document.getElementById('visaReceivedList');
+    const cancelledList = document.getElementById('visaCancelledList');
+    const approvedList = document.getElementById('visaApprovedList');
+
+    const statusEntries = Object.values(window.visaStatusData || {});
+
+    // Filter by status
+    const receivedStudents = statusEntries.filter(s => s.status === 'APP/RECEIVED' || s.status === 'UNDER REVIEW' || s.status === 'PENDING');
+    const cancelledStudents = statusEntries.filter(s => s.status === 'CANCELLED' || s.status === 'REJECTED');
+    const approvedStudents = statusEntries.filter(s => s.status === 'APPROVED');
+
+    // Sort receivedStudents by applicationDate (oldest first - earlier apps more likely to change)
+    receivedStudents.sort((a, b) => {
+        const dateA = a.applicationDate || '';
+        const dateB = b.applicationDate || '';
+        return dateA.localeCompare(dateB); // Ascending order (oldest first)
+    });
+
+    // Render received/processing list
+    if (receivedList) {
+        if (receivedStudents.length === 0) {
+            receivedList.innerHTML = '<div class="text-center py-4 text-secondary"><i class="bi bi-inbox"></i> No students with App/Received status yet</div>';
+        } else {
+            receivedList.innerHTML = receivedStudents.map(s => renderVisaTrackerCard(s, 'status-received')).join('');
+        }
+
+        const countElement = document.getElementById('visaReceivedCount');
+        if (countElement) countElement.textContent = receivedStudents.length;
+    }
+
+    // Render cancelled list
+    if (cancelledList) {
+        if (cancelledStudents.length === 0) {
+            cancelledList.innerHTML = `
+                <div class="col-12 text-center py-4 text-secondary">
+                    <i class="bi bi-x-circle" style="font-size: 2rem;"></i>
+                    <p class="mt-2 mb-0">No cancelled applications found</p>
+                </div>`;
+        } else {
+            cancelledList.innerHTML = cancelledStudents.map(s => `
+                <div class="col-md-6 col-lg-4 visa-status-card-wrapper" data-search-text="${(s.studentName || '').toLowerCase()} ${(s.studentId || '').toLowerCase()}">
+                    ${renderVisaTrackerCard(s, 'status-cancelled')}
+                </div>
+            `).join('');
+        }
+
+        const countElement = document.getElementById('visaCancelledListCount');
+        if (countElement) countElement.textContent = cancelledStudents.length;
+    }
+
+    // Render approved list
+    if (approvedList) {
+        if (approvedStudents.length === 0) {
+            approvedList.innerHTML = `
+                <div class="col-12 text-center py-4 text-secondary">
+                    <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
+                    <p class="mt-2 mb-0">No approved visas found</p>
+                </div>`;
+        } else {
+            approvedList.innerHTML = approvedStudents.map(s => `
+                <div class="col-md-6 col-lg-4 visa-status-card-wrapper" data-search-text="${(s.studentName || '').toLowerCase()} ${(s.studentId || '').toLowerCase()}">
+                    ${renderVisaTrackerCard(s, 'status-approved')}
+                </div>
+            `).join('');
+        }
+
+        const countElement = document.getElementById('visaApprovedListCount');
+        if (countElement) countElement.textContent = approvedStudents.length;
+    }
+}
+
+// Render a visa tracker card - ENHANCED DESIGN
+function renderVisaTrackerCard(statusData, statusClass) {
+    // Format checked time (last update)
+    let checkedTimeDisplay = '';
+    if (statusData.checkedAt) {
+        const checkedDate = new Date(statusData.checkedAt);
+        const day = String(checkedDate.getDate()).padStart(2, '0');
+        const month = String(checkedDate.getMonth() + 1).padStart(2, '0');
+        const year = checkedDate.getFullYear();
+        const hours = String(checkedDate.getHours()).padStart(2, '0');
+        const minutes = String(checkedDate.getMinutes()).padStart(2, '0');
+        checkedTimeDisplay = `${day}.${month}.${year} ${hours}:${minutes}`;
+    }
+
+    // Format application date
+    let appDateDisplay = '';
+    if (statusData.applicationDate) {
+        appDateDisplay = statusData.applicationDate;
+    }
+
+    // Format birthday
+    let birthdayDisplay = '-';
+    if (statusData.birthday) {
+        const parts = statusData.birthday.split('-');
+        if (parts.length === 3) {
+            birthdayDisplay = `${parts[2]}.${parts[1]}.${parts[0]}`;
+        } else {
+            birthdayDisplay = statusData.birthday;
+        }
+    }
+
+    return `
+        <div class="visa-tracker-card ${statusClass}">
+            <div class="card-header">
+                <div class="student-info">
+                    <div class="student-name">${statusData.studentName || 'Unknown'}</div>
+                    <div class="student-details-grid">
+                        <span class="student-passport"><i class="bi bi-passport"></i>${statusData.passport || '-'}</span>
+                        <span class="student-birthday"><i class="bi bi-calendar"></i>${birthdayDisplay}</span>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="visa-action-btn recheck" 
+                            onclick="recheckStudentVisa('${statusData.studentId}')" 
+                            title="Recheck status">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                    <button class="visa-action-btn delete" 
+                            onclick="removeVisaStatus('${statusData.studentId}')" 
+                            title="Remove from list">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body-compact">
+                <div class="status-info">
+                    <div class="status-badge">${statusData.status}</div>
+                    ${appDateDisplay ? `<span class="app-date"><i class="bi bi-box-arrow-in-right"></i>App: ${appDateDisplay}</span>` : ''}
+                </div>
+                ${checkedTimeDisplay ? `<span class="check-time"><i class="bi bi-clock"></i>Updated: ${checkedTimeDisplay}</span>` : ''}
+            </div>
+        </div>
+    `;
+}
+
+// Recheck visa status for a student
+async function recheckStudentVisa(studentId) {
+    await checkSingleStudentVisa(studentId);
+}
+
+// Remove visa status (does NOT delete student data)
+function removeVisaStatus(studentId) {
+    if (!confirm('Remove this visa status from the list? (Student data will NOT be deleted)')) {
+        return;
+    }
+    deleteVisaStatusFromFirestore(studentId);
+}
+
+// Move visa card to another tab (called when user clicks Move button)
+function moveVisaCard(studentId, targetTab) {
+    console.log(`Moving ${studentId} to ${targetTab} tab`);
+
+    // Simply re-render all lists - the card will appear in the correct tab based on its status
+    renderVisaStatusLists();
+    updateVisaTabCounts();
+
+    // Switch to the target tab to show the moved card
+    if (targetTab === 'approved') {
+        showVisaSubTab('approved');
+    } else if (targetTab === 'cancelled') {
+        showVisaSubTab('cancelled');
+    } else if (targetTab === 'received') {
+        showVisaSubTab('processing'); // The Processing tab contains the received list
+    }
+
+    showNotification(`Card moved to ${targetTab} tab successfully!`, 'success');
+}
+
+// Update tab counts
+function updateVisaTabCounts() {
+    const statusEntries = Object.values(window.visaStatusData || {});
+
+    const receivedCount = statusEntries.filter(s => s.status === 'APP/RECEIVED' || s.status === 'UNDER REVIEW' || s.status === 'PENDING').length;
+    const cancelledCount = statusEntries.filter(s => s.status === 'CANCELLED' || s.status === 'REJECTED').length;
+    const approvedCount = statusEntries.filter(s => s.status === 'APPROVED').length;
+
+    // Update tab badge counts
+    const processingBadge = document.getElementById('visaProcessingCount');
+    const cancelledBadge = document.getElementById('visaCancelledCount');
+    const approvedBadge = document.getElementById('visaApprovedCount');
+
+    if (processingBadge) processingBadge.textContent = receivedCount;
+    if (cancelledBadge) cancelledBadge.textContent = cancelledCount;
+    if (approvedBadge) approvedBadge.textContent = approvedCount;
+}
+
+// Filter functions for each list
+function filterVisaReceivedStudents() {
+    const searchInput = document.getElementById('visaReceivedSearch');
+    const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const cards = document.querySelectorAll('#visaReceivedList .visa-tracker-card');
+
+    cards.forEach(card => {
+        const name = card.querySelector('.student-name') ? card.querySelector('.student-name').textContent.toLowerCase() : '';
+        const passport = card.querySelector('.student-passport') ? card.querySelector('.student-passport').textContent.toLowerCase() : '';
+        card.style.display = (name.includes(searchTerm) || passport.includes(searchTerm)) ? 'block' : 'none';
+    });
+}
+
+function filterVisaCancelledStudents() {
+    const searchInput = document.getElementById('visaCancelledSearch');
+    const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const wrappers = document.querySelectorAll('#visaCancelledList .visa-status-card-wrapper');
+
+    wrappers.forEach(wrapper => {
+        const searchText = wrapper.getAttribute('data-search-text') || '';
+        wrapper.style.display = searchText.includes(searchTerm) ? '' : 'none';
+    });
+}
+
+function filterVisaApprovedStudents() {
+    const searchInput = document.getElementById('visaApprovedSearch');
+    const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const wrappers = document.querySelectorAll('#visaApprovedList .visa-status-card-wrapper');
+
+    wrappers.forEach(wrapper => {
+        const searchText = wrapper.getAttribute('data-search-text') || '';
+        wrapper.style.display = searchText.includes(searchTerm) ? '' : 'none';
+    });
+}
+
+// Fetch visa status from API (kept from original implementation)
+async function fetchVisaStatus(student) {
+    // Format birth date - keep as YYYY-MM-DD (API expects this format)
+    let birthDate = student.birthday || '';
+
+    // If birthday is in a different format, convert it
+    if (birthDate && birthDate.includes('.')) {
+        // Convert DD.MM.YYYY to YYYY-MM-DD
+        const parts = birthDate.split('.');
+        if (parts.length === 3) {
+            birthDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+        }
+    }
+
+    // Extract English name (uppercase) and truncate if too long
+    let englishName = (student.fullName || '').toUpperCase().trim();
+    const NAME_MAX_LENGTH = 38;
+
+    if (englishName.length > NAME_MAX_LENGTH) {
+        let truncated = englishName.substring(0, NAME_MAX_LENGTH);
+        const lastSpace = truncated.lastIndexOf(' ');
+        if (lastSpace > NAME_MAX_LENGTH - 10) {
+            truncated = truncated.substring(0, lastSpace + 2);
+        }
+        englishName = truncated.trim();
+    }
+
+    const requestData = {
+        passport_number: (student.passport || '').toUpperCase(),
+        english_name: englishName,
+        birth_date: birthDate,
+        website: "",
+        _form_start_time: Date.now() / 1000
+    };
+
+    console.log('Visa check request:', requestData);
+
+    const CORS_PROXY = 'https://corsproxy.io/?';
+    const API_BASE = 'https://visadoctors.uz/api/uz/visas/v2/check-status/';
+
+    try {
+        const response = await fetch(CORS_PROXY + encodeURIComponent(API_BASE), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        let data = await response.json();
+        console.log('Initial response:', data);
+
+        // Poll for result if status is PENDING
+        const taskId = data.id;
+        let retryCount = 0;
+        const maxRetries = 10;
+
+        while (data.status === 'PENDING' && retryCount < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            retryCount++;
+
+            try {
+                const pollUrl = `${API_BASE}${taskId}/`;
+                const pollResponse = await fetch(CORS_PROXY + encodeURIComponent(pollUrl), {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (pollResponse.ok) {
+                    data = await pollResponse.json();
+                    console.log(`Poll attempt ${retryCount}:`, data);
+                }
+            } catch (pollError) {
+                console.error('Poll error:', pollError);
+            }
+        }
+
+        if (!data.response_data) {
+            return {
+                status: 'UNKNOWN',
+                message: 'No response data received'
+            };
+        }
+
+        const responseData = data.response_data;
+
+        if (responseData.status === 'error') {
+            return {
+                status: 'UNKNOWN',
+                message: responseData.message || 'API error'
+            };
+        }
+
+        if (!responseData.visa_data) {
+            return {
+                status: 'UNKNOWN',
+                message: 'No visa data found'
+            };
+        }
+
+        const visaData = responseData.visa_data;
+        const uzStatus = visaData.status || '';
+        const applicationDate = visaData.application_date || '';
+
+        console.log('Visa status (Uzbek):', uzStatus);
+
+        const englishStatus = translateVisaStatus(uzStatus);
+
+        return {
+            status: englishStatus,
+            message: applicationDate ? `Application: ${applicationDate}` : '',
+            applicationDate: applicationDate
+        };
+
+    } catch (error) {
+        console.error('Visa check error:', error);
+        throw error;
+    }
+}
+
+// Translate Uzbek visa status to English
+function translateVisaStatus(status) {
+    const statusUpper = (status || '').toUpperCase();
+
+    const translations = {
+        "Tasdiqlangan": "APPROVED",
+        "Qabul qilingan": "APP/RECEIVED",
+        "Viza tayyorlanish bosqichida": "UNDER REVIEW",
+        "Rad etilgan": "CANCELLED"
+    };
+
+    if (translations[status]) {
+        return translations[status];
+    }
+
+    if (statusUpper.includes('APPROVED') || statusUpper.includes('TASDIQLANGAN')) {
+        return 'APPROVED';
+    }
+    if (statusUpper.includes('CANCEL') || statusUpper.includes('REJECT') || statusUpper.includes('RAD')) {
+        return 'CANCELLED';
+    }
+    if (statusUpper.includes('PENDING') || statusUpper.includes('REVIEW') || statusUpper.includes('BOSQICH')) {
+        return 'UNDER REVIEW';
+    }
+    if (statusUpper.includes('RECEIVED') || statusUpper.includes('QABUL')) {
+        return 'APP/RECEIVED';
+    }
+
+    return 'UNKNOWN';
+}
+
+// Initialize visa status when tab is shown
+function initializeVisaStatusTab() {
+    loadVisaStatusFromFirestore();
+}
+
+// Expose visa status functions to window
+window.showVisaSubTab = showVisaSubTab;
+window.loadVisaStatusFromFirestore = loadVisaStatusFromFirestore;
+window.checkSingleStudentVisa = checkSingleStudentVisa;
+window.recheckStudentVisa = recheckStudentVisa;
+window.removeVisaStatus = removeVisaStatus;
+window.moveVisaCard = moveVisaCard;
+window.filterVisaAllStudents = filterVisaAllStudents;
+window.filterVisaReceivedStudents = filterVisaReceivedStudents;
+window.filterVisaCancelledStudents = filterVisaCancelledStudents;
+window.filterVisaApprovedStudents = filterVisaApprovedStudents;
+window.renderVisaAllStudentsList = renderVisaAllStudentsList;
+window.initializeVisaStatusTab = initializeVisaStatusTab;

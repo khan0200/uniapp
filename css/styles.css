@@ -2699,7 +2699,7 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 24px;
     padding: 40px;
-    box-shadow: 
+    box-shadow:
         0 25px 50px rgba(0, 0, 0, 0.5),
         0 0 100px rgba(0, 120, 212, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -2711,6 +2711,7 @@ body {
         opacity: 0;
         transform: translateY(30px) scale(0.95);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -2736,9 +2737,12 @@ body {
 }
 
 @keyframes iconPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         box-shadow: 0 10px 30px rgba(0, 120, 212, 0.3);
     }
+
     50% {
         box-shadow: 0 10px 40px rgba(0, 120, 212, 0.5);
     }
@@ -2789,6 +2793,7 @@ body {
     0% {
         left: -100%;
     }
+
     100% {
         left: 100%;
     }
@@ -2885,9 +2890,21 @@ body {
 }
 
 @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-5px); }
-    40%, 80% { transform: translateX(5px); }
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    20%,
+    60% {
+        transform: translateX(-5px);
+    }
+
+    40%,
+    80% {
+        transform: translateX(5px);
+    }
 }
 
 .login-footer {
@@ -2923,4 +2940,800 @@ body {
     background: rgba(0, 0, 0, 0.05) !important;
     border-color: rgba(0, 0, 0, 0.15) !important;
     color: #1d1d1f !important;
+}
+
+/* ==========================================
+   VISA STATUS CHECKER STYLES
+   ========================================== */
+
+/* Student Selection Dropdown */
+.visa-student-select-container {
+    position: relative;
+}
+
+.visa-dropdown-btn {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border-default) !important;
+    color: var(--text-secondary) !important;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    transition: var(--transition-base);
+}
+
+.visa-dropdown-btn:hover {
+    border-color: var(--accent-primary) !important;
+}
+
+.visa-dropdown-menu {
+    background: var(--bg-card);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    max-height: 350px;
+    overflow: hidden;
+    z-index: 1050;
+}
+
+/* Ensure the visa tab card doesn't clip the dropdown */
+#visastatus-tab .card-apple {
+    overflow: visible;
+}
+
+/* The dropdown container needs position relative for proper stacking */
+.visa-student-select-container {
+    position: relative;
+    z-index: 100;
+}
+
+.visa-student-select-container .dropdown {
+    position: relative;
+}
+
+.visa-student-list {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.visa-student-item {
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 0.25rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    border: 1px solid transparent;
+}
+
+.visa-student-item:hover {
+    background: var(--bg-elevated);
+}
+
+.visa-student-item.selected {
+    background: rgba(0, 120, 212, 0.1);
+    border-color: rgba(0, 120, 212, 0.3);
+}
+
+.visa-student-item .form-check {
+    pointer-events: none;
+    margin-bottom: 0;
+}
+
+.visa-student-item .form-check-label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: 100%;
+}
+
+/* Student details ghost text styling */
+.visa-student-details {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.visa-student-details i {
+    font-size: 0.65rem;
+    opacity: 0.8;
+}
+
+/* Selected Students Badges */
+.visa-selected-students {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.visa-selected-students .badge {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.visa-selected-students .badge i {
+    cursor: pointer;
+    opacity: 0.7;
+    transition: var(--transition-fast);
+}
+
+.visa-selected-students .badge i:hover {
+    opacity: 1;
+}
+
+/* Results Section */
+.visa-results-section {
+    margin-top: 1.5rem;
+}
+
+/* Result Cards */
+.visa-result-card {
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition-base);
+}
+
+/* Recheck and Delete buttons */
+.visa-recheck-btn,
+.visa-delete-btn {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    opacity: 0.6;
+    transition: var(--transition-fast);
+}
+
+.visa-recheck-btn:hover,
+.visa-delete-btn:hover {
+    opacity: 1;
+}
+
+.visa-recheck-btn:hover {
+    background: var(--accent-primary) !important;
+    border-color: var(--accent-primary) !important;
+    color: white !important;
+}
+
+.visa-delete-btn:hover {
+    background: var(--accent-danger) !important;
+    border-color: var(--accent-danger) !important;
+    color: white !important;
+}
+
+/* Check time display */
+.visa-check-time {
+    font-size: 0.7rem;
+    opacity: 0.6;
+}
+
+.visa-result-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+}
+
+/* Status Icons */
+.visa-status-icon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+/* Status Badges */
+.visa-status-badge {
+    display: inline-block;
+    padding: 0.375rem 0.875rem;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* Status-specific Styles */
+.visa-result-card.status-approved::before {
+    background: linear-gradient(to bottom, #10b981, #059669);
+}
+
+.visa-result-card.status-approved {
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.visa-status-icon.status-approved {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+.visa-status-badge.status-approved {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.visa-result-card.status-rejected::before {
+    background: linear-gradient(to bottom, #ef4444, #dc2626);
+}
+
+.visa-result-card.status-rejected {
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.visa-status-icon.status-rejected {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.visa-status-badge.status-rejected {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.visa-result-card.status-pending::before {
+    background: linear-gradient(to bottom, #f59e0b, #d97706);
+}
+
+.visa-result-card.status-pending {
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.visa-status-icon.status-pending {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+}
+
+.visa-status-badge.status-pending {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.visa-result-card.status-unknown::before {
+    background: linear-gradient(to bottom, #6b7280, #4b5563);
+}
+
+.visa-result-card.status-unknown {
+    border-color: rgba(107, 114, 128, 0.3);
+}
+
+.visa-status-icon.status-unknown {
+    background: rgba(107, 114, 128, 0.15);
+    color: #6b7280;
+}
+
+.visa-status-badge.status-unknown {
+    background: rgba(107, 114, 128, 0.15);
+    color: #6b7280;
+    border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+/* Status Received (Yellow) - APP/RECEIVED */
+.visa-result-card.status-received::before {
+    background: linear-gradient(to bottom, #eab308, #ca8a04);
+}
+
+.visa-result-card.status-received {
+    border-color: rgba(234, 179, 8, 0.3);
+}
+
+.visa-status-icon.status-received {
+    background: rgba(234, 179, 8, 0.15);
+    color: #eab308;
+}
+
+.visa-status-badge.status-received {
+    background: rgba(234, 179, 8, 0.15);
+    color: #eab308;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+/* Light Theme Adjustments */
+[data-bs-theme="light"] .visa-dropdown-btn {
+    background: rgba(0, 0, 0, 0.03) !important;
+    border-color: rgba(0, 0, 0, 0.12) !important;
+    color: var(--text-secondary) !important;
+}
+
+[data-bs-theme="light"] .visa-dropdown-menu {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-bs-theme="light"] .visa-student-item:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+[data-bs-theme="light"] .visa-student-item.selected {
+    background: rgba(0, 120, 212, 0.08);
+}
+
+/* ==========================================
+   VISA STATUS TRACKER - NEW LAYOUT STYLES
+   ========================================== */
+
+/* Visa Sub-tab Toggle */
+.visa-subtab {
+    display: block;
+}
+
+.visa-subtab.section-hidden {
+    display: none;
+}
+
+/* Student check list scrollable container */
+.visa-students-check-list,
+.visa-received-list {
+    max-height: 500px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+/* Student Check Card in the left column - COMPACT DESIGN */
+.visa-student-check-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 0.65rem 0.85rem;
+    margin-bottom: 0.5rem;
+    transition: var(--transition-base);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: nowrap;
+}
+
+.visa-student-check-card:hover {
+    border-color: var(--accent-primary);
+    background: var(--bg-card);
+}
+
+.visa-student-check-card .student-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.visa-student-check-card .student-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.visa-student-check-card .student-details {
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.visa-student-check-card .student-details span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.visa-student-check-card .student-details i {
+    font-size: 0.65rem;
+}
+
+.visa-student-check-card .check-btn {
+    flex-shrink: 0;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.7rem;
+    font-weight: 500;
+    min-width: 60px;
+}
+
+/* Checking animation */
+.visa-student-check-card .check-btn.checking-animation,
+.visa-action-btn.checking-animation {
+    animation: rotate-icon 1s linear infinite;
+}
+
+@keyframes rotate-icon {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* UNKNOWN status badge */
+.badge-unknown-status {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    font-size: 0.6rem;
+    font-weight: 600;
+    padding: 0.15rem 0.4rem;
+    border-radius: var(--radius-full);
+}
+
+/* Highlight card with UNKNOWN status */
+.visa-student-check-card.has-unknown-status {
+    border-color: rgba(245, 158, 11, 0.4);
+    background: rgba(245, 158, 11, 0.05);
+}
+
+.visa-student-check-card.has-unknown-status:hover {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.08);
+}
+
+/* Visa Result Card (Used in all tabs) - COMPACT DESIGN */
+.visa-tracker-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-default);
+    padding: 0.65rem 0.85rem;
+    margin-bottom: 0.5rem;
+    position: relative;
+    transition: var(--transition-base);
+    overflow: hidden;
+}
+
+.visa-tracker-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+}
+
+.visa-tracker-card:hover {
+    border-color: var(--accent-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.visa-tracker-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.visa-tracker-card .student-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.visa-tracker-card .student-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    margin-bottom: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.visa-tracker-card .student-passport {
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.visa-tracker-card .student-passport i {
+    font-size: 0.6rem;
+}
+
+.visa-tracker-card .card-actions {
+    display: flex;
+    gap: 0.35rem;
+    flex-shrink: 0;
+}
+
+.visa-tracker-card .card-body-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.visa-tracker-card .status-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.visa-tracker-card .student-details-grid {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    margin-top: 0.15rem;
+}
+
+.visa-tracker-card .student-details-grid span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.visa-tracker-card .student-details-grid i {
+    font-size: 0.6rem;
+}
+
+.visa-tracker-card .student-birthday {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.visa-tracker-card .status-badge {
+    display: inline-block;
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    font-size: 0.65rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.visa-tracker-card .check-time {
+    font-size: 0.65rem;
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.visa-tracker-card .check-time i {
+    font-size: 0.6rem;
+}
+
+.visa-tracker-card .app-date {
+    font-size: 0.65rem;
+    color: var(--accent-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 600;
+    background: rgba(0, 120, 212, 0.1);
+    border: 1px solid rgba(0, 120, 212, 0.25);
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--radius-full);
+}
+
+.visa-tracker-card .app-date i {
+    font-size: 0.6rem;
+}
+
+/* Light theme app-date */
+[data-bs-theme="light"] .visa-tracker-card .app-date {
+    background: rgba(0, 120, 212, 0.08);
+    border-color: rgba(0, 120, 212, 0.2);
+}
+
+/* Status-specific card styles */
+.visa-tracker-card.status-received::before {
+    background: linear-gradient(to bottom, #eab308, #ca8a04);
+}
+
+.visa-tracker-card.status-received {
+    border-color: rgba(234, 179, 8, 0.3);
+}
+
+.visa-tracker-card.status-received .status-badge {
+    background: rgba(234, 179, 8, 0.15);
+    color: #eab308;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.visa-tracker-card.status-cancelled::before {
+    background: linear-gradient(to bottom, #ef4444, #dc2626);
+}
+
+.visa-tracker-card.status-cancelled {
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.visa-tracker-card.status-cancelled .status-badge {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.visa-tracker-card.status-approved::before {
+    background: linear-gradient(to bottom, #10b981, #059669);
+}
+
+.visa-tracker-card.status-approved {
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.visa-tracker-card.status-approved .status-badge {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.visa-tracker-card.status-pending::before {
+    background: linear-gradient(to bottom, #f59e0b, #d97706);
+}
+
+.visa-tracker-card.status-pending {
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.visa-tracker-card.status-pending .status-badge {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.visa-tracker-card.status-unknown::before {
+    background: linear-gradient(to bottom, #6b7280, #4b5563);
+}
+
+.visa-tracker-card.status-unknown {
+    border-color: rgba(107, 114, 128, 0.3);
+}
+
+.visa-tracker-card.status-unknown .status-badge {
+    background: rgba(107, 114, 128, 0.15);
+    color: #6b7280;
+    border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+/* Action buttons for visa cards - COLORED DESIGN */
+.visa-action-btn {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    border-radius: var(--radius-full);
+    transition: var(--transition-fast);
+    border: none;
+}
+
+/* Recheck button - Blue colored */
+.visa-action-btn.recheck {
+    background: rgba(0, 120, 212, 0.15);
+    color: var(--accent-primary);
+    border: 1px solid rgba(0, 120, 212, 0.3);
+}
+
+.visa-action-btn.recheck:hover {
+    background: var(--accent-primary) !important;
+    border-color: var(--accent-primary) !important;
+    color: white !important;
+    transform: rotate(180deg);
+}
+
+/* Delete button - Subtle until hover */
+.visa-action-btn.delete {
+    background: transparent;
+    color: var(--text-tertiary);
+    border: 1px solid var(--border-subtle);
+    opacity: 0.6;
+}
+
+.visa-action-btn.delete:hover {
+    background: var(--accent-danger) !important;
+    border-color: var(--accent-danger) !important;
+    color: white !important;
+    opacity: 1;
+}
+
+/* Move button - Shows when status changes */
+.visa-action-btn.move-btn {
+    animation: pulse-move 2s ease-in-out infinite;
+}
+
+.visa-action-btn.move-success {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.visa-action-btn.move-success:hover {
+    background: #10b981 !important;
+    border-color: #10b981 !important;
+    color: white !important;
+    transform: translateX(3px);
+}
+
+.visa-action-btn.move-danger {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.visa-action-btn.move-danger:hover {
+    background: #ef4444 !important;
+    border-color: #ef4444 !important;
+    color: white !important;
+    transform: translateX(3px);
+}
+
+.visa-action-btn.move-warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.visa-action-btn.move-warning:hover {
+    background: #f59e0b !important;
+    border-color: #f59e0b !important;
+    color: white !important;
+    transform: translateX(3px);
+}
+
+@keyframes pulse-move {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 currentColor;
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* Status changed badge animation */
+.status-changed-badge {
+    animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Light theme visa tracker adjustments */
+[data-bs-theme="light"] .visa-student-check-card {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-bs-theme="light"] .visa-student-check-card:hover {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: var(--accent-primary);
+}
+
+[data-bs-theme="light"] .visa-tracker-card {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-bs-theme="light"] .visa-action-btn.recheck {
+    background: rgba(0, 120, 212, 0.1);
+}
+
+[data-bs-theme="light"] .visa-action-btn.delete {
+    background: rgba(0, 0, 0, 0.03);
 }

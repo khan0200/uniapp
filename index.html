@@ -40,8 +40,9 @@
                         <span class="input-group-text bg-transparent border-end-0">
                             <i class="bi bi-key-fill text-primary"></i>
                         </span>
-                        <input type="password" class="form-control border-start-0 login-input" id="loginPassword" 
-                            placeholder="Enter access code" autocomplete="off" onkeypress="if(event.key==='Enter')verifyLogin()">
+                        <input type="password" class="form-control border-start-0 login-input" id="loginPassword"
+                            placeholder="Enter access code" autocomplete="off"
+                            onkeypress="if(event.key==='Enter')verifyLogin()">
                     </div>
                     <button class="btn btn-primary w-100 login-btn" onclick="verifyLogin()">
                         <i class="bi bi-unlock-fill me-2"></i>Access System
@@ -63,7 +64,8 @@
     <nav class="navbar navbar-expand-lg navbar-glass sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
-                <img src="Logo.png" alt="UNIAPP Logo" style="width: 32px; height: 32px; object-fit: contain;" class="me-2">
+                <img src="Logo.png" alt="UNIAPP Logo" style="width: 32px; height: 32px; object-fit: contain;"
+                    class="me-2">
                 UNIAPP
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
@@ -91,10 +93,17 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link nav-link-apple" href="#" onclick="showTab('visastatus'); return false;"
+                            id="nav-visastatus">
+                            <i class="bi bi-passport me-1"></i> VISA STATUS
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link nav-link-apple" href="#" onclick="showTab('notifications'); return false;"
                             id="nav-notifications">
                             <i class="bi bi-bell-fill me-1"></i> NOTIFICATIONS
-                            <span class="badge rounded-pill bg-danger ms-1" id="notificationsBadge" style="font-size: 0.65rem; display: none;">0</span>
+                            <span class="badge rounded-pill bg-danger ms-1" id="notificationsBadge"
+                                style="font-size: 0.65rem; display: none;">0</span>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -369,6 +378,172 @@
             </div>
         </div>
 
+        <!-- VISA STATUS TAB -->
+        <div id="visastatus-tab" class="tab-content-section section-hidden">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="mb-1"><i class="bi bi-passport me-2"></i>Visa Status Tracker</h4>
+                    <p class="text-secondary mb-0 small">Track and manage student visa application statuses</p>
+                </div>
+            </div>
+
+            <!-- Visa Sub-Tabs -->
+            <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+                <div class="btn-group" role="group" aria-label="Visa status tabs">
+                    <button type="button" class="btn btn-outline-light rounded-pill px-4 active"
+                        id="visaProcessingTabBtn" onclick="showVisaSubTab('processing')">
+                        <i class="bi bi-hourglass-split me-2"></i>Processing
+                        <span class="badge bg-warning text-dark ms-2" id="visaProcessingCount">0</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-light rounded-pill px-4" id="visaCancelledTabBtn"
+                        onclick="showVisaSubTab('cancelled')">
+                        <i class="bi bi-x-circle me-2"></i>Cancelled
+                        <span class="badge bg-danger ms-2" id="visaCancelledCount">0</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-light rounded-pill px-4" id="visaApprovedTabBtn"
+                        onclick="showVisaSubTab('approved')">
+                        <i class="bi bi-check-circle me-2"></i>Approved
+                        <span class="badge bg-success ms-2" id="visaApprovedCount">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PROCESSING SUB-TAB (Two Columns) -->
+            <div id="visa-processing-subtab" class="visa-subtab">
+                <div class="row g-4">
+                    <!-- Column 1: All Students (for checking) -->
+                    <div class="col-lg-6">
+                        <div class="card-apple p-4 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0 fw-bold"><i class="bi bi-people me-2 text-primary"></i>Students</h6>
+                                <span class="badge bg-primary bg-opacity-10 text-primary"
+                                    id="visaStudentsCount">0</span>
+                            </div>
+                            <!-- Search bar for all students -->
+                            <div class="mb-3">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-transparent border-end-0"
+                                        style="border-color: var(--border-default);">
+                                        <i class="bi bi-search text-secondary"></i>
+                                    </span>
+                                    <input type="text" class="form-control border-start-0 ios-input"
+                                        id="visaAllStudentsSearch" placeholder="Search students..."
+                                        oninput="filterVisaAllStudents()" style="border-color: var(--border-default);">
+                                </div>
+                            </div>
+                            <!-- Student list for checking -->
+                            <div class="visa-students-check-list" id="visaAllStudentsList">
+                                <!-- Students will be populated here -->
+                                <div class="text-center py-4 text-secondary">
+                                    <i class="bi bi-hourglass-split"></i> Loading students...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: App/Received Status Students -->
+                    <div class="col-lg-6">
+                        <div class="card-apple p-4 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0 fw-bold"><i class="bi bi-inbox me-2 text-warning"></i>App/Received</h6>
+                                <span class="badge bg-warning bg-opacity-25 text-warning"
+                                    id="visaReceivedCount">0</span>
+                            </div>
+                            <!-- Search bar for received students -->
+                            <div class="mb-3">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-transparent border-end-0"
+                                        style="border-color: var(--border-default);">
+                                        <i class="bi bi-search text-secondary"></i>
+                                    </span>
+                                    <input type="text" class="form-control border-start-0 ios-input"
+                                        id="visaReceivedSearch" placeholder="Search App/Received..."
+                                        oninput="filterVisaReceivedStudents()"
+                                        style="border-color: var(--border-default);">
+                                </div>
+                            </div>
+                            <!-- Received students list -->
+                            <div class="visa-received-list" id="visaReceivedList">
+                                <div class="text-center py-4 text-secondary">
+                                    <i class="bi bi-inbox"></i> No students with App/Received status yet
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CANCELLED SUB-TAB -->
+            <div id="visa-cancelled-subtab" class="visa-subtab section-hidden">
+                <div class="card-apple p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-x-circle me-2 text-danger"></i>Cancelled Applications
+                        </h6>
+                        <span class="badge bg-danger bg-opacity-25 text-danger" id="visaCancelledListCount">0</span>
+                    </div>
+                    <!-- Search bar -->
+                    <div class="mb-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-transparent border-end-0"
+                                        style="border-color: var(--border-default);">
+                                        <i class="bi bi-search text-secondary"></i>
+                                    </span>
+                                    <input type="text" class="form-control border-start-0 ios-input"
+                                        id="visaCancelledSearch" placeholder="Search cancelled students..."
+                                        oninput="filterVisaCancelledStudents()"
+                                        style="border-color: var(--border-default);">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Cancelled students list -->
+                    <div class="row g-3" id="visaCancelledList">
+                        <div class="col-12 text-center py-4 text-secondary">
+                            <i class="bi bi-x-circle" style="font-size: 2rem;"></i>
+                            <p class="mt-2 mb-0">No cancelled applications found</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- APPROVED SUB-TAB -->
+            <div id="visa-approved-subtab" class="visa-subtab section-hidden">
+                <div class="card-apple p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-check-circle me-2 text-success"></i>Approved Visas</h6>
+                        <span class="badge bg-success bg-opacity-25 text-success" id="visaApprovedListCount">0</span>
+                    </div>
+                    <!-- Search bar -->
+                    <div class="mb-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-transparent border-end-0"
+                                        style="border-color: var(--border-default);">
+                                        <i class="bi bi-search text-secondary"></i>
+                                    </span>
+                                    <input type="text" class="form-control border-start-0 ios-input"
+                                        id="visaApprovedSearch" placeholder="Search approved students..."
+                                        oninput="filterVisaApprovedStudents()"
+                                        style="border-color: var(--border-default);">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Approved students list -->
+                    <div class="row g-3" id="visaApprovedList">
+                        <div class="col-12 text-center py-4 text-secondary">
+                            <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
+                            <p class="mt-2 mb-0">No approved visas found</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- NOTIFICATIONS TAB -->
         <div id="notifications-tab" class="tab-content-section section-hidden">
             <!-- Header with Add Button -->
@@ -504,7 +679,8 @@
             <div class="card-apple p-4 mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <h5 class="mb-1"><i class="bi bi-play-circle-fill me-2" style="color: #ef4444;"></i>Video Tutorials</h5>
+                        <h5 class="mb-1"><i class="bi bi-play-circle-fill me-2" style="color: #ef4444;"></i>Video
+                            Tutorials</h5>
                         <p class="text-secondary mb-0 small">Manage video links shown on Student Portal</p>
                     </div>
                     <button class="btn btn-danger rounded-pill px-3" onclick="openVideoModal()">
@@ -1120,9 +1296,9 @@
                         <i class="bi bi-check-circle me-2"></i>Save University
                     </button>
                 </div>
-                </div>
             </div>
         </div>
+    </div>
     </div>
 
     <!-- Video Modal (Add/Edit) -->
@@ -1246,8 +1422,9 @@
                                 <label for="admissionScholarships" class="form-label form-label-elite">
                                     <i class="bi bi-award me-1"></i> Scholarships Opportunities
                                 </label>
-                                <textarea class="form-control input-elite info-textarea-elite" id="admissionScholarships"
-                                    rows="3" placeholder="Scholarship opportunities and requirements..."></textarea>
+                                <textarea class="form-control input-elite info-textarea-elite"
+                                    id="admissionScholarships" rows="3"
+                                    placeholder="Scholarship opportunities and requirements..."></textarea>
                             </div>
                         </div>
                     </form>
