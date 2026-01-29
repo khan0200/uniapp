@@ -4011,7 +4011,7 @@ async function checkSingleStudentVisa(studentId) {
             }
 
             // Find the card element
-            const cardElement = document.querySelector(`.visa-tracker-card [onclick*="recheckStudentVisa('${studentId}')"]`) ?.closest('.visa-tracker-card');
+            const cardElement = document.querySelector(`.visa-tracker-card [onclick*="recheckStudentVisa('${studentId}')"]`) ? .closest('.visa-tracker-card');
             if (cardElement) {
                 // Store pending data on the card
                 cardElement.dataset.pendingMove = 'true';
@@ -4086,7 +4086,7 @@ async function checkSingleStudentVisa(studentId) {
 
                 // Wait for render, then add move button
                 setTimeout(() => {
-                    const cardElement = document.querySelector(`.visa-tracker-card [onclick*="recheckStudentVisa('${studentId}')"]`) ?.closest('.visa-tracker-card');
+                    const cardElement = document.querySelector(`.visa-tracker-card [onclick*="recheckStudentVisa('${studentId}')"]`) ? .closest('.visa-tracker-card');
                     if (cardElement) {
                         // Determine target tab
                         let targetTab = '';
@@ -4159,7 +4159,19 @@ async function checkSingleStudentVisa(studentId) {
 
     } catch (error) {
         console.error('Error checking visa status:', error);
-        showNotification('Error checking visa status', 'error');
+
+        // Show error with manual check option
+        const manualCheckUrl = `visa-checker.html?passport=${encodeURIComponent(student.passport || '')}&name=${encodeURIComponent(student.fullName || '')}&birthday=${encodeURIComponent(student.birthday || '')}`;
+
+        showNotification('API error. Click the button again or check manually on visa.go.kr', 'error');
+
+        // Update button to offer manual check
+        if (card) {
+            card.innerHTML = '<i class="bi bi-box-arrow-up-right"></i>';
+            card.title = 'Check manually on visa.go.kr';
+            card.onclick = () => window.open(manualCheckUrl, '_blank');
+        }
+        return; // Exit early to keep the manual check button
     }
 
     // Restore button
