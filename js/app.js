@@ -4497,7 +4497,7 @@ function filterVisaApprovedStudents() {
     });
 }
 
-// Fetch visa status from API (kept from original implementation)
+// Fetch visa status from API with multiple CORS proxy fallbacks
 async function fetchVisaStatus(student) {
     // Format birth date - keep as YYYY-MM-DD (API expects this format)
     let birthDate = student.birthday || '';
@@ -4534,94 +4534,130 @@ async function fetchVisaStatus(student) {
 
     console.log('Visa check request:', requestData);
 
-    const CORS_PROXY = 'https://corsproxy.io/?';
     const API_BASE = 'https://visadoctors.uz/api/uz/visas/v2/check-status/';
 
-    try {
-        const response = await fetch(CORS_PROXY + encodeURIComponent(API_BASE), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(requestData)
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    // Multiple CORS proxy options - will try each one in order
+    const CORS_PROXIES = [{
+            name: 'allorigins',
+            url: 'https://api.allorigins.win/raw?url='
+        },
+        {
+            name: 'corsproxy.io',
+            url: 'https://corsproxy.io/?'
+        },
+        {
+            name: 'cors-anywhere-alt',
+            url: 'https://proxy.cors.sh/'
+        },
+        {
+            name: 'thingproxy',
+            url: 'https://thingproxy.freeboard.io/fetch/'
         }
+    ];
 
-        let data = await response.json();
-        console.log('Initial response:', data);
+    let lastError = null;
 
-        // Poll for result if status is PENDING
-        const taskId = data.id;
-        let retryCount = 0;
-        const maxRetries = 10;
+    // Try each CORS proxy until one works
+    for (const proxy of CORS_PROXIES) {
+        try {
+            console.log(`Trying CORS proxy: ${proxy.name}...`);
 
-        while (data.status === 'PENDING' && retryCount < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            retryCount++;
+            const proxyUrl = proxy.url + encodeURIComponent(API_BASE);
 
-            try {
-                const pollUrl = `${API_BASE}${taskId}/`;
-                const pollResponse = await fetch(CORS_PROXY + encodeURIComponent(pollUrl), {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
+            const response = await fetch(proxyUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'x-cors-api-key': 'temp_' + Date.now() // For cors.sh
+                },
+                body: JSON.stringify(requestData)
+            });
 
-                if (pollResponse.ok) {
-                    data = await pollResponse.json();
-                    console.log(`Poll attempt ${retryCount}:`, data);
-                }
-            } catch (pollError) {
-                console.error('Poll error:', pollError);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-        }
 
-        if (!data.response_data) {
+            let data = await response.json();
+            console.log(`✅ ${proxy.name} worked! Initial response:`, data);
+
+            // Poll for result if status is PENDING
+            const taskId = data.id;
+            let retryCount = 0;
+            const maxRetries = 10;
+
+            while (data.status === 'PENDING' && retryCount < maxRetries) {
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                retryCount++;
+
+                try {
+                    const pollUrl = `${API_BASE}${taskId}/`;
+                    const pollProxyUrl = proxy.url + encodeURIComponent(pollUrl);
+
+                    const pollResponse = await fetch(pollProxyUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'x-cors-api-key': 'temp_' + Date.now()
+                        }
+                    });
+
+                    if (pollResponse.ok) {
+                        data = await pollResponse.json();
+                        console.log(`Poll attempt ${retryCount}:`, data);
+                    }
+                } catch (pollError) {
+                    console.error('Poll error:', pollError);
+                }
+            }
+
+            if (!data.response_data) {
+                return {
+                    status: 'UNKNOWN',
+                    message: 'No response data received'
+                };
+            }
+
+            const responseData = data.response_data;
+
+            if (responseData.status === 'error') {
+                return {
+                    status: 'UNKNOWN',
+                    message: responseData.message || 'API error'
+                };
+            }
+
+            if (!responseData.visa_data) {
+                return {
+                    status: 'UNKNOWN',
+                    message: 'No visa data found'
+                };
+            }
+
+            const visaData = responseData.visa_data;
+            const uzStatus = visaData.status || '';
+            const applicationDate = visaData.application_date || '';
+
+            console.log('Visa status (Uzbek):', uzStatus);
+
+            const englishStatus = translateVisaStatus(uzStatus);
+
             return {
-                status: 'UNKNOWN',
-                message: 'No response data received'
+                status: englishStatus,
+                message: applicationDate ? `Application: ${applicationDate}` : '',
+                applicationDate: applicationDate
             };
+
+        } catch (error) {
+            console.warn(`❌ ${proxy.name} failed:`, error.message);
+            lastError = error;
+            // Continue to next proxy
         }
-
-        const responseData = data.response_data;
-
-        if (responseData.status === 'error') {
-            return {
-                status: 'UNKNOWN',
-                message: responseData.message || 'API error'
-            };
-        }
-
-        if (!responseData.visa_data) {
-            return {
-                status: 'UNKNOWN',
-                message: 'No visa data found'
-            };
-        }
-
-        const visaData = responseData.visa_data;
-        const uzStatus = visaData.status || '';
-        const applicationDate = visaData.application_date || '';
-
-        console.log('Visa status (Uzbek):', uzStatus);
-
-        const englishStatus = translateVisaStatus(uzStatus);
-
-        return {
-            status: englishStatus,
-            message: applicationDate ? `Application: ${applicationDate}` : '',
-            applicationDate: applicationDate
-        };
-
-    } catch (error) {
-        console.error('Visa check error:', error);
-        throw error;
     }
+
+    // All proxies failed
+    console.error('All CORS proxies failed. Last error:', lastError);
+    throw new Error('All CORS proxies failed. Please try again later or check your internet connection.');
 }
 
 // Translate Uzbek visa status to English
