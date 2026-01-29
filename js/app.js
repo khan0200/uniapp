@@ -4011,7 +4011,7 @@ async function checkSingleStudentVisa(studentId) {
             }
 
             // Find the card element
-            const cardElement = document.querySelector(`.visa-tracker-card [onclick*="recheckStudentVisa('${studentId}')"]`) ? .closest('.visa-tracker-card');
+            const cardElement = document.querySelector(`.visa-tracker-card [onclick*="recheckStudentVisa('${studentId}')"]`) ?.closest('.visa-tracker-card');
             if (cardElement) {
                 // Store pending data on the card
                 cardElement.dataset.pendingMove = 'true';
@@ -4086,7 +4086,7 @@ async function checkSingleStudentVisa(studentId) {
 
                 // Wait for render, then add move button
                 setTimeout(() => {
-                    const cardElement = document.querySelector(`.visa-tracker-card [onclick*="recheckStudentVisa('${studentId}')"]`) ? .closest('.visa-tracker-card');
+                    const cardElement = document.querySelector(`.visa-tracker-card [onclick*="recheckStudentVisa('${studentId}')"]`) ?.closest('.visa-tracker-card');
                     if (cardElement) {
                         // Determine target tab
                         let targetTab = '';
