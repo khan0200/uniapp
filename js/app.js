@@ -3345,14 +3345,57 @@ function viewAdmissionDetails(index) {
     } else {
         detailsHtml += '<div class="text-center py-4 text-secondary fst-italic border border-dashed border-light-subtle rounded-3 mb-4">No rounds configured</div>';
     }
+    // Added Premium Accordions for Information, Majors, and Scholarships
     if (admission.information) {
-        detailsHtml += '<div class="card bg-info bg-opacity-10 border border-info border-opacity-25 p-4 rounded-3 shadow-sm mb-3"><div class="d-flex gap-3"><i class="bi bi-info-circle text-info fs-5 mt-1"></i><div><h6 class="text-info fw-bold mb-2 small text-uppercase tracking-wider" style="font-size: 0.8em;">Information</h6><p class="mb-0 text-body opacity-90" style="white-space: pre-wrap; line-height: 1.6; font-size: 0.9em;">' + admission.information + '</p></div></div></div>';
+        detailsHtml += `
+            <div class="accordion-item-premium accordion-item-info mb-3" id="accordion-info-${index}">
+                <div class="accordion-header-premium" onclick="togglePremiumAccordion('info-${index}')">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="bi bi-info-circle text-info fs-5"></i>
+                        <span class="fw-bold text-uppercase small tracking-wider text-info">Information</span>
+                    </div>
+                    <i class="bi bi-chevron-down chevron-icon"></i>
+                </div>
+                <div class="accordion-content-premium">
+                    <div class="px-4 pb-4">
+                        <p class="mb-0 text-body opacity-90" style="white-space: pre-wrap; line-height: 1.6; font-size: 0.9em;">${admission.information}</p>
+                    </div>
+                </div>
+            </div>`;
     }
     if (admission.majors) {
-        detailsHtml += '<div class="card bg-primary bg-opacity-10 border border-primary border-opacity-25 p-4 rounded-3 shadow-sm mb-3"><div class="d-flex gap-3"><i class="bi bi-book text-primary fs-5 mt-1"></i><div><h6 class="text-primary fw-bold mb-2 small text-uppercase tracking-wider" style="font-size: 0.8em;">Majors</h6><p class="mb-0 text-body opacity-90" style="white-space: pre-wrap; line-height: 1.6; font-size: 0.9em;">' + admission.majors + '</p></div></div></div>';
+        detailsHtml += `
+            <div class="accordion-item-premium accordion-item-majors mb-3" id="accordion-majors-${index}">
+                <div class="accordion-header-premium" onclick="togglePremiumAccordion('majors-${index}')">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="bi bi-book text-primary fs-5"></i>
+                        <span class="fw-bold text-uppercase small tracking-wider text-primary">Majors</span>
+                    </div>
+                    <i class="bi bi-chevron-down chevron-icon"></i>
+                </div>
+                <div class="accordion-content-premium">
+                    <div class="px-4 pb-4">
+                        <p class="mb-0 text-body opacity-90" style="white-space: pre-wrap; line-height: 1.6; font-size: 0.9em;">${admission.majors}</p>
+                    </div>
+                </div>
+            </div>`;
     }
     if (admission.scholarships) {
-        detailsHtml += '<div class="card bg-success bg-opacity-10 border border-success border-opacity-25 p-4 rounded-3 shadow-sm mb-3"><div class="d-flex gap-3"><i class="bi bi-award text-success fs-5 mt-1"></i><div><h6 class="text-success fw-bold mb-2 small text-uppercase tracking-wider" style="font-size: 0.8em;">Scholarships Opportunities</h6><p class="mb-0 text-body opacity-90" style="white-space: pre-wrap; line-height: 1.6; font-size: 0.9em;">' + admission.scholarships + '</p></div></div></div>';
+        detailsHtml += `
+            <div class="accordion-item-premium accordion-item-scholarships mb-3" id="accordion-scholarships-${index}">
+                <div class="accordion-header-premium" onclick="togglePremiumAccordion('scholarships-${index}')">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="bi bi-award text-success fs-5"></i>
+                        <span class="fw-bold text-uppercase small tracking-wider text-success">Scholarships Opportunities</span>
+                    </div>
+                    <i class="bi bi-chevron-down chevron-icon"></i>
+                </div>
+                <div class="accordion-content-premium">
+                    <div class="px-4 pb-4">
+                        <p class="mb-0 text-body opacity-90" style="white-space: pre-wrap; line-height: 1.6; font-size: 0.9em;">${admission.scholarships}</p>
+                    </div>
+                </div>
+            </div>`;
     }
     document.getElementById('admissionDetailsContent').innerHTML = detailsHtml;
     var modal = new bootstrap.Modal(document.getElementById('viewAdmissionModal'));
@@ -3701,6 +3744,28 @@ window.saveNotification = saveNotification;
 window.viewNotificationDetails = viewNotificationDetails;
 window.editNotification = editNotification;
 window.deleteNotification = deleteNotification;
+
+// Premium Accordion Toggle Function
+function togglePremiumAccordion(id) {
+    const item = document.getElementById(`accordion-${id}`);
+    if (!item) return;
+
+    const isActive = item.classList.contains('active');
+
+    // Close other accordions in the same container to ensure only one is open
+    const allItems = item.parentElement.querySelectorAll('.accordion-item-premium');
+    allItems.forEach(i => {
+        if (i !== item) i.classList.remove('active');
+    });
+
+    if (isActive) {
+        item.classList.remove('active');
+    } else {
+        item.classList.add('active');
+    }
+}
+
+window.togglePremiumAccordion = togglePremiumAccordion;
 
 // ==========================================
 // VISA STATUS TRACKER FUNCTIONS (REDESIGNED)
