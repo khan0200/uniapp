@@ -206,7 +206,7 @@ function showTab(tabName) {
     document.getElementById('students-tab').style.display = 'none';
     document.getElementById('payments-tab').style.display = 'none';
     document.getElementById('admissions-tab').style.display = 'none';
-    document.getElementById('visastatus-tab').style.display = 'none';
+
     document.getElementById('notifications-tab').style.display = 'none';
     document.getElementById('settings-tab').style.display = 'none';
     document.querySelectorAll('.nav-link-apple').forEach(link => link.classList.remove('active'));
@@ -223,10 +223,7 @@ function showTab(tabName) {
         renderAdmissions();
     }
 
-    // Initialize visa status tracker when visa status tab is activated
-    if (tabName === 'visastatus') {
-        initializeVisaStatusTab();
-    }
+
 
     // Render notifications when notifications tab is activated
     if (tabName === 'notifications') {
@@ -4541,7 +4538,7 @@ async function fetchVisaStatus(student) {
         english_name: englishName,
         birth_date: birthDate,
         website: "",
-        _form_start_time: Date.now() / 1000
+        _form_start_time: Math.floor(Date.now() / 1000)
     };
 
     console.log('Visa check request:', requestData);
@@ -4551,19 +4548,25 @@ async function fetchVisaStatus(student) {
     // Multiple CORS proxy options - will try each one in order
     const CORS_PROXIES = [{
             name: 'allorigins',
-            url: 'https://api.allorigins.win/raw?url='
+            url: 'https://api.allorigins.win/raw?url=',
+            headers: {}
         },
         {
             name: 'corsproxy.io',
-            url: 'https://corsproxy.io/?'
+            url: 'https://corsproxy.io/?',
+            headers: {}
+        },
+        {
+            name: 'cors-proxy.org',
+            url: 'https://cors-proxy.org/',
+            headers: {}
         },
         {
             name: 'cors-anywhere-alt',
-            url: 'https://proxy.cors.sh/'
-        },
-        {
-            name: 'thingproxy',
-            url: 'https://thingproxy.freeboard.io/fetch/'
+            url: 'https://proxy.cors.sh/',
+            headers: {
+                'x-cors-api-key': 'temp_' + Date.now()
+            }
         }
     ];
 
@@ -4575,14 +4578,15 @@ async function fetchVisaStatus(student) {
             console.log(`Trying CORS proxy: ${proxy.name}...`);
 
             const proxyUrl = proxy.url + encodeURIComponent(API_BASE);
+            const fetchHeaders = {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                ...proxy.headers
+            };
 
             const response = await fetch(proxyUrl, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'x-cors-api-key': 'temp_' + Date.now() // For cors.sh
-                },
+                headers: fetchHeaders,
                 body: JSON.stringify(requestData)
             });
 
@@ -4605,13 +4609,14 @@ async function fetchVisaStatus(student) {
                 try {
                     const pollUrl = `${API_BASE}${taskId}/`;
                     const pollProxyUrl = proxy.url + encodeURIComponent(pollUrl);
+                    const pollHeaders = {
+                        'Accept': 'application/json',
+                        ...proxy.headers
+                    };
 
                     const pollResponse = await fetch(pollProxyUrl, {
                         method: 'GET',
-                        headers: {
-                            'Accept': 'application/json',
-                            'x-cors-api-key': 'temp_' + Date.now()
-                        }
+                        headers: pollHeaders
                     });
 
                     if (pollResponse.ok) {
