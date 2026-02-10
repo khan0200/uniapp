@@ -1247,53 +1247,53 @@ function downloadSelectedAsExcel() {
 
     // Set column widths
     ws['!cols'] = [{
-            wch: 5
-        }, // No
-        {
-            wch: 12
-        }, // ID
-        {
-            wch: 35
-        }, // Full Name
-        {
-            wch: 15
-        }, // Phone 1
-        {
-            wch: 15
-        }, // Phone 2
-        {
-            wch: 25
-        }, // Email
-        {
-            wch: 20
-        }, // Level
-        {
-            wch: 15
-        }, // Tariff
-        {
-            wch: 30
-        }, // University 1
-        {
-            wch: 30
-        }, // University 2
-        {
-            wch: 18
-        }, // Language Certificate
-        {
-            wch: 8
-        }, // Score
-        {
-            wch: 12
-        }, // Passport
-        {
-            wch: 12
-        }, // Birthday
-        {
-            wch: 40
-        }, // Address
-        {
-            wch: 30
-        } // Notes
+        wch: 5
+    }, // No
+    {
+        wch: 12
+    }, // ID
+    {
+        wch: 35
+    }, // Full Name
+    {
+        wch: 15
+    }, // Phone 1
+    {
+        wch: 15
+    }, // Phone 2
+    {
+        wch: 25
+    }, // Email
+    {
+        wch: 20
+    }, // Level
+    {
+        wch: 15
+    }, // Tariff
+    {
+        wch: 30
+    }, // University 1
+    {
+        wch: 30
+    }, // University 2
+    {
+        wch: 18
+    }, // Language Certificate
+    {
+        wch: 8
+    }, // Score
+    {
+        wch: 12
+    }, // Passport
+    {
+        wch: 12
+    }, // Birthday
+    {
+        wch: 40
+    }, // Address
+    {
+        wch: 30
+    } // Notes
     ];
 
     // Generate filename with date and filter info
@@ -1355,29 +1355,29 @@ function downloadPaymentHistoryAsExcel() {
 
     // Set column widths
     ws['!cols'] = [{
-            wch: 5
-        }, // No
-        {
-            wch: 18
-        }, // Date & Time
-        {
-            wch: 12
-        }, // Student ID
-        {
-            wch: 30
-        }, // Student Name
-        {
-            wch: 18
-        }, // Amount
-        {
-            wch: 15
-        }, // Payment Method
-        {
-            wch: 15
-        }, // Received By
-        {
-            wch: 35
-        } // Notes
+        wch: 5
+    }, // No
+    {
+        wch: 18
+    }, // Date & Time
+    {
+        wch: 12
+    }, // Student ID
+    {
+        wch: 30
+    }, // Student Name
+    {
+        wch: 18
+    }, // Amount
+    {
+        wch: 15
+    }, // Payment Method
+    {
+        wch: 15
+    }, // Received By
+    {
+        wch: 35
+    } // Notes
     ];
 
     // Generate filename with date
@@ -2025,6 +2025,7 @@ window.universitiesData = [];
 
 // Pending delete state for settings confirmation
 let pendingSettingsDelete = null;
+let isDeleting = false; // Flag to prevent multiple simultaneous deletes
 
 // ==========================================
 // THEME TOGGLE FUNCTIONS
@@ -2577,6 +2578,14 @@ function confirmDeleteUniversity(universityId) {
 function executeSettingsDelete() {
     if (!pendingSettingsDelete) return;
 
+    // 🛡️ PROTECTION: Prevent multiple simultaneous deletes
+    if (isDeleting) {
+        console.warn('⚠️ Delete operation already in progress, please wait...');
+        return;
+    }
+
+    isDeleting = true;
+
     const {
         type,
         id
@@ -2614,6 +2623,11 @@ function executeSettingsDelete() {
 
     const modal = bootstrap.Modal.getInstance(document.getElementById('confirmSettingsDeleteModal'));
     if (modal) modal.hide();
+
+    // Reset deletion flag after a short delay to allow Firestore operation to complete
+    setTimeout(() => {
+        isDeleting = false;
+    }, 1000);
 }
 
 // ==========================================
@@ -4073,7 +4087,7 @@ async function checkSingleStudentVisa(studentId) {
             }
 
             // Find the card element
-            const cardElement = document.querySelector(`.visa-tracker-card [onclick*="recheckStudentVisa('${studentId}')"]`) ?.closest('.visa-tracker-card');
+            const cardElement = document.querySelector(`.visa-tracker-card [onclick*="recheckStudentVisa('${studentId}')"]`)?.closest('.visa-tracker-card');
             if (cardElement) {
                 // Store pending data on the card
                 cardElement.dataset.pendingMove = 'true';
@@ -4148,7 +4162,7 @@ async function checkSingleStudentVisa(studentId) {
 
                 // Wait for render, then add move button
                 setTimeout(() => {
-                    const cardElement = document.querySelector(`.visa-tracker-card [onclick*="recheckStudentVisa('${studentId}')"]`) ?.closest('.visa-tracker-card');
+                    const cardElement = document.querySelector(`.visa-tracker-card [onclick*="recheckStudentVisa('${studentId}')"]`)?.closest('.visa-tracker-card');
                     if (cardElement) {
                         // Determine target tab
                         let targetTab = '';
@@ -4612,27 +4626,27 @@ async function fetchVisaStatus(student) {
 
     // Multiple CORS proxy options - will try each one in order
     const CORS_PROXIES = [{
-            name: 'allorigins',
-            url: 'https://api.allorigins.win/raw?url=',
-            headers: {}
-        },
-        {
-            name: 'corsproxy.io',
-            url: 'https://corsproxy.io/?',
-            headers: {}
-        },
-        {
-            name: 'cors-proxy.org',
-            url: 'https://cors-proxy.org/',
-            headers: {}
-        },
-        {
-            name: 'cors-anywhere-alt',
-            url: 'https://proxy.cors.sh/',
-            headers: {
-                'x-cors-api-key': 'temp_' + Date.now()
-            }
+        name: 'allorigins',
+        url: 'https://api.allorigins.win/raw?url=',
+        headers: {}
+    },
+    {
+        name: 'corsproxy.io',
+        url: 'https://corsproxy.io/?',
+        headers: {}
+    },
+    {
+        name: 'cors-proxy.org',
+        url: 'https://cors-proxy.org/',
+        headers: {}
+    },
+    {
+        name: 'cors-anywhere-alt',
+        url: 'https://proxy.cors.sh/',
+        headers: {
+            'x-cors-api-key': 'temp_' + Date.now()
         }
+    }
     ];
 
     let lastError = null;

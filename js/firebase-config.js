@@ -601,42 +601,42 @@ async function deletePaymentFromFirestore(paymentFirestoreId, amount, studentFir
 
 // Default data to seed Firestore if empty
 const defaultTariffs = [{
-        name: 'STANDART',
-        price: 13000000
-    },
-    {
-        name: 'PREMIUM',
-        price: 32500000
-    },
-    {
-        name: 'VISA PLUS',
-        price: 65000000
-    },
-    {
-        name: 'E-VISA',
-        price: 2000000
-    },
-    {
-        name: 'REGIONAL VISA',
-        price: 2000000
-    }
+    name: 'STANDART',
+    price: 13000000
+},
+{
+    name: 'PREMIUM',
+    price: 32500000
+},
+{
+    name: 'VISA PLUS',
+    price: 65000000
+},
+{
+    name: 'E-VISA',
+    price: 2000000
+},
+{
+    name: 'REGIONAL VISA',
+    price: 2000000
+}
 ];
 
 const defaultLevels = [{
-        name: 'COLLEGE'
-    },
-    {
-        name: 'BACHELOR'
-    },
-    {
-        name: 'MASTERS'
-    },
-    {
-        name: 'MASTER NO CERTIFICATE'
-    },
-    {
-        name: 'LANGUAGE COURSE'
-    }
+    name: 'COLLEGE'
+},
+{
+    name: 'BACHELOR'
+},
+{
+    name: 'MASTERS'
+},
+{
+    name: 'MASTER NO CERTIFICATE'
+},
+{
+    name: 'LANGUAGE COURSE'
+}
 ];
 
 // ==========================================
@@ -651,6 +651,17 @@ async function saveTariffToFirestore(tariffData) {
     }
 
     try {
+        // ✨ DUPLICATE PREVENTION: Check if tariff with same name already exists
+        const existingTariffs = await db.collection('tariffs')
+            .where('name', '==', tariffData.name)
+            .get();
+
+        if (!existingTariffs.empty) {
+            console.warn('⚠️ Tariff with this name already exists');
+            showNotification(`Tariff "${tariffData.name}" already exists!`, 'error');
+            return;
+        }
+
         tariffData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
         const docRef = await db.collection('tariffs').add(tariffData);
         console.log('✅ Tariff saved with ID:', docRef.id);
@@ -748,6 +759,17 @@ async function saveLevelToFirestore(levelData) {
     }
 
     try {
+        // ✨ DUPLICATE PREVENTION: Check if level with same name already exists
+        const existingLevels = await db.collection('levels')
+            .where('name', '==', levelData.name)
+            .get();
+
+        if (!existingLevels.empty) {
+            console.warn('⚠️ Education level with this name already exists');
+            showNotification(`Education level "${levelData.name}" already exists!`, 'error');
+            return;
+        }
+
         levelData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
         const docRef = await db.collection('levels').add(levelData);
         console.log('✅ Level saved with ID:', docRef.id);
@@ -860,6 +882,18 @@ async function saveUniversityToFirestore(universityData) {
     }
 
     try {
+        // ✨ DUPLICATE PREVENTION: Check if university with same name and level already exists
+        const existingUniversities = await db.collection('universities')
+            .where('name', '==', universityData.name)
+            .where('levelId', '==', universityData.levelId)
+            .get();
+
+        if (!existingUniversities.empty) {
+            console.warn('⚠️ University with this name and level already exists');
+            showNotification(`University "${universityData.name}" already exists for this education level!`, 'error');
+            return;
+        }
+
         universityData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
         const docRef = await db.collection('universities').add(universityData);
         console.log('✅ University saved with ID:', docRef.id);
@@ -954,6 +988,17 @@ async function saveGroupToFirestore(groupData) {
     }
 
     try {
+        // ✨ DUPLICATE PREVENTION: Check if group with same name already exists
+        const existingGroups = await db.collection('groups')
+            .where('name', '==', groupData.name)
+            .get();
+
+        if (!existingGroups.empty) {
+            console.warn('⚠️ Group with this name already exists');
+            showNotification(`Group "${groupData.name}" already exists!`, 'error');
+            return;
+        }
+
         groupData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
         const docRef = await db.collection('groups').add(groupData);
         console.log('✅ Group saved with ID:', docRef.id);
@@ -1484,13 +1529,13 @@ window.deleteNotificationFromFirestore = deleteNotificationFromFirestore;
 
 // Default videos to seed Firestore if empty
 const defaultVideos = [{
-        name: "NIKOH HOLATI MA'LUMOTNOMASINI OLISH",
-        url: "https://youtube.com/shorts/yjl4f1BVgEE?si=Vexz6TbX_aXiVfsA"
-    },
-    {
-        name: "OTA-ONA DAROMADINI MA'LUMOTNOMASINI OLISH",
-        url: "https://youtu.be/ViKiiLUPq1g?si=ge0ZEZmTYGDSgD0W"
-    }
+    name: "NIKOH HOLATI MA'LUMOTNOMASINI OLISH",
+    url: "https://youtube.com/shorts/yjl4f1BVgEE?si=Vexz6TbX_aXiVfsA"
+},
+{
+    name: "OTA-ONA DAROMADINI MA'LUMOTNOMASINI OLISH",
+    url: "https://youtu.be/ViKiiLUPq1g?si=ge0ZEZmTYGDSgD0W"
+}
 ];
 
 async function saveVideoToFirestore(videoData) {
