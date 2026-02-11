@@ -666,6 +666,7 @@ async function saveTariffToFirestore(tariffData) {
         const docRef = await db.collection('tariffs').add(tariffData);
         console.log('✅ Tariff saved with ID:', docRef.id);
         showNotification('Tariff saved successfully!', 'success');
+        await loadTariffsFromFirestore();
     } catch (error) {
         console.error('❌ Error saving tariff:', error);
         showNotification('Error saving tariff: ' + error.message, 'error');
@@ -684,40 +685,40 @@ async function loadTariffsFromFirestore() {
         return;
     }
 
-    db.collection('tariffs')
-        .orderBy('name')
-        .onSnapshot(async (snapshot) => {
-            window.tariffsData = [];
+    try {
+        const snapshot = await db.collection('tariffs').orderBy('name').get();
+        window.tariffsData = [];
 
-            // If empty, seed with default data
-            if (snapshot.empty) {
-                console.log('📦 Seeding tariffs collection with defaults...');
-                for (const tariff of defaultTariffs) {
-                    await db.collection('tariffs').add({
-                        ...tariff,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                }
-                return; // onSnapshot will fire again after seeding
-            }
-
-            snapshot.forEach((doc) => {
-                window.tariffsData.push({
-                    firestoreId: doc.id,
-                    ...doc.data()
+        // If empty, seed with default data
+        if (snapshot.empty) {
+            console.log('📦 Seeding tariffs collection with defaults...');
+            for (const tariff of defaultTariffs) {
+                await db.collection('tariffs').add({
+                    ...tariff,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
+            }
+            // Reload after seeding
+            return loadTariffsFromFirestore();
+        }
+
+        snapshot.forEach((doc) => {
+            window.tariffsData.push({
+                firestoreId: doc.id,
+                ...doc.data()
             });
-
-            // Remove duplicates by firestoreId
-            window.tariffsData = Array.from(new Map(window.tariffsData.map(t => [t.firestoreId, t])).values());
-
-            console.log(`✅ Loaded ${window.tariffsData.length} tariffs from Firestore`);
-
-            if (typeof renderTariffsList === 'function') renderTariffsList();
-            if (typeof updateTariffDropdowns === 'function') updateTariffDropdowns();
-        }, (error) => {
-            console.error('❌ Error loading tariffs:', error);
         });
+
+        // Remove duplicates by firestoreId
+        window.tariffsData = Array.from(new Map(window.tariffsData.map(t => [t.firestoreId, t])).values());
+
+        console.log(`✅ Loaded ${window.tariffsData.length} tariffs from Firestore`);
+
+        if (typeof renderTariffsList === 'function') renderTariffsList();
+        if (typeof updateTariffDropdowns === 'function') updateTariffDropdowns();
+    } catch (error) {
+        console.error('❌ Error loading tariffs:', error);
+    }
 }
 
 async function updateTariffInFirestore(firestoreId, updatedData) {
@@ -728,6 +729,7 @@ async function updateTariffInFirestore(firestoreId, updatedData) {
         await db.collection('tariffs').doc(firestoreId).update(updatedData);
         console.log('✅ Tariff updated');
         showNotification('Tariff updated successfully!', 'success');
+        await loadTariffsFromFirestore();
     } catch (error) {
         console.error('❌ Error updating tariff:', error);
         showNotification('Error updating tariff: ' + error.message, 'error');
@@ -741,6 +743,7 @@ async function deleteTariffFromFirestore(firestoreId) {
         await db.collection('tariffs').doc(firestoreId).delete();
         console.log('✅ Tariff deleted');
         showNotification('Tariff deleted successfully!', 'success');
+        await loadTariffsFromFirestore();
     } catch (error) {
         console.error('❌ Error deleting tariff:', error);
         showNotification('Error deleting tariff: ' + error.message, 'error');
@@ -774,6 +777,7 @@ async function saveLevelToFirestore(levelData) {
         const docRef = await db.collection('levels').add(levelData);
         console.log('✅ Level saved with ID:', docRef.id);
         showNotification('Education level saved successfully!', 'success');
+        await loadLevelsFromFirestore();
     } catch (error) {
         console.error('❌ Error saving level:', error);
         showNotification('Error saving level: ' + error.message, 'error');
@@ -792,40 +796,40 @@ async function loadLevelsFromFirestore() {
         return;
     }
 
-    db.collection('levels')
-        .orderBy('name')
-        .onSnapshot(async (snapshot) => {
-            window.levelsData = [];
+    try {
+        const snapshot = await db.collection('levels').orderBy('name').get();
+        window.levelsData = [];
 
-            // If empty, seed with default data
-            if (snapshot.empty) {
-                console.log('📦 Seeding levels collection with defaults...');
-                for (const level of defaultLevels) {
-                    await db.collection('levels').add({
-                        ...level,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                }
-                return;
-            }
-
-            snapshot.forEach((doc) => {
-                window.levelsData.push({
-                    firestoreId: doc.id,
-                    ...doc.data()
+        // If empty, seed with default data
+        if (snapshot.empty) {
+            console.log('📦 Seeding levels collection with defaults...');
+            for (const level of defaultLevels) {
+                await db.collection('levels').add({
+                    ...level,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
+            }
+            // Reload after seeding
+            return loadLevelsFromFirestore();
+        }
+
+        snapshot.forEach((doc) => {
+            window.levelsData.push({
+                firestoreId: doc.id,
+                ...doc.data()
             });
-
-            // Remove duplicates by firestoreId
-            window.levelsData = Array.from(new Map(window.levelsData.map(l => [l.firestoreId, l])).values());
-
-            console.log(`✅ Loaded ${window.levelsData.length} levels from Firestore`);
-
-            if (typeof renderLevelsList === 'function') renderLevelsList();
-            if (typeof updateLevelDropdowns === 'function') updateLevelDropdowns();
-        }, (error) => {
-            console.error('❌ Error loading levels:', error);
         });
+
+        // Remove duplicates by firestoreId
+        window.levelsData = Array.from(new Map(window.levelsData.map(l => [l.firestoreId, l])).values());
+
+        console.log(`✅ Loaded ${window.levelsData.length} levels from Firestore`);
+
+        if (typeof renderLevelsList === 'function') renderLevelsList();
+        if (typeof updateLevelDropdowns === 'function') updateLevelDropdowns();
+    } catch (error) {
+        console.error('❌ Error loading levels:', error);
+    }
 }
 
 async function updateLevelInFirestore(firestoreId, updatedData) {
@@ -836,6 +840,7 @@ async function updateLevelInFirestore(firestoreId, updatedData) {
         await db.collection('levels').doc(firestoreId).update(updatedData);
         console.log('✅ Level updated');
         showNotification('Education level updated successfully!', 'success');
+        await loadLevelsFromFirestore();
     } catch (error) {
         console.error('❌ Error updating level:', error);
         showNotification('Error updating level: ' + error.message, 'error');
@@ -864,6 +869,8 @@ async function deleteLevelFromFirestore(firestoreId) {
         }
 
         showNotification('Education level deleted successfully!', 'success');
+        await loadLevelsFromFirestore();
+        await loadUniversitiesFromFirestore();
     } catch (error) {
         console.error('❌ Error deleting level:', error);
         showNotification('Error deleting level: ' + error.message, 'error');
@@ -898,6 +905,7 @@ async function saveUniversityToFirestore(universityData) {
         const docRef = await db.collection('universities').add(universityData);
         console.log('✅ University saved with ID:', docRef.id);
         showNotification('University saved successfully!', 'success');
+        await loadUniversitiesFromFirestore();
     } catch (error) {
         console.error('❌ Error saving university:', error);
         showNotification('Error saving university: ' + error.message, 'error');
@@ -912,41 +920,41 @@ async function loadUniversitiesFromFirestore() {
         return;
     }
 
-    // Don't use orderBy so we can load ALL documents including those with missing levelName
-    db.collection('universities')
-        .onSnapshot((snapshot) => {
-            window.universitiesData = [];
+    try {
+        // Don't use orderBy so we can load ALL documents including those with missing levelName
+        const snapshot = await db.collection('universities').get();
+        window.universitiesData = [];
 
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                window.universitiesData.push({
-                    firestoreId: doc.id,
-                    name: data.name || '',
-                    levelId: data.levelId || '',
-                    // Support both 'levelName' and 'level' field names for backwards compatibility
-                    levelName: data.levelName || data.level || 'Unknown Level',
-                    ...data
-                });
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            window.universitiesData.push({
+                firestoreId: doc.id,
+                name: data.name || '',
+                levelId: data.levelId || '',
+                // Support both 'levelName' and 'level' field names for backwards compatibility
+                levelName: data.levelName || data.level || 'Unknown Level',
+                ...data
             });
-
-            // Remove duplicates by firestoreId
-            window.universitiesData = Array.from(new Map(window.universitiesData.map(u => [u.firestoreId, u])).values());
-
-            // Sort by levelName client-side
-            window.universitiesData.sort((a, b) => (a.levelName || '').localeCompare(b.levelName || ''));
-
-            console.log(`✅ Loaded ${window.universitiesData.length} universities from Firestore`);
-
-            if (typeof renderUniversitiesList === 'function') renderUniversitiesList();
-
-            // Refresh university dropdowns if a level is already selected
-            const levelSelect = document.getElementById('levelSelect');
-            if (levelSelect && levelSelect.value && typeof updateUniversityDropdowns === 'function') {
-                updateUniversityDropdowns(levelSelect.value);
-            }
-        }, (error) => {
-            console.error('❌ Error loading universities:', error);
         });
+
+        // Remove duplicates by firestoreId
+        window.universitiesData = Array.from(new Map(window.universitiesData.map(u => [u.firestoreId, u])).values());
+
+        // Sort by levelName client-side
+        window.universitiesData.sort((a, b) => (a.levelName || '').localeCompare(b.levelName || ''));
+
+        console.log(`✅ Loaded ${window.universitiesData.length} universities from Firestore`);
+
+        if (typeof renderUniversitiesList === 'function') renderUniversitiesList();
+
+        // Refresh university dropdowns if a level is already selected
+        const levelSelect = document.getElementById('levelSelect');
+        if (levelSelect && levelSelect.value && typeof updateUniversityDropdowns === 'function') {
+            updateUniversityDropdowns(levelSelect.value);
+        }
+    } catch (error) {
+        console.error('❌ Error loading universities:', error);
+    }
 }
 
 async function updateUniversityInFirestore(firestoreId, updatedData) {
@@ -957,6 +965,7 @@ async function updateUniversityInFirestore(firestoreId, updatedData) {
         await db.collection('universities').doc(firestoreId).update(updatedData);
         console.log('✅ University updated');
         showNotification('University updated successfully!', 'success');
+        await loadUniversitiesFromFirestore();
     } catch (error) {
         console.error('❌ Error updating university:', error);
         showNotification('Error updating university: ' + error.message, 'error');
@@ -970,6 +979,7 @@ async function deleteUniversityFromFirestore(firestoreId) {
         await db.collection('universities').doc(firestoreId).delete();
         console.log('✅ University deleted');
         showNotification('University deleted successfully!', 'success');
+        await loadUniversitiesFromFirestore();
     } catch (error) {
         console.error('❌ Error deleting university:', error);
         showNotification('Error deleting university: ' + error.message, 'error');
@@ -1003,6 +1013,7 @@ async function saveGroupToFirestore(groupData) {
         const docRef = await db.collection('groups').add(groupData);
         console.log('✅ Group saved with ID:', docRef.id);
         showNotification('Group saved successfully!', 'success');
+        await loadGroupsFromFirestore();
     } catch (error) {
         console.error('❌ Error saving group:', error);
         showNotification('Error saving group: ' + error.message, 'error');
@@ -1018,28 +1029,27 @@ async function loadGroupsFromFirestore() {
         return;
     }
 
-    db.collection('groups')
-        .orderBy('name')
-        .onSnapshot((snapshot) => {
-            window.groupsData = [];
+    try {
+        const snapshot = await db.collection('groups').orderBy('name').get();
+        window.groupsData = [];
 
-            snapshot.forEach((doc) => {
-                window.groupsData.push({
-                    firestoreId: doc.id,
-                    ...doc.data()
-                });
+        snapshot.forEach((doc) => {
+            window.groupsData.push({
+                firestoreId: doc.id,
+                ...doc.data()
             });
-
-            // Remove duplicates by firestoreId
-            window.groupsData = Array.from(new Map(window.groupsData.map(g => [g.firestoreId, g])).values());
-
-            console.log(`✅ Loaded ${window.groupsData.length} groups from Firestore`);
-
-            if (typeof renderGroupsList === 'function') renderGroupsList();
-            if (typeof updateGroupDropdowns === 'function') updateGroupDropdowns();
-        }, (error) => {
-            console.error('❌ Error loading groups:', error);
         });
+
+        // Remove duplicates by firestoreId
+        window.groupsData = Array.from(new Map(window.groupsData.map(g => [g.firestoreId, g])).values());
+
+        console.log(`✅ Loaded ${window.groupsData.length} groups from Firestore`);
+
+        if (typeof renderGroupsList === 'function') renderGroupsList();
+        if (typeof updateGroupDropdowns === 'function') updateGroupDropdowns();
+    } catch (error) {
+        console.error('❌ Error loading groups:', error);
+    }
 }
 
 async function updateGroupInFirestore(firestoreId, updatedData) {
@@ -1050,6 +1060,7 @@ async function updateGroupInFirestore(firestoreId, updatedData) {
         await db.collection('groups').doc(firestoreId).update(updatedData);
         console.log('✅ Group updated');
         showNotification('Group updated successfully!', 'success');
+        await loadGroupsFromFirestore();
     } catch (error) {
         console.error('❌ Error updating group:', error);
         showNotification('Error updating group: ' + error.message, 'error');
@@ -1063,6 +1074,7 @@ async function deleteGroupFromFirestore(firestoreId) {
         await db.collection('groups').doc(firestoreId).delete();
         console.log('✅ Group deleted');
         showNotification('Group deleted successfully!', 'success');
+        await loadGroupsFromFirestore();
     } catch (error) {
         console.error('❌ Error deleting group:', error);
         showNotification('Error deleting group: ' + error.message, 'error');
@@ -1550,6 +1562,7 @@ async function saveVideoToFirestore(videoData) {
         const docRef = await db.collection('videos').add(videoData);
         console.log('✅ Video saved with ID:', docRef.id);
         showNotification('Video saved successfully!', 'success');
+        await loadVideosFromFirestore();
     } catch (error) {
         console.error('❌ Error saving video:', error);
         showNotification('Error saving video: ' + error.message, 'error');
@@ -1567,39 +1580,39 @@ async function loadVideosFromFirestore() {
         return;
     }
 
-    db.collection('videos')
-        .orderBy('createdAt', 'asc')
-        .onSnapshot(async (snapshot) => {
-            window.videosData = [];
+    try {
+        const snapshot = await db.collection('videos').orderBy('createdAt', 'asc').get();
+        window.videosData = [];
 
-            // If empty, seed with default data
-            if (snapshot.empty) {
-                console.log('📦 Seeding videos collection with defaults...');
-                for (const video of defaultVideos) {
-                    await db.collection('videos').add({
-                        ...video,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                }
-                return; // onSnapshot will fire again after seeding
-            }
-
-            snapshot.forEach((doc) => {
-                window.videosData.push({
-                    firestoreId: doc.id,
-                    ...doc.data()
+        // If empty, seed with default data
+        if (snapshot.empty) {
+            console.log('📦 Seeding videos collection with defaults...');
+            for (const video of defaultVideos) {
+                await db.collection('videos').add({
+                    ...video,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
+            }
+            // Reload after seeding
+            return loadVideosFromFirestore();
+        }
+
+        snapshot.forEach((doc) => {
+            window.videosData.push({
+                firestoreId: doc.id,
+                ...doc.data()
             });
-
-            // Remove duplicates by firestoreId
-            window.videosData = Array.from(new Map(window.videosData.map(v => [v.firestoreId, v])).values());
-
-            console.log(`✅ Loaded ${window.videosData.length} videos from Firestore`);
-
-            if (typeof renderVideosList === 'function') renderVideosList();
-        }, (error) => {
-            console.error('❌ Error loading videos:', error);
         });
+
+        // Remove duplicates by firestoreId
+        window.videosData = Array.from(new Map(window.videosData.map(v => [v.firestoreId, v])).values());
+
+        console.log(`✅ Loaded ${window.videosData.length} videos from Firestore`);
+
+        if (typeof renderVideosList === 'function') renderVideosList();
+    } catch (error) {
+        console.error('❌ Error loading videos:', error);
+    }
 }
 
 async function updateVideoInFirestore(firestoreId, updatedData) {
@@ -1610,6 +1623,7 @@ async function updateVideoInFirestore(firestoreId, updatedData) {
         await db.collection('videos').doc(firestoreId).update(updatedData);
         console.log('✅ Video updated');
         showNotification('Video updated successfully!', 'success');
+        await loadVideosFromFirestore();
     } catch (error) {
         console.error('❌ Error updating video:', error);
         showNotification('Error updating video: ' + error.message, 'error');
@@ -1623,6 +1637,7 @@ async function deleteVideoFromFirestore(firestoreId) {
         await db.collection('videos').doc(firestoreId).delete();
         console.log('✅ Video deleted');
         showNotification('Video deleted successfully!', 'success');
+        await loadVideosFromFirestore();
     } catch (error) {
         console.error('❌ Error deleting video:', error);
         showNotification('Error deleting video: ' + error.message, 'error');

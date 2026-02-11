@@ -184,23 +184,18 @@ const uniData = new Proxy({}, {
     }
 });
 
-// Tariff Mapping
-const tariffValues = {
-    'STANDART': '13,000,000 UZS',
-    'PREMIUM': '32,500,000 UZS',
-    'VISA PLUS': '65,000,000 UZS',
-    'E-VISA': '2,000,000 UZS',
-    'REGIONAL VISA': '2,000,000 UZS'
-};
+// Dynamic Tariff Price Lookup from Firestore
+function getTariffPrice(tariffName) {
+    const tariff = (window.tariffsData || []).find(t => t.name === tariffName);
+    return tariff ? (tariff.price || 0) : 0;
+}
 
-// Tariff Amounts (numeric values for balance calculation)
-const tariffAmounts = {
-    'STANDART': 13000000,
-    'PREMIUM': 32500000,
-    'VISA PLUS': 65000000,
-    'E-VISA': 2000000,
-    'REGIONAL VISA': 2000000
-};
+// Dynamic Tariff Display Value (formatted string)
+function getTariffDisplayValue(tariffName) {
+    const price = getTariffPrice(tariffName);
+    if (!price) return '0 UZS';
+    return price.toLocaleString('en-US') + ' UZS';
+}
 
 function showTab(tabName) {
     document.getElementById('students-tab').style.display = 'none';
@@ -243,7 +238,7 @@ function saveStudent() {
     const tariff = document.getElementById('tariff').value;
 
     // Calculate initial balance (negative of tariff amount = what student owes)
-    const initialBalance = tariff && tariffAmounts[tariff] ? -tariffAmounts[tariff] : 0;
+    const initialBalance = tariff ? -getTariffPrice(tariff) : 0;
 
     const studentData = {
         id: document.getElementById('studentId').value.trim(),
@@ -1076,10 +1071,17 @@ document.addEventListener('DOMContentLoaded', function () {
         renderStudents();
     }
 
-    // Search input listener
+    // Debounce utility for search input
+    let searchDebounceTimer = null;
+    function debouncedApplyFilters() {
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => applyFilters(), 300);
+    }
+
+    // Search input listener (debounced)
     const search = document.getElementById('searchInput');
     if (search) {
-        search.addEventListener('input', applyFilters);
+        search.addEventListener('input', debouncedApplyFilters);
     }
 
     // Tariff filter listener
@@ -2916,7 +2918,8 @@ window.populateStudentDropdown = populateStudentDropdown;
 window.selectStudentForPayment = selectStudentForPayment;
 window.addQuickNote = addQuickNote;
 window.submitPayment = submitPayment;
-window.tariffAmounts = tariffAmounts;
+window.getTariffPrice = getTariffPrice;
+window.getTariffDisplayValue = getTariffDisplayValue;
 window.downloadPaymentHistoryAsExcel = downloadPaymentHistoryAsExcel;
 window.editPayment = editPayment;
 window.savePaymentEdit = savePaymentEdit;

@@ -3353,8 +3353,8 @@ body {
     position: relative;
 }
 
-.visa-student-check-card .check-btn.checking-animation > *,
-.visa-action-btn.checking-animation > * {
+.visa-student-check-card .check-btn.checking-animation>*,
+.visa-action-btn.checking-animation>* {
     visibility: hidden;
 }
 
@@ -3382,7 +3382,9 @@ body {
 }
 
 @keyframes spinner-rotate {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* UNKNOWN status badge */
@@ -3559,13 +3561,16 @@ body {
 }
 
 @keyframes blink-orange {
-    0%, 100% { 
-        opacity: 1; 
+
+    0%,
+    100% {
+        opacity: 1;
         box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4);
         transform: scale(1);
     }
-    50% { 
-        opacity: 0.85; 
+
+    50% {
+        opacity: 0.85;
         box-shadow: 0 0 10px 3px rgba(234, 179, 8, 0.5);
         transform: scale(1.02);
     }
@@ -3914,23 +3919,26 @@ body {
 }
 
 /* Color thematic accents */
-.accordion-item-info { 
-    border-left: 4px solid #0dcaf0 !important; 
+.accordion-item-info {
+    border-left: 4px solid #0dcaf0 !important;
 }
+
 .accordion-item-info.active {
     background: rgba(13, 202, 240, 0.03);
 }
 
-.accordion-item-majors { 
-    border-left: 4px solid #0d6efd !important; 
+.accordion-item-majors {
+    border-left: 4px solid #0d6efd !important;
 }
+
 .accordion-item-majors.active {
     background: rgba(13, 110, 253, 0.03);
 }
 
-.accordion-item-scholarships { 
-    border-left: 4px solid #198754 !important; 
+.accordion-item-scholarships {
+    border-left: 4px solid #198754 !important;
 }
+
 .accordion-item-scholarships.active {
     background: rgba(25, 135, 84, 0.03);
 }
