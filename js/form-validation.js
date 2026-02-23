@@ -147,18 +147,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 {
                     id: 'fullName',
                     name: 'Full Name'
-                },
-                {
-                    id: 'phone1',
-                    name: 'Phone 1'
-                },
-                {
-                    id: 'levelSelect',
-                    name: 'Education Level'
-                },
-                {
-                    id: 'tariff',
-                    name: 'Tariff'
                 }
             ];
 
