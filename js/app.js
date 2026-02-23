@@ -261,9 +261,9 @@ function saveStudent() {
         createdAt: new Date().toISOString()
     };
 
-    // Validate required fields
-    if (!studentData.id || !studentData.fullName || !studentData.phone1 || !studentData.level || !studentData.tariff) {
-        showNotification('Please fill in all required fields!', 'error');
+    // Validate required fields (only Student ID and Full Name are required)
+    if (!studentData.id || !studentData.fullName) {
+        showNotification('Please fill in Student ID and Full Name!', 'error');
         return;
     }
 
