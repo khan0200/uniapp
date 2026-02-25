@@ -1595,29 +1595,50 @@ function renderPaymentHistory(filteredData = null) {
         }) : 'Unknown';
 
         const studentInfo = p.studentId && p.studentName ?
-            `<span class="payment-badge payment-student-info">${p.studentId} - ${p.studentName}</span>` :
-            '';
+            `<span class="payment-amount flex-grow-1 text-truncate pe-2" style="font-size: 0.95rem; color: var(--text-primary);" title="${p.studentId} - ${p.studentName}">${p.studentId} - ${p.studentName}</span>` :
+            `<span class="payment-amount flex-grow-1 text-truncate pe-2" style="font-size: 0.95rem; color: var(--text-secondary);">General Payment</span>`;
 
         // Check if amount is negative (withdrawal)
         const amount = parseFloat(p.amount) || 0;
         const isWithdrawal = amount < 0;
         const amountPrefix = isWithdrawal ? '-' : '+';
-        const amountClass = isWithdrawal ? 'text-danger' : 'text-success';
         const displayAmount = formatAmount(Math.abs(amount));
+        const amountBg = isWithdrawal ? 'rgba(245, 101, 101, 0.15)' : 'rgba(72, 187, 120, 0.15)';
+        const amountColor = isWithdrawal ? '#f56565' : '#48bb78';
+        const amountBorder = isWithdrawal ? 'rgba(245, 101, 101, 0.3)' : 'rgba(72, 187, 120, 0.3)';
+        const amountBadge = `<span class="payment-badge" style="background: ${amountBg}; color: ${amountColor}; border-color: ${amountBorder}; font-weight: 700;">${amountPrefix}${displayAmount} UZS</span>`;
+
+        let notesHtml = '';
+        if (p.notes) {
+            let noteBg = 'var(--bg-elevated)';
+            let noteColor = 'var(--text-secondary)';
+            let noteBorder = 'var(--border-subtle)';
+
+            if (p.notes.toUpperCase().includes('DISCOUNT')) {
+                noteBg = 'rgba(157, 123, 234, 0.15)';
+                noteColor = 'var(--accent-purple)';
+                noteBorder = 'rgba(157, 123, 234, 0.3)';
+            } else if (p.notes.toLowerCase().includes('shartnoma')) {
+                noteBg = 'rgba(91, 141, 239, 0.15)';
+                noteColor = 'var(--accent-blue)';
+                noteBorder = 'rgba(91, 141, 239, 0.3)';
+            }
+            notesHtml = `<div class="mt-2 text-start"><span class="badge rounded-pill" style="background: ${noteBg}; color: ${noteColor}; border: 1px solid ${noteBorder}; font-size: 0.65rem; font-weight: 600; text-transform: uppercase;">${p.notes}</span></div>`;
+        }
 
         return `
         <div class="col-12 col-md-6 col-lg-4">
             <div class="payment-history-card">
                 <div class="payment-header">
-                    <span class="payment-amount ${amountClass}">${amountPrefix}${displayAmount} UZS</span>
-                    <span class="payment-timestamp">${timestamp}</span>
+                    ${studentInfo}
+                    <span class="payment-timestamp ms-2" style="white-space: nowrap;">${timestamp}</span>
                 </div>
-                <div class="payment-details">
+                <div class="payment-details mt-1">
+                    ${amountBadge}
                     <span class="payment-badge payment-method">${p.method}</span>
                     <span class="payment-badge payment-receiver">${p.receivedBy}</span>
-                    ${studentInfo}
                 </div>
-                ${p.notes ? `<div class="payment-notes">${p.notes}</div>` : ''}
+                ${notesHtml}
                 <div class="payment-actions mt-2 d-flex gap-3 justify-content-end">
                     <button class="btn btn-link text-primary text-decoration-none p-0 fw-semibold" style="font-size: 0.8rem;" onclick="event.stopPropagation(); editPayment('${p.firestoreId}')">
                         <i class="bi bi-pencil me-1"></i>Edit
@@ -1992,6 +2013,12 @@ function populateWithdrawStudentDropdown() {
 
 // Edit payment - open modal with pre-filled data
 function editPayment(paymentFirestoreId) {
+    const pwd = prompt('Enter password to edit payment:');
+    if (pwd !== '1198') {
+        if (pwd !== null) showNotification('Incorrect password!', 'error');
+        return;
+    }
+
     const payment = window.paymentsData.find(p => p.firestoreId === paymentFirestoreId);
     if (!payment) {
         showNotification('Payment not found!', 'error');
@@ -2062,6 +2089,12 @@ function savePaymentEdit() {
 
 // Delete payment with confirmation
 function deletePayment(paymentFirestoreId) {
+    const pwd = prompt('Enter password to delete payment:');
+    if (pwd !== '1198') {
+        if (pwd !== null) showNotification('Incorrect password!', 'error');
+        return;
+    }
+
     const payment = window.paymentsData.find(p => p.firestoreId === paymentFirestoreId);
     if (!payment) {
         showNotification('Payment not found!', 'error');
