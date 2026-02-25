@@ -36,6 +36,28 @@ if (typeof firebase !== 'undefined') {
 }
 
 // ==========================================
+// TELEGRAM NOTIFICATIONS
+// ==========================================
+
+async function sendTelegramNotification(message) {
+    try {
+        const response = await fetch('/api/notify', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message })
+        });
+
+        if (!response.ok) {
+            console.error('Failed to send Telegram notification');
+        }
+    } catch (error) {
+        console.error('Error sending Telegram notification:', error);
+    }
+}
+
+// ==========================================
 // SAVE STUDENT TO FIRESTORE
 // ==========================================
 
@@ -59,6 +81,11 @@ async function saveStudentToFirestore(studentData) {
         if (typeof showNotification === 'function') {
             showNotification('Student saved successfully!', 'success');
         }
+
+        // Send Telegram Notification
+        const safeName = studentData.fullName ? studentData.fullName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'Unknown';
+        const notifMsg = `🆕 <b>New Registration!</b>\n\n👤 <b>Name:</b> ${safeName}\n🆔 <b>ID:</b> ${studentData.id || '-'}\n📱 <b>Phone:</b> ${studentData.phone1 || '-'}\n📚 <b>Tariff:</b> ${studentData.tariff || 'None'}`;
+        sendTelegramNotification(notifMsg);
 
         // Close modal and reset form
         const modal = bootstrap.Modal.getInstance(document.getElementById('addStudentModal'));
@@ -146,6 +173,11 @@ async function updateStudentInFirestore(firestoreId, updatedData) {
         if (typeof showNotification === 'function') {
             showNotification('Student updated successfully!', 'success');
         }
+
+        // Send Telegram Notification
+        const safeName = updatedData.fullName ? updatedData.fullName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'Unknown';
+        const notifMsg = `✏️ <b>Profile Updated!</b>\n\n👤 <b>Name:</b> ${safeName}\n🆔 <b>ID:</b> ${updatedData.id || '-'}`;
+        sendTelegramNotification(notifMsg);
     } catch (error) {
         console.error('❌ Error updating student:', error);
         if (typeof showNotification === 'function') {
@@ -262,6 +294,13 @@ async function savePaymentToFirestore(paymentData) {
             const message = paymentData.isWithdrawal ? 'Withdrawal recorded successfully!' : 'Payment recorded successfully!';
             showNotification(message, 'success');
         }
+
+        // Send Telegram Notification
+        const safeName = paymentData.studentName ? paymentData.studentName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'Unknown';
+        const amountFormatted = new Intl.NumberFormat('uz-UZ').format(paymentData.amount) + ' UZS';
+        let actionStr = paymentData.isWithdrawal ? '🟥 <b>Withdrawal</b>' : (paymentData.isDiscount ? '🟨 <b>Discount Added</b>' : '🟩 <b>Payment Received</b>');
+        const notifMsg = `${actionStr}\n\n👤 <b>Student:</b> ${safeName}\n💰 <b>Amount:</b> ${amountFormatted}\n📝 <b>Note:</b> ${paymentData.note || 'None'}`;
+        sendTelegramNotification(notifMsg);
 
         return docRef.id;
     } catch (error) {

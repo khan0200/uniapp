@@ -115,10 +115,11 @@ if (!window.studentsData) {
 let currentStudentId = null;
 
 // Pagination State
-const ITEMS_PER_PAGE = 15;
+const ITEMS_PER_PAGE = 20;
 let studentsPage = 1;
 let paymentStudentsPage = 1;
 let paymentHistoryPage = 1;
+
 
 // Helper: Render Pagination Controls
 function renderPaginationControls(containerId, currentPage, totalItems, limit, onPageChangeName) {
@@ -235,33 +236,28 @@ function showTab(tabName) {
 }
 
 function saveStudent() {
-    const tariff = document.getElementById('tariff').value;
-
-    // Calculate initial balance (negative of tariff amount = what student owes)
-    const initialBalance = tariff ? -getTariffPrice(tariff) : 0;
-
     const studentData = {
         id: document.getElementById('studentId').value.trim(),
         fullName: document.getElementById('fullName').value.trim().toUpperCase(),
-        phone1: document.getElementById('phone1').value.trim(),
-        phone2: '', // Can be added later
-        email: '', // Can be added later
-        birthday: '', // Can be added later
-        passport: '', // Can be added later
-        tariff: tariff,
-        level: document.getElementById('levelSelect').value,
-        languageCertificate: 'NO CERTIFICATE', // Default, can be changed later
-        certificateScore: '', // Can be added later
-        university1: document.getElementById('uni1').value,
-        university2: '', // Can be added later
-        address: document.getElementById('address').value.trim().toUpperCase(),
-        notes: '', // Can be added later
-        balance: initialBalance, // Initial balance = negative tariff (debt)
-        discount: 0, // Initial discount
+        phone1: '',
+        phone2: '',
+        email: '',
+        birthday: '',
+        passport: '',
+        tariff: '',
+        level: '',
+        languageCertificate: 'NO CERTIFICATE',
+        certificateScore: '',
+        university1: '',
+        university2: '',
+        address: '',
+        notes: '',
+        balance: 0,
+        discount: 0,
         createdAt: new Date().toISOString()
     };
 
-    // Validate required fields (only Student ID and Full Name are required)
+    // Validate required fields
     if (!studentData.id || !studentData.fullName) {
         showNotification('Please fill in Student ID and Full Name!', 'error');
         return;
@@ -317,12 +313,12 @@ function viewStudentDetails(uniqueId) {
         .join('');
 
     // Generate tariff options from dynamic data
-    const tariffOptions = (window.tariffsData || [])
+    const tariffOptions = '<option value="">Select Tariff...</option>' + (window.tariffsData || [])
         .map(t => `<option value="${t.name}" ${s.tariff === t.name ? 'selected' : ''}>${t.name}</option>`)
         .join('');
 
     // Generate education level options from dynamic data
-    const levelOptions = (window.levelsData || [])
+    const levelOptions = '<option value="">Select Level...</option>' + (window.levelsData || [])
         .map(l => `<option value="${l.name}" ${s.level === l.name ? 'selected' : ''}>${l.name}</option>`)
         .join('');
 
@@ -376,7 +372,7 @@ function viewStudentDetails(uniqueId) {
                         </div>
                     </div>
                     <div class="edit-field" style="display:none;">
-                        <input type="text" class="form-control ios-input form-control-sm" value="${s.phone1}" id="edit-phone1" placeholder="00-000-00-00">
+                        <input type="text" class="form-control ios-input form-control-sm" value="${s.phone1}" id="edit-phone1" placeholder="00-000-00-00" oninput="formatPhoneInline(this)">
                         <div class="edit-actions"><button class="save-btn" onclick="saveEdit('phone1')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('phone1')"><i class="bi bi-x"></i></button></div>
                     </div>
                 </div>
@@ -392,7 +388,7 @@ function viewStudentDetails(uniqueId) {
                         </div>
                     </div>
                     <div class="edit-field" style="display:none;">
-                        <input type="text" class="form-control ios-input form-control-sm" value="${s.phone2 || ''}" id="edit-phone2" placeholder="00-000-00-00">
+                        <input type="text" class="form-control ios-input form-control-sm" value="${s.phone2 || ''}" id="edit-phone2" placeholder="00-000-00-00" oninput="formatPhoneInline(this)">
                         <div class="edit-actions"><button class="save-btn" onclick="saveEdit('phone2')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('phone2')"><i class="bi bi-x"></i></button></div>
                     </div>
                 </div>
@@ -442,7 +438,7 @@ function viewStudentDetails(uniqueId) {
                         </div>
                     </div>
                     <div class="edit-field" style="display:none;">
-                        <input type="text" class="form-control ios-input form-control-sm" value="${s.passport || ''}" id="edit-passport" placeholder="AA0000000" style="text-transform:uppercase;">
+                        <input type="text" class="form-control ios-input form-control-sm" value="${s.passport || ''}" id="edit-passport" placeholder="AA0000000" style="text-transform:uppercase;" oninput="formatPassportInline(this)">
                         <div class="edit-actions"><button class="save-btn" onclick="saveEdit('passport')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('passport')"><i class="bi bi-x"></i></button></div>
                     </div>
                 </div>
@@ -688,6 +684,26 @@ function saveEdit(field) {
         return;
     }
 
+    // --- RECALCULATE BALANCE WHEN TARIFF CHANGES ---
+    if (field === 'tariff' && s.tariff !== newValue) {
+        let oldPrice = 0;
+        let newPrice = 0;
+
+        if (window.tariffsData) {
+            // Find old tariff price
+            const oldT = window.tariffsData.find(t => t.name === s.tariff);
+            if (oldT) oldPrice = parseFloat(oldT.price) || 0;
+
+            // Find new tariff price
+            const newT = window.tariffsData.find(t => t.name === newValue);
+            if (newT) newPrice = parseFloat(newT.price) || 0;
+        }
+
+        // Balance is negative if student owes money.
+        // Refund old tariff price, then subtract new tariff price to get new exact balance.
+        s.balance = (parseFloat(s.balance) || 0) + oldPrice - newPrice;
+    }
+
     s[field] = newValue;
 
     // Handle certificate score separately
@@ -731,8 +747,28 @@ function saveEdit(field) {
 
     // Refresh the student list
     applyFilters();
-    showNotification('Field updated!', 'success');
 }
+
+// Inline input formatters for Student Details modal
+window.formatPhoneInline = function (input) {
+    let val = input.value.replace(/\D/g, '');
+    let formatted = '';
+    if (val.length > 0) formatted += val.substring(0, 2);
+    if (val.length > 2) formatted += '-' + val.substring(2, 5);
+    if (val.length > 5) formatted += '-' + val.substring(5, 7);
+    if (val.length > 7) formatted += '-' + val.substring(7, 9);
+    input.value = formatted;
+};
+
+window.formatPassportInline = function (input) {
+    let value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (value.length > 0) {
+        let letters = value.substring(0, 2).replace(/[^A-Z]/g, '');
+        let numbers = value.substring(2).replace(/[^0-9]/g, '').substring(0, 7);
+        value = letters + numbers;
+    }
+    input.value = value;
+};
 
 // Toggle Student ID edit mode in modal header
 function toggleIdEdit() {
@@ -1012,53 +1048,80 @@ function applyFilters(resetPage = true) {
         }
     }
 
+    // Sort by numeric ID (F1 < F2 < F3 ... F-last)
+    filtered.sort((a, b) => {
+        const numA = parseInt((a.id || '').replace(/\D+/, ''), 10);
+        const numB = parseInt((b.id || '').replace(/\D+/, ''), 10);
+        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+        return (a.id || '').localeCompare(b.id || '');
+    });
+
     // Pagination Logic
     const totalItems = filtered.length;
     const startIndex = (studentsPage - 1) * ITEMS_PER_PAGE;
     const paginatedData = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-    // Render paginated data
+    // Render empty state
     if (paginatedData.length === 0) {
         renderPaginationControls('studentsPagination', 1, 0, ITEMS_PER_PAGE, 'changeStudentsPage');
-        if (levelFilter === 'DELETED') {
-            container.innerHTML = '<div class="col-12 text-center py-5"><i class="bi bi-trash" style="font-size: 4rem; opacity: 0.3;"></i><p class="text-secondary mt-3">No deleted students.</p></div>';
-        } else {
-            container.innerHTML = '<div class="col-12 text-center py-5"><i class="bi bi-search" style="font-size: 4rem; opacity: 0.3;"></i><p class="text-secondary mt-3">No students match your filters.</p></div>';
+        const tbody = document.getElementById('studentsTableBody');
+        if (tbody) {
+            tbody.innerHTML = levelFilter === 'DELETED'
+                ? '<tr><td colspan="9" class="text-center py-5 text-secondary"><i class="bi bi-trash me-2"></i>No deleted students.</td></tr>'
+                : '<tr><td colspan="9" class="text-center py-5 text-secondary"><i class="bi bi-search me-2"></i>No students match your filters.</td></tr>';
         }
         return;
     }
 
-    container.innerHTML = paginatedData.map((s) => {
-        const uniqueId = s.firestoreId || s.id;
+    // Render table rows
+    const tbody = document.getElementById('studentsTableBody');
+    if (tbody) {
+        tbody.innerHTML = paginatedData.map((s) => {
+            const uniqueId = s.firestoreId || s.id;
+            const importanceColors = { 'GREEN': '#28a745', 'YELLOW': '#ffc107', 'RED': '#dc3545' };
+            const rowColor = s.noteImportance ? importanceColors[s.noteImportance] : null;
+            const rowStyle = rowColor ? `style="border-left: 3px solid ${rowColor};"` : '';
 
-        // Get importance color
-        const importanceColors = {
-            'GREEN': '#28a745',
-            'YELLOW': '#ffc107',
-            'RED': '#dc3545'
-        };
-        const importanceColor = s.noteImportance ? importanceColors[s.noteImportance] : null;
+            const certText = (s.languageCertificate && s.languageCertificate !== 'NO CERTIFICATE')
+                ? `${s.languageCertificate}${s.certificateScore ? ': ' + s.certificateScore : ''}`
+                : '';
 
-        return `
-        <div class="col-12 col-md-6 col-lg-4">
-            <div class="student-card ${s.deleted ? 'deleted-student' : ''}" onclick="viewStudentDetails('${uniqueId}')">
-                ${importanceColor ? `<div class="importance-indicator" style="background: ${importanceColor};"></div>` : ''}
-                <div class="student-card-body">
-                    <div class="student-card-header">
-                        <div class="student-name">${s.deleted ? '<i class="bi bi-trash text-danger me-2"></i>' : ''}${s.fullName}</div>
-                        <span class="student-id-pill">${s.id}</span>
-                    </div>
-                    <div class="student-pills">
-                        <span class="pill pill-tariff"><i class="bi bi-tag-fill"></i> ${s.tariff}</span>
-                        <span class="pill pill-level"><i class="bi bi-mortarboard-fill"></i> ${s.level}</span>
-                        ${s.languageCertificate && s.languageCertificate !== 'NO CERTIFICATE' ? `<span class="pill pill-certificate"><i class="bi bi-award-fill"></i> ${s.languageCertificate}${s.certificateScore ? ': ' + s.certificateScore : ''}</span>` : ''}
-                    </div>
-                    ${s.university1 ? `<div class="student-university"><i class="bi bi-building"></i> ${s.university1}</div>` : ''}
-                </div>
-            </div>
-        </div>
-    `
-    }).join('');
+            return `
+            <tr class="student-table-row ${s.deleted ? 'deleted-row' : ''}" ${rowStyle}
+                onclick="viewStudentDetails('${uniqueId}')">
+
+                <!-- ID -->
+                <td><span class="table-id-badge">${s.id}</span></td>
+
+                <!-- Full Name + Tariff ghost -->
+                <td class="student-name-cell">
+                    ${s.deleted ? '<i class="bi bi-trash text-danger me-1" style="font-size:0.75rem;"></i>' : ''}
+                    <span class="table-full-name">${s.fullName}</span>
+                    ${s.tariff ? `<span class="table-tariff-ghost">${s.tariff}</span>` : ''}
+                </td>
+
+                <!-- Phone 1 + Phone 2 ghost -->
+                <td class="table-phone-cell">
+                    <span class="table-phone-main">${s.phone1 || '—'}</span>
+                    ${s.phone2 ? `<span class="table-ghost-sub">${s.phone2}</span>` : ''}
+                </td>
+
+                <!-- Level + Certificate ghost -->
+                <td class="table-level-cell">
+                    ${s.level ? `<span class="table-pill pill-level">${s.level}</span>` : '<span class="text-muted">—</span>'}
+                    ${certText ? `<span class="table-ghost-sub">${certText}</span>` : ''}
+                </td>
+
+                <!-- University 1 + University 2 as bullets -->
+                <td class="table-uni-cell">
+                    ${s.university1 ? `<span class="table-uni-item">· ${s.university1}</span>` : '<span class="text-muted">—</span>'}
+                    ${s.university2 ? `<span class="table-uni-item">· ${s.university2}</span>` : ''}
+                </td>
+
+            </tr>
+            `;
+        }).join('');
+    }
 
     // Render Pagination Controls
     renderPaginationControls('studentsPagination', studentsPage, totalItems, ITEMS_PER_PAGE, 'changeStudentsPage');

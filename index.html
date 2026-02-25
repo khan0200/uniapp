@@ -184,14 +184,37 @@
                 <span id="studentsCounter" class="text-secondary small fst-italic">Loading...</span>
             </div>
 
-            <!-- Student Cards Container (Grid Layout) -->
-            <div id="studentsList" class="row g-3">
-                <!-- Student cards will be dynamically loaded here -->
-                <div class="col-12 text-center py-5">
-                    <i class="bi bi-inbox icon-empty-state"></i>
-                    <p class="text-secondary mt-3">No students yet. Click "Add Student" to get started.</p>
+            <!-- Students Table -->
+            <div id="studentsTableContainer">
+                <div class="students-table-wrapper">
+                    <table class="students-table" id="studentsTable">
+                        <colgroup>
+                            <col style="width:5%;">
+                            <col style="width:30%;">
+                            <col style="width:15%;">
+                            <col style="width:16%;">
+                            <col style="width:34%;">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Full Name</th>
+                                <th>Phone</th>
+                                <th>Level</th>
+                                <th>University</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody">
+                            <tr>
+                                <td colspan="9" class="text-center py-5 text-secondary">
+                                    <i class="bi bi-hourglass-split me-2"></i>Loading students...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
+
             <!-- Students Pagination -->
             <div id="studentsPagination" class="d-flex justify-content-center align-items-center gap-3 mt-4"></div>
         </div>
@@ -530,98 +553,93 @@
     <!-- Add Student Modal -->
     <div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel"
         aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content modal-glass">
-                <div class="modal-header border-bottom border-secondary">
-                    <h5 class="modal-title fw-bold" id="addStudentModalLabel">
-                        <i class="bi bi-person-plus-fill me-2"></i> Add New Student
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+            <div class="modal-content modal-glass" style="border-radius: 20px; overflow: hidden;">
+
+                <!-- Header -->
+                <div class="modal-header border-0 pb-0 px-4 pt-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="
+                            width: 44px; height: 44px;
+                            background: linear-gradient(135deg, var(--accent-primary), #7c3aed);
+                            border-radius: 14px;
+                            display: flex; align-items: center; justify-content: center;
+                            box-shadow: 0 4px 14px rgba(91,141,239,0.4);
+                            flex-shrink: 0;
+                        ">
+                            <i class="bi bi-person-plus-fill text-white" style="font-size: 1.15rem;"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0" id="addStudentModalLabel" style="font-size: 1.1rem;">
+                                Add New Student</h5>
+                            <p class="mb-0 text-secondary" style="font-size: 0.78rem; margin-top: 2px;">Fill in the
+                                required fields below</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-4">
+
+                <!-- Body -->
+                <div class="modal-body px-4 py-4">
                     <form id="addStudentForm">
-                        <!-- Row 1: Student ID & Full Name -->
-                        <div class="row mb-3">
-                            <div class="col-md-2">
-                                <label for="studentId" class="form-label">Student ID <span
-                                        class="text-danger">*</span></label>
-                                <input type="text" class="form-control ios-input" id="studentId" placeholder="D120"
-                                    required>
-                            </div>
-                            <div class="col-md-10">
-                                <label for="fullName" class="form-label">Full Name <span
-                                        class="text-danger">*</span></label>
-                                <input type="text" class="form-control ios-input text-uppercase-input" id="fullName"
-                                    placeholder="SURNAME, NAME" required>
-                            </div>
+
+                        <!-- Student ID -->
+                        <div class="mb-3">
+                            <label for="studentId" class="form-label d-flex align-items-center gap-1">
+                                Student ID
+                                <span class="text-danger">*</span>
+                                <span class="text-secondary ms-1" style="font-size:0.75rem; font-weight:400;">(e.g.
+                                    D120)</span>
+                            </label>
+                            <input type="text" class="form-control ios-input" id="studentId" placeholder="D120"
+                                autocomplete="off" style="font-size: 1rem; font-weight: 600; letter-spacing: 0.04em;"
+                                required>
                         </div>
 
-                        <!-- Row 2: Phone 1, Level & Tariff -->
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label for="phone1" class="form-label">Phone 1</label>
-                                <input type="text" class="form-control ios-input" id="phone1"
-                                    placeholder="00-000-00-00">
-                            </div>
-                            <div class="col-md-4">
-                                <label for="levelSelect" class="form-label">Education Level</label>
-                                <select class="form-select ios-input" id="levelSelect">
-                                    <option value="">Choose Level</option>
-                                    <option value="COLLEGE">COLLEGE</option>
-                                    <option value="BACHELOR">BACHELOR</option>
-                                    <option value="MASTERS">MASTERS</option>
-                                    <option value="MASTER NO CERTIFICATE">MASTER NO CERTIFICATE</option>
-                                    <option value="LANGUAGE COURSE">LANGUAGE COURSE</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="tariff" class="form-label">Tariff</label>
-                                <select class="form-select ios-input" id="tariff">
-                                    <option value="">Choose Tariff</option>
-                                    <option value="STANDART">STANDART - 13,000,000 UZS</option>
-                                    <option value="PREMIUM">PREMIUM - 32,500,000 UZS</option>
-                                    <option value="VISA PLUS">VISA PLUS - 65,000,000 UZS</option>
-                                    <option value="E-VISA">E-VISA - 2,000,000 UZS</option>
-                                    <option value="REGIONAL VISA">REGIONAL VISA - 2,000,000 UZS</option>
-                                </select>
-                            </div>
+                        <!-- Full Name -->
+                        <div class="mb-4">
+                            <label for="fullName" class="form-label d-flex align-items-center gap-1">
+                                Full Name
+                                <span class="text-danger">*</span>
+                                <span class="text-secondary ms-1" style="font-size:0.75rem; font-weight:400;">(SURNAME,
+                                    NAME)</span>
+                            </label>
+                            <input type="text" class="form-control ios-input text-uppercase-input" id="fullName"
+                                placeholder="SURNAME, NAME" autocomplete="off" style="font-size: 0.95rem;" required>
                         </div>
 
-                        <!-- Row 3: University 1 -->
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <label for="uni1" class="form-label">University 1</label>
-                                <select class="form-select ios-input" id="uni1">
-                                    <option value="">Choose University</option>
-                                </select>
-                            </div>
+                        <!-- Info tip -->
+                        <div style="
+                            background: rgba(91,141,239,0.08);
+                            border: 1px solid rgba(91,141,239,0.2);
+                            border-radius: 12px;
+                            padding: 0.75rem 1rem;
+                            display: flex;
+                            align-items: flex-start;
+                            gap: 0.625rem;
+                        ">
+                            <i class="bi bi-lightbulb-fill"
+                                style="color: var(--accent-primary); font-size: 0.9rem; margin-top: 1px; flex-shrink:0;"></i>
+                            <p class="mb-0 text-secondary" style="font-size: 0.78rem; line-height: 1.5;">
+                                All other details — Phone, Email, Birthday, Passport, Tariff, University — can be added
+                                later by clicking on the student card.
+                            </p>
                         </div>
 
-                        <!-- Row 4: Address -->
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <label for="address" class="form-label">Address</label>
-                                <textarea class="form-control ios-input text-uppercase-input" id="address" rows="2"
-                                    placeholder="Full address in uppercase"></textarea>
-                            </div>
-                        </div>
-
-                        <p class="text-secondary small mt-2 mb-0">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Other details (Phone 2, Email, Birthday, Passport, Tariff, etc.) can be added later by
-                            clicking on the student card.
-                        </p>
                     </form>
                 </div>
-                <div class="modal-footer border-top border-secondary">
+
+                <!-- Footer -->
+                <div class="modal-footer border-0 px-4 pb-4 pt-0 gap-2">
                     <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
                         data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary-apple rounded-pill px-4 shadow-apple"
-                        onclick="saveStudent()">
-                        <i class="bi bi-check-circle me-2"></i> Save Student
+                        onclick="saveStudent()" style="min-width: 140px;">
+                        <i class="bi bi-check-circle-fill me-2"></i>Save Student
                     </button>
                 </div>
+
             </div>
         </div>
     </div>
@@ -629,7 +647,7 @@
     <!-- View Student Details Modal -->
     <div class="modal fade" id="viewStudentModal" tabindex="-1" aria-labelledby="viewStudentModalLabel"
         aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" style="max-width:1300px;">
             <div class="modal-content modal-glass">
                 <div class="modal-header border-bottom border-secondary">
                     <h5 class="modal-title fw-bold" id="viewStudentModalLabel">
