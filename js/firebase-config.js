@@ -311,12 +311,12 @@ async function savePaymentToFirestore(paymentData) {
 
         let notifMsg = '';
         if (paymentData.isWithdrawal) {
-            notifMsg = `🟥 <b>Withdrawal</b>\n\n👤 <b>Student:</b> ${safeName}\n💰 <b>Amount:</b> -${amountFormatted}\n📝 <b>Note:</b> ${paymentData.note || 'None'}`;
+            notifMsg = `🟥 <b>Withdrawal</b>\n\n👤 <b>Student:</b> ${safeName}\n💰 <b>Amount:</b> -${amountFormatted}\n📝 <b>Note:</b> ${paymentData.notes || 'None'}`;
         } else if (paymentData.isDiscount) {
-            notifMsg = `🟨 <b>Discount Added</b>\n\n🆔 <b>ID:</b> ${strId}\n👤 <b>Student:</b> ${safeName}\n💰 <b>Amount:</b> ${amountFormatted}\n📝 <b>Note:</b> ${paymentData.note || 'None'}`;
+            notifMsg = `🟨 <b>Discount Added</b>\n\n🆔 <b>ID:</b> ${strId}\n👤 <b>Student:</b> ${safeName}\n💰 <b>Amount:</b> ${amountFormatted}\n📝 <b>Note:</b> ${paymentData.notes || 'None'}`;
         } else {
             const curDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            notifMsg = `🟩 <b>Payment Received</b>\n\n🆔 <b>ID:</b> ${strId}\n👤 <b>Name:</b> ${safeName}\n\n📰 <b>Tariff:</b> ${tariffName}\n💰 <b>Amount:</b> ${amountFormatted}\n💼 <b>Balance:</b> ${finalBalanceStr}\n💳 <b>Payment Type:</b> ${paymentData.method || '-'}\n🧾 <b>Received by:</b> ${paymentData.receivedBy || '-'}\n\n📝 <b>Note:</b> ${paymentData.note || 'None'}\n\n📅 <b>Date:</b> ${curDate}`;
+            notifMsg = `🟩 <b>Payment Received</b>\n\n🆔 <b>ID:</b> ${strId}\n👤 <b>Name:</b> ${safeName}\n\n📰 <b>Tariff:</b> ${tariffName}\n💰 <b>Amount:</b> ${amountFormatted}\n💼 <b>Balance:</b> ${finalBalanceStr}\n💳 <b>Payment Type:</b> ${paymentData.method || '-'}\n🧾 <b>Received by:</b> ${paymentData.receivedBy || '-'}\n\n📝 <b>Note:</b> ${paymentData.notes || 'None'}\n\n📅 <b>Date:</b> ${curDate}`;
         }
 
         sendTelegramNotification(notifMsg);
