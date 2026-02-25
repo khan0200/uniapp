@@ -1618,11 +1618,11 @@ function renderPaymentHistory(filteredData = null) {
                     ${studentInfo}
                 </div>
                 ${p.notes ? `<div class="payment-notes">${p.notes}</div>` : ''}
-                <div class="payment-actions mt-2 d-flex gap-2 justify-content-end">
-                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="event.stopPropagation(); editPayment('${p.firestoreId}')">
+                <div class="payment-actions mt-2 d-flex gap-3 justify-content-end">
+                    <button class="btn btn-link text-primary text-decoration-none p-0 fw-semibold" style="font-size: 0.8rem;" onclick="event.stopPropagation(); editPayment('${p.firestoreId}')">
                         <i class="bi bi-pencil me-1"></i>Edit
                     </button>
-                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="event.stopPropagation(); deletePayment('${p.firestoreId}')">
+                    <button class="btn btn-link text-danger text-decoration-none p-0 fw-semibold" style="font-size: 0.8rem;" onclick="event.stopPropagation(); deletePayment('${p.firestoreId}')">
                         <i class="bi bi-trash me-1"></i>Delete
                     </button>
                 </div>

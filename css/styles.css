@@ -1671,7 +1671,7 @@ body {
     backdrop-filter: var(--blur-medium);
     border-radius: var(--radius-lg);
     border: 1px solid var(--glass-border);
-    padding: 1.25rem;
+    padding: 1rem;
     transition: var(--transition-base);
     position: relative;
 }
@@ -1685,11 +1685,11 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
 }
 
 .payment-history-card .payment-amount {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 700;
     font-family: 'Space Grotesk', sans-serif;
     color: #48bb78;
@@ -1708,11 +1708,12 @@ body {
 }
 
 .payment-history-card .payment-badge {
-    font-size: 0.7rem;
-    padding: 0.25rem 0.5rem;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.45rem;
     border-radius: var(--radius-full);
     font-weight: 600;
     text-transform: uppercase;
+    border: 1px solid var(--border-subtle);
 }
 
 .payment-history-card .payment-method {
@@ -1726,15 +1727,15 @@ body {
 }
 
 .payment-history-card .payment-student-info {
-    background: var(--bg-elevated);
+    background: var(--glass-bg);
     color: var(--text-secondary);
 }
 
 .payment-history-card .payment-notes {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: var(--text-secondary);
-    margin-top: 0.5rem;
-    padding-top: 0.5rem;
+    margin-top: 0.4rem;
+    padding-top: 0.4rem;
     border-top: 1px solid var(--border-subtle);
     font-style: italic;
 }
