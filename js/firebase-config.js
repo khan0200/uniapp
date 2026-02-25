@@ -84,7 +84,7 @@ async function saveStudentToFirestore(studentData) {
 
         // Send Telegram Notification
         const safeName = studentData.fullName ? studentData.fullName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'Unknown';
-        const notifMsg = `🆕 <b>New Registration!</b>\n\n👤 <b>Name:</b> ${safeName}\n🆔 <b>ID:</b> ${studentData.id || '-'}\n📱 <b>Phone:</b> ${studentData.phone1 || '-'}\n📚 <b>Tariff:</b> ${studentData.tariff || 'None'}`;
+        const notifMsg = `🆕 <b>New Registration!</b>\n\n👤 <b>Name:</b> ${safeName}\n🆔 <b>ID:</b> ${studentData.id || '-'}`;
         sendTelegramNotification(notifMsg);
 
         // Close modal and reset form
@@ -174,10 +174,8 @@ async function updateStudentInFirestore(firestoreId, updatedData) {
             showNotification('Student updated successfully!', 'success');
         }
 
-        // Send Telegram Notification
-        const safeName = updatedData.fullName ? updatedData.fullName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'Unknown';
-        const notifMsg = `✏️ <b>Profile Updated!</b>\n\n👤 <b>Name:</b> ${safeName}\n🆔 <b>ID:</b> ${updatedData.id || '-'}`;
-        sendTelegramNotification(notifMsg);
+        // Removed Profile Updated notification per user request
+
     } catch (error) {
         console.error('❌ Error updating student:', error);
         if (typeof showNotification === 'function') {
@@ -298,8 +296,29 @@ async function savePaymentToFirestore(paymentData) {
         // Send Telegram Notification
         const safeName = paymentData.studentName ? paymentData.studentName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'Unknown';
         const amountFormatted = new Intl.NumberFormat('uz-UZ').format(paymentData.amount) + ' UZS';
-        let actionStr = paymentData.isWithdrawal ? '🟥 <b>Withdrawal</b>' : (paymentData.isDiscount ? '🟨 <b>Discount Added</b>' : '🟩 <b>Payment Received</b>');
-        const notifMsg = `${actionStr}\n\n👤 <b>Student:</b> ${safeName}\n💰 <b>Amount:</b> ${amountFormatted}\n📝 <b>Note:</b> ${paymentData.note || 'None'}`;
+        const strId = paymentData.studentId || '-';
+
+        // Get student's new balance to show
+        let finalBalanceStr = '-';
+        let tariffName = '-';
+        if (paymentData.studentFirestoreId) {
+            const sIdx = window.studentsData.findIndex(s => s.firestoreId === paymentData.studentFirestoreId);
+            if (sIdx !== -1) {
+                finalBalanceStr = new Intl.NumberFormat('uz-UZ').format(window.studentsData[sIdx].balance) + ' UZS';
+                tariffName = window.studentsData[sIdx].tariff || '-';
+            }
+        }
+
+        let notifMsg = '';
+        if (paymentData.isWithdrawal) {
+            notifMsg = `🟥 <b>Withdrawal</b>\n\n👤 <b>Student:</b> ${safeName}\n💰 <b>Amount:</b> -${amountFormatted}\n📝 <b>Note:</b> ${paymentData.note || 'None'}`;
+        } else if (paymentData.isDiscount) {
+            notifMsg = `🟨 <b>Discount Added</b>\n\n🆔 <b>ID:</b> ${strId}\n👤 <b>Student:</b> ${safeName}\n💰 <b>Amount:</b> ${amountFormatted}\n📝 <b>Note:</b> ${paymentData.note || 'None'}`;
+        } else {
+            const curDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            notifMsg = `🟩 <b>Payment Received</b>\n\n🆔 <b>ID:</b> ${strId}\n👤 <b>Name:</b> ${safeName}\n\n📰 <b>Tariff:</b> ${tariffName}\n💰 <b>Amount:</b> ${amountFormatted}\n💼 <b>Balance:</b> ${finalBalanceStr}\n💳 <b>Payment Type:</b> ${paymentData.method || '-'}\n🧾 <b>Received by:</b> ${paymentData.receivedBy || '-'}\n\n📝 <b>Note:</b> ${paymentData.note || 'None'}\n\n📅 <b>Date:</b> ${curDate}`;
+        }
+
         sendTelegramNotification(notifMsg);
 
         return docRef.id;
@@ -573,7 +592,9 @@ async function deletePaymentFromFirestore(paymentFirestoreId, amount, studentFir
 
         // Remove payment from local data and refresh UI
         const paymentIndex = window.paymentsData.findIndex(p => p.firestoreId === paymentFirestoreId);
+        let deletedPayment = null;
         if (paymentIndex !== -1) {
+            deletedPayment = window.paymentsData[paymentIndex];
             window.paymentsData.splice(paymentIndex, 1);
             console.log('✅ Payment removed from local data');
             if (typeof renderPaymentHistory === 'function') {
@@ -625,6 +646,19 @@ async function deletePaymentFromFirestore(paymentFirestoreId, amount, studentFir
         if (typeof showNotification === 'function') {
             showNotification('Payment deleted successfully!', 'success');
         }
+
+        // Send Telegram Notification
+        const safeName = deletedPayment && deletedPayment.studentName ? deletedPayment.studentName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'Unknown';
+        const strId = deletedPayment && deletedPayment.studentId ? deletedPayment.studentId : '-';
+        let finalBalance = '-';
+        if (studentFirestoreId) {
+            const sIndex = window.studentsData.findIndex(s => s.firestoreId === studentFirestoreId);
+            if (sIndex !== -1) {
+                finalBalance = new Intl.NumberFormat('uz-UZ').format(window.studentsData[sIndex].balance) + ' UZS';
+            }
+        }
+        const notifMsg = `🟥 <b>Payment Deleted</b>\n\n🆔 <b>ID:</b> ${strId}\n👤 <b>Student:</b> ${safeName}\n💰 <b>Amount:</b> -${new Intl.NumberFormat('uz-UZ').format(amount)} UZS\n💼 <b>Balance:</b> ${finalBalance}`;
+        sendTelegramNotification(notifMsg);
     } catch (error) {
         console.error('❌ Error deleting payment:', error);
         if (typeof showNotification === 'function') {
