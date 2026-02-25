@@ -586,16 +586,21 @@ async function deletePaymentFromFirestore(paymentFirestoreId, amount, studentFir
     }
 
     try {
+        // Capture the payment details before deleting in case the real-time listener clears it early
+        const paymentIndex = window.paymentsData.findIndex(p => p.firestoreId === paymentFirestoreId);
+        let deletedPayment = null;
+        if (paymentIndex !== -1) {
+            deletedPayment = window.paymentsData[paymentIndex];
+        }
+
         await db.collection('payments').doc(paymentFirestoreId).delete();
 
         console.log('✅ Payment deleted successfully');
 
         // Remove payment from local data and refresh UI
-        const paymentIndex = window.paymentsData.findIndex(p => p.firestoreId === paymentFirestoreId);
-        let deletedPayment = null;
-        if (paymentIndex !== -1) {
-            deletedPayment = window.paymentsData[paymentIndex];
-            window.paymentsData.splice(paymentIndex, 1);
+        const newPaymentIndex = window.paymentsData.findIndex(p => p.firestoreId === paymentFirestoreId);
+        if (newPaymentIndex !== -1) {
+            window.paymentsData.splice(newPaymentIndex, 1);
             console.log('✅ Payment removed from local data');
             if (typeof renderPaymentHistory === 'function') {
                 renderPaymentHistory();
