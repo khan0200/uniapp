@@ -514,13 +514,15 @@ body {
 }
 
 .pill-balance.bal-positive {
-    color: var(--accent-success);
-    border-color: rgba(16, 124, 16, 0.3);
+    background: #10b981;
+    color: #ffffff;
+    border-color: #059669;
 }
 
 .pill-balance.bal-negative {
-    color: var(--accent-danger);
-    border-color: rgba(209, 52, 56, 0.3);
+    background: #ef4444;
+    color: #ffffff;
+    border-color: #dc2626;
 }
 
 /* Payment History Card */
@@ -565,18 +567,98 @@ body {
     margin-bottom: 0.5rem;
 }
 
+.apple-segment-group {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    padding: 0.3rem;
+    border-radius: 2rem;
+    display: inline-flex;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.apple-segment-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 0.45rem 1.5rem;
+    border-radius: 2rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.apple-segment-btn:hover {
+    color: var(--text-primary);
+}
+
+.apple-segment-btn.active {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+
 .payment-badge {
-    font-size: 0.7rem;
-    padding: 0.2rem 0.5rem;
-    border-radius: var(--radius-sm);
+    font-size: 0.72rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: var(--radius-full);
     background: var(--bg-elevated);
     color: var(--text-secondary);
     border: 1px solid var(--border-subtle);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+[data-bs-theme="light"] .payment-badge {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .payment-method {
-    color: var(--accent-primary);
-    border-color: rgba(0, 120, 212, 0.2);
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #1d4ed8;
+    border-color: rgba(59, 130, 246, 0.25);
+}
+
+[data-bs-theme="dark"] .payment-method {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.35);
+}
+
+.payment-receiver {
+    background-color: rgba(139, 92, 246, 0.15);
+    color: #6d28d9;
+    border-color: rgba(139, 92, 246, 0.25);
+}
+
+[data-bs-theme="dark"] .payment-receiver {
+    background-color: rgba(139, 92, 246, 0.2);
+    color: #a78bfa;
+    border-color: rgba(139, 92, 246, 0.35);
+}
+
+.payment-amount-positive {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #15803d;
+    border-color: rgba(34, 197, 94, 0.25);
+}
+
+[data-bs-theme="dark"] .payment-amount-positive {
+    background-color: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+    border-color: rgba(34, 197, 94, 0.35);
+}
+
+.payment-amount-negative {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #b91c1c;
+    border-color: rgba(239, 68, 68, 0.25);
+}
+
+[data-bs-theme="dark"] .payment-amount-negative {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.35);
 }
 
 .payment-player {
@@ -1545,18 +1627,21 @@ body {
 }
 
 .pill-balance.bal-positive {
-    background: rgba(72, 187, 120, 0.15);
-    color: #48bb78;
+    background: #10b981;
+    color: #ffffff;
+    border-color: #059669;
 }
 
 .pill-balance.bal-negative {
-    background: rgba(245, 101, 101, 0.15);
-    color: #f56565;
+    background: #ef4444;
+    color: #ffffff;
+    border-color: #dc2626;
 }
 
 .pill-discount {
-    background: rgba(157, 123, 234, 0.15);
-    color: var(--accent-purple);
+    background: #db2777;
+    color: #ffffff;
+    border-color: #be185d;
 }
 
 /* Payment Student Card */

@@ -134,22 +134,22 @@ const ROW_COLOR_MAP = {
 // Status column color palettes (used by multi-select popup + badge rendering)
 // bg = solid badge background, text = badge text color, ball = dot color, bd = border
 const INVOICE_COLORS = {
-    'NOT APPLIED': { text: '#94a3b8', ball: '#94a3b8', bg: 'transparent', bd: 'rgba(148,163,184,0.45)' },
-    'APPLIED': { text: '#ffffff', ball: '#3b82f6', bg: '#3b82f6', bd: '#2563eb' },
-    'RECEIVED': { text: '#ffffff', ball: '#22c55e', bg: '#22c55e', bd: '#16a34a' },
-    'PAYED': { text: '#ffffff', ball: '#10b981', bg: '#059669', bd: '#047857' },
-    'NO RESULT': { text: '#94a3b8', ball: '#6b7280', bg: 'transparent', bd: 'rgba(107,114,128,0.4)' },
-    'CANCELLED': { text: '#ffffff', ball: '#ef4444', bg: '#ef4444', bd: '#dc2626' },
+    'NOT APPLIED': { text: '#64748b', ball: '#94a3b8', bg: 'transparent', bd: 'rgba(148,163,184,0.45)' },
+    'APPLIED': { text: '#1d4ed8', ball: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)', bd: 'rgba(59, 130, 246, 0.3)' },
+    'RECEIVED': { text: '#15803d', ball: '#22c55e', bg: 'rgba(34, 197, 94, 0.15)', bd: 'rgba(34, 197, 94, 0.3)' },
+    'PAYED': { text: '#047857', ball: '#10b981', bg: 'rgba(16, 185, 129, 0.15)', bd: 'rgba(16, 185, 129, 0.3)' },
+    'NO RESULT': { text: '#6b7280', ball: '#6b7280', bg: 'transparent', bd: 'rgba(107,114,128,0.4)' },
+    'CANCELLED': { text: '#b91c1c', ball: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)', bd: 'rgba(239, 68, 68, 0.3)' },
 };
 const ADMISSION_COLORS = {
-    '1 MONTH KDB': { text: '#ffffff', ball: '#8b5cf6', bg: '#8b5cf6', bd: '#7c3aed' },
-    '1 MONTH KDB OK': { text: '#ffffff', ball: '#6366f1', bg: '#4f46e5', bd: '#4338ca' },
-    'COA RECEIVED': { text: '#ffffff', ball: '#22c55e', bg: '#22c55e', bd: '#16a34a' },
-    'COA MISTAKE': { text: '#ffffff', ball: '#ef4444', bg: '#ef4444', bd: '#dc2626' },
-    '1 DAY KDB NEED': { text: '#ffffff', ball: '#f97316', bg: '#f97316', bd: '#ea580c' },
-    '1 DAY KDB OK': { text: '#111827', ball: '#eab308', bg: '#fbbf24', bd: '#d97706' },
-    'NO RESULT': { text: '#94a3b8', ball: '#6b7280', bg: 'transparent', bd: 'rgba(107,114,128,0.4)' },
-    'CANCELLED': { text: '#ffffff', ball: '#ef4444', bg: '#ef4444', bd: '#dc2626' },
+    '1 MONTH KDB': { text: '#6d28d9', ball: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.15)', bd: 'rgba(139, 92, 246, 0.3)' },
+    '1 MONTH KDB OK': { text: '#4338ca', ball: '#6366f1', bg: 'rgba(99, 102, 241, 0.15)', bd: 'rgba(99, 102, 241, 0.3)' },
+    'COA RECEIVED': { text: '#15803d', ball: '#22c55e', bg: 'rgba(34, 197, 94, 0.15)', bd: 'rgba(34, 197, 94, 0.3)' },
+    'COA MISTAKE': { text: '#b91c1c', ball: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)', bd: 'rgba(239, 68, 68, 0.3)' },
+    '1 DAY KDB NEED': { text: '#c2410c', ball: '#f97316', bg: 'rgba(249, 115, 22, 0.15)', bd: 'rgba(249, 115, 22, 0.3)' },
+    '1 DAY KDB OK': { text: '#a16207', ball: '#eab308', bg: 'rgba(234, 179, 8, 0.15)', bd: 'rgba(234, 179, 8, 0.3)' },
+    'NO RESULT': { text: '#6b7280', ball: '#6b7280', bg: 'transparent', bd: 'rgba(107,114,128,0.4)' },
+    'CANCELLED': { text: '#b91c1c', ball: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)', bd: 'rgba(239, 68, 68, 0.3)' },
 };
 
 function renderStatusBadges(type, values) {
@@ -2168,27 +2168,27 @@ function renderPaymentHistory(filteredData = null) {
         const isWithdrawal = amount < 0;
         const amountPrefix = isWithdrawal ? '-' : '+';
         const displayAmount = formatAmount(Math.abs(amount));
-        const amountBg = isWithdrawal ? 'rgba(245, 101, 101, 0.15)' : 'rgba(72, 187, 120, 0.15)';
-        const amountColor = isWithdrawal ? '#f56565' : '#48bb78';
-        const amountBorder = isWithdrawal ? 'rgba(245, 101, 101, 0.3)' : 'rgba(72, 187, 120, 0.3)';
-        const amountBadge = `<span class="payment-badge" style="background: ${amountBg}; color: ${amountColor}; border-color: ${amountBorder}; font-weight: 700;">${amountPrefix}${displayAmount} UZS</span>`;
+
+        let amountClass = isWithdrawal ? 'payment-amount-negative' : 'payment-amount-positive';
+        const amountBadge = `<span class="payment-badge ${amountClass}">${amountPrefix}${displayAmount} UZS</span>`;
 
         let notesHtml = '';
         if (p.notes) {
-            let noteBg = 'var(--bg-elevated)';
-            let noteColor = 'var(--text-secondary)';
-            let noteBorder = 'var(--border-subtle)';
+            let noteClass = 'bg-secondary text-white';
+            let noteStyle = '';
 
             if (p.notes.toUpperCase().includes('DISCOUNT')) {
-                noteBg = 'rgba(157, 123, 234, 0.15)';
-                noteColor = 'var(--accent-purple)';
-                noteBorder = 'rgba(157, 123, 234, 0.3)';
+                noteStyle = 'background-color: rgba(219, 39, 119, 0.15); color: #be185d; border: 1px solid rgba(219, 39, 119, 0.25);';
             } else if (p.notes.toLowerCase().includes('shartnoma')) {
-                noteBg = 'rgba(91, 141, 239, 0.15)';
-                noteColor = 'var(--accent-blue)';
-                noteBorder = 'rgba(91, 141, 239, 0.3)';
+                noteStyle = 'background-color: rgba(6, 182, 212, 0.15); color: #0891b2; border: 1px solid rgba(6, 182, 212, 0.25);';
+            } else {
+                noteStyle = 'background-color: rgba(107, 114, 128, 0.15); color: #4b5563; border: 1px solid rgba(107, 114, 128, 0.25);';
             }
-            notesHtml = `<div class="mt-2 text-start"><span class="badge rounded-pill" style="background: ${noteBg}; color: ${noteColor}; border: 1px solid ${noteBorder}; font-size: 0.65rem; font-weight: 600; text-transform: uppercase;">${p.notes}</span></div>`;
+
+            // Dark mode overrides inline (since this is dynamically generated, it's better to use classes instead of inline styles if we care about dark mode, 
+            // but we can add a general note-badge class and inline var if needed. Let's just create a generic notes badge or inline colors that look okay).
+
+            notesHtml = `<div class="mt-2 text-start"><span class="badge rounded-pill" style="${noteStyle} font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">${p.notes}</span></div>`;
         }
 
         return `

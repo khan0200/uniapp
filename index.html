@@ -371,16 +371,17 @@
         <div id="payments-tab" class="tab-content-section section-hidden">
             <!-- Header Row with Tabs and Actions -->
             <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
-                <!-- Inner Tabs for Payments Section -->
-                <div class="btn-group" role="group" aria-label="Payment tabs">
-                    <button type="button" class="btn btn-outline-light rounded-pill px-4 active"
-                        id="paymentStudentsTabBtn" onclick="showPaymentTab('students')">
-                        <i class="bi bi-people me-2"></i>Students
-                    </button>
-                    <button type="button" class="btn btn-outline-light rounded-pill px-4" id="paymentHistoryTabBtn"
-                        onclick="showPaymentTab('history')">
-                        <i class="bi bi-clock-history me-2"></i>Payment History
-                    </button>
+                <div class="payment-tabs-container mb-4">
+                    <div class="apple-segment-group" role="group" aria-label="Payment tabs">
+                        <button type="button" class="apple-segment-btn active" id="paymentStudentsTabBtn"
+                            onclick="showPaymentTab('students')">
+                            <i class="bi bi-people me-2"></i>Students
+                        </button>
+                        <button type="button" class="apple-segment-btn" id="paymentHistoryTabBtn"
+                            onclick="showPaymentTab('history')">
+                            <i class="bi bi-clock-history me-2"></i>Payment History
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Payment Action Buttons -->
