@@ -363,27 +363,28 @@ body {
 }
 
 .pill-level {
-    background: linear-gradient(135deg, rgba(0, 120, 212, 0.12) 0%, rgba(96, 165, 250, 0.18) 100%);
-    color: #60a5fa;
-    border-color: rgba(96, 165, 250, 0.25);
+    background: #3b82f6;
+    color: #ffffff;
+    border-color: #2563eb;
 }
 
 .pill-tariff {
-    background: linear-gradient(135deg, rgba(16, 124, 16, 0.12) 0%, rgba(74, 222, 128, 0.18) 100%);
-    color: #4ade80;
-    border-color: rgba(74, 222, 128, 0.25);
+    background: #10b981;
+    color: #ffffff;
+    border-color: #059669;
 }
 
 .pill-certificate {
-    background: linear-gradient(135deg, rgba(202, 80, 16, 0.12) 0%, rgba(251, 146, 60, 0.18) 100%);
-    color: #fb923c;
-    border-color: rgba(251, 146, 60, 0.25);
+    background: #f97316;
+    color: #ffffff;
+    border-color: #ea580c;
 }
 
 .pill-group {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(167, 139, 250, 0.18) 100%);
-    color: #a78bfa;
-    border-color: rgba(167, 139, 250, 0.25);
+    background: #db2777;
+    /* pink to differentiate from level */
+    color: #ffffff;
+    border-color: #be185d;
 }
 
 /* University ghost text - Subtle display at bottom */
@@ -2141,27 +2142,28 @@ body {
 }
 
 [data-bs-theme="light"] .pill-level {
-    background: linear-gradient(135deg, rgba(0, 120, 212, 0.1) 0%, rgba(96, 165, 250, 0.15) 100%);
-    color: #0078d4;
-    border-color: rgba(0, 120, 212, 0.2);
+    background: #3b82f6;
+    color: #ffffff;
+    border-color: #2563eb;
 }
 
 [data-bs-theme="light"] .pill-tariff {
-    background: linear-gradient(135deg, rgba(16, 124, 16, 0.1) 0%, rgba(74, 222, 128, 0.15) 100%);
-    color: #107c10;
-    border-color: rgba(16, 124, 16, 0.2);
+    background: #10b981;
+    color: #ffffff;
+    border-color: #059669;
 }
 
 [data-bs-theme="light"] .pill-certificate {
-    background: linear-gradient(135deg, rgba(202, 80, 16, 0.1) 0%, rgba(251, 146, 60, 0.15) 100%);
-    color: #ca5010;
-    border-color: rgba(202, 80, 16, 0.2);
+    background: #f97316;
+    color: #ffffff;
+    border-color: #ea580c;
 }
 
 [data-bs-theme="light"] .pill-group {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(167, 139, 250, 0.15) 100%);
-    color: #7c3aed;
-    border-color: rgba(139, 92, 246, 0.2);
+    background: #db2777;
+    /* pink */
+    color: #ffffff;
+    border-color: #be185d;
 }
 
 [data-bs-theme="light"] .badge-level {
@@ -4180,33 +4182,27 @@ body {
 }
 
 .table-pill.pill-tariff {
-    background: rgba(72, 187, 120, 0.15);
-    color: #48bb78;
+    background: #10b981;
+    color: #ffffff;
+    border: 1px solid #059669;
 }
 
 .table-pill.pill-level {
-    background: rgba(0, 120, 212, 0.15);
-    color: #60a5fa;
+    background: #3b82f6;
+    color: #ffffff;
+    border: 1px solid #2563eb;
 }
 
 .table-pill.pill-certificate {
-    background: rgba(202, 80, 16, 0.15);
-    color: #fb923c;
+    background: #f97316;
+    color: #ffffff;
+    border: 1px solid #ea580c;
 }
 
 .table-pill.pill-group {
-    background: rgba(139, 92, 246, 0.15);
-    color: #a78bfa;
-}
-
-/* Deleted row style */
-.student-table-row.deleted-row {
-    opacity: 0.55;
-}
-
-.student-table-row.deleted-row .table-full-name {
-    text-decoration: line-through;
-    color: var(--text-tertiary);
+    background: #db2777;
+    color: #ffffff;
+    border: 1px solid #be185d;
 }
 
 /* ==========================================
@@ -4255,4 +4251,348 @@ body {
 [data-bs-theme="light"] .btn-view-toggle:hover {
     background: #e4e4e4;
     color: #333;
+}
+
+/* ==========================================
+   ACTION COLUMN — Row Color Picker
+   ========================================== */
+
+/* Column header */
+.th-action {
+    text-align: center;
+    font-size: 0.65rem;
+}
+
+/* Cell — must allow visual overflow for the ball's glow */
+.table-action-cell {
+    text-align: center;
+    vertical-align: middle;
+    overflow: visible !important;
+    position: relative;
+}
+
+/* Wrapper: hover target spans both ball and popup edge */
+.cp-ball-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+/* The colour ball */
+.cp-ball {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--border-default);
+    background: var(--bg-elevated);
+    transition: transform 0.18s cubic-bezier(.4, 0, .2, 1),
+        box-shadow 0.18s cubic-bezier(.4, 0, .2, 1),
+        background 0.18s ease;
+    box-sizing: border-box;
+}
+
+.cp-ball-wrapper:hover .cp-ball {
+    transform: scale(1.25);
+}
+
+/* ── Shared popup (fixed, appended to <body>) ── */
+.cp-popup {
+    display: none;
+    /* JS sets to flex when open */
+    position: fixed;
+    z-index: 9999;
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 128px;
+    padding: 10px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-default);
+    border-radius: 14px;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    /* Entrance animation */
+    animation: cpFadeIn 0.15s ease forwards;
+}
+
+@keyframes cpFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Individual swatch */
+.cp-swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.cp-swatch:hover {
+    transform: scale(1.32);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* Active / selected indicator */
+.cp-swatch.cp-active {
+    border-color: #ffffff;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5), 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Clear (✕) swatch */
+.cp-clear {
+    border: 2px dashed var(--border-default);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-tertiary);
+    line-height: 1;
+}
+
+.cp-clear:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+    transform: scale(1.2);
+    box-shadow: none;
+}
+
+/* ── Light mode ── */
+[data-bs-theme="light"] .cp-popup {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+[data-bs-theme="light"] .cp-ball {
+    background: #e8e8e8;
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-bs-theme="light"] .cp-clear {
+    border-color: rgba(0, 0, 0, 0.2);
+    color: #999;
+}
+
+[data-bs-theme="light"] .cp-swatch.cp-active {
+    border-color: #333;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ==========================================
+   STATUS TABLE — Multi-select Trigger + Popup
+   ========================================== */
+
+/* Cell wrapper */
+.status-select-cell {
+    padding: 0.35rem 0.5rem !important;
+    vertical-align: middle;
+    overflow: visible !important;
+}
+
+/* Trigger button (shows selected badge pills) */
+.sms-trigger {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    min-height: 34px;
+    padding: 4px 22px 4px 6px;
+    border: 1.5px solid var(--border-subtle);
+    border-radius: 9px;
+    background: var(--bg-elevated);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+    position: relative;
+    user-select: none;
+}
+
+.sms-trigger:hover {
+    border-color: var(--accent-primary);
+    background: var(--bg-card);
+}
+
+/* Placeholder text when nothing selected */
+.sms-empty {
+    font-size: 0.68rem;
+    color: var(--text-tertiary);
+    flex: 1;
+    padding: 2px 0;
+}
+
+/* Selected value badge */
+.sms-badge {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+    padding: 0.18rem 0.55rem;
+    border-radius: 20px;
+    border: 1.5px solid;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+/* Small chevron inside trigger */
+.sms-chevron {
+    position: absolute;
+    right: 6px;
+    font-size: 0.58rem;
+    color: var(--text-tertiary);
+}
+
+/* ---- Shared dropdown popup ---- */
+.sdp-popup {
+    position: fixed;
+    z-index: 9997;
+    min-width: 214px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-default);
+    border-radius: 14px;
+    padding: 6px 6px 8px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    animation: cpFadeIn 0.12s ease forwards;
+}
+
+.sdp-header {
+    font-size: 0.63rem;
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    padding: 4px 8px 7px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 4px;
+}
+
+.sdp-hint {
+    font-weight: 400;
+    opacity: 0.65;
+    text-transform: none;
+    font-size: 0.6rem;
+}
+
+/* Each option row */
+.sdp-option {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.1s ease;
+    user-select: none;
+}
+
+.sdp-option:hover:not(.sdp-disabled) {
+    background: var(--bg-elevated);
+}
+
+/* Hide native checkbox; visual state shown via row highlight + dot */
+.sdp-option input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* Colored dot indicator */
+.sdp-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    opacity: 0.6;
+    transition: opacity 0.15s, transform 0.15s;
+}
+
+.sdp-checked .sdp-dot {
+    opacity: 1;
+    transform: scale(1.3);
+}
+
+.sdp-label {
+    font-size: 0.73rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: color 0.12s, font-weight 0.12s;
+    flex: 1;
+}
+
+.sdp-checked {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.sdp-checked .sdp-label {
+    font-weight: 700;
+}
+
+.sdp-disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.sdp-separator {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 4px 2px;
+}
+
+.sdp-clear {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #f87171;
+    padding: 5px 8px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.1s ease;
+    user-select: none;
+}
+
+.sdp-clear:hover {
+    background: rgba(248, 113, 113, 0.12);
+}
+
+.sdp-unknown {
+    opacity: 0.7;
+}
+
+
+/* ---- Light mode overrides ---- */
+[data-bs-theme="light"] .sms-trigger {
+    background: #f4f4f4;
+    border-color: rgba(0, 0, 0, 0.12);
+}
+
+[data-bs-theme="light"] .sms-trigger:hover {
+    background: #fff;
+}
+
+[data-bs-theme="light"] .sdp-popup {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.07);
+}
+
+[data-bs-theme="light"] .sdp-checked {
+    background: rgba(0, 0, 0, 0.04);
 }

@@ -117,11 +117,54 @@ let currentStudentId = null;
 // Pagination State
 const ITEMS_PER_PAGE = 20;
 let studentsPage = 1;
+let statusPage = 1;
 let paymentStudentsPage = 1;
 let paymentHistoryPage = 1;
 
+// Row Colorization — color map (ball colour + row background tint)
+const ROW_COLOR_MAP = {
+    'RED': { ball: '#ef4444', bg: 'rgba(239,68,68,0.22)' },
+    'YELLOW': { ball: '#eab308', bg: 'rgba(234,179,8,0.22)' },
+    'GREEN': { ball: '#006400', bg: 'rgba(0,100,0,0.22)' },
+    'BLUE': { ball: '#3b82f6', bg: 'rgba(59,130,246,0.22)' },
+    'MAGENTA': { ball: '#d946ef', bg: 'rgba(217,70,239,0.22)' },
+    'CYAN': { ball: '#06b6d4', bg: 'rgba(6,182,212,0.22)' },
+};
 
-// Helper: Render Pagination Controls
+// Status column color palettes (used by multi-select popup + badge rendering)
+// bg = solid badge background, text = badge text color, ball = dot color, bd = border
+const INVOICE_COLORS = {
+    'NOT APPLIED': { text: '#94a3b8', ball: '#94a3b8', bg: 'transparent', bd: 'rgba(148,163,184,0.45)' },
+    'APPLIED': { text: '#ffffff', ball: '#3b82f6', bg: '#3b82f6', bd: '#2563eb' },
+    'RECEIVED': { text: '#ffffff', ball: '#22c55e', bg: '#22c55e', bd: '#16a34a' },
+    'PAYED': { text: '#ffffff', ball: '#10b981', bg: '#059669', bd: '#047857' },
+    'NO RESULT': { text: '#94a3b8', ball: '#6b7280', bg: 'transparent', bd: 'rgba(107,114,128,0.4)' },
+    'CANCELLED': { text: '#ffffff', ball: '#ef4444', bg: '#ef4444', bd: '#dc2626' },
+};
+const ADMISSION_COLORS = {
+    '1 MONTH KDB': { text: '#ffffff', ball: '#8b5cf6', bg: '#8b5cf6', bd: '#7c3aed' },
+    '1 MONTH KDB OK': { text: '#ffffff', ball: '#6366f1', bg: '#4f46e5', bd: '#4338ca' },
+    'COA RECEIVED': { text: '#ffffff', ball: '#22c55e', bg: '#22c55e', bd: '#16a34a' },
+    'COA MISTAKE': { text: '#ffffff', ball: '#ef4444', bg: '#ef4444', bd: '#dc2626' },
+    '1 DAY KDB NEED': { text: '#ffffff', ball: '#f97316', bg: '#f97316', bd: '#ea580c' },
+    '1 DAY KDB OK': { text: '#111827', ball: '#eab308', bg: '#fbbf24', bd: '#d97706' },
+    'NO RESULT': { text: '#94a3b8', ball: '#6b7280', bg: 'transparent', bd: 'rgba(107,114,128,0.4)' },
+    'CANCELLED': { text: '#ffffff', ball: '#ef4444', bg: '#ef4444', bd: '#dc2626' },
+};
+
+function renderStatusBadges(type, values) {
+    const colorMap = type === 'invoice' ? INVOICE_COLORS : ADMISSION_COLORS;
+    if (!values || values.length === 0) {
+        return '<span class="sms-empty">— select —</span>';
+    }
+    return values.map(v => {
+        const c = colorMap[v] || { text: '#ffffff', bg: '#6b7280', bd: '#4b5563' };
+        return `<span class="sms-badge" style="color:${c.text};background:${c.bg};border-color:${c.bd};">${v}</span>`;
+    }).join('');
+}
+
+
+
 function renderPaginationControls(containerId, currentPage, totalItems, limit, onPageChangeName) {
     const totalPages = Math.ceil(totalItems / limit);
     const container = document.getElementById(containerId);
@@ -160,7 +203,94 @@ function changePaymentStudentsPage(page) {
 
 function changePaymentHistoryPage(page) {
     paymentHistoryPage = page;
-    filterPaymentHistory(false); // Pass false to prevent resetting to page 1
+    filterPaymentHistory(false);
+}
+
+function changeStatusPage(page) {
+    statusPage = page;
+    applyStatusFilters(false);
+}
+
+
+// ==========================================
+// ROW COLORIZATION — Color Picker
+// ==========================================
+
+let _cpCurrentId = null;
+let _cpHideTimer = null;
+
+let _cpContext = 'students'; // 'students' | 'status'
+
+function showColorPicker(wrapperEl, uniqueId, context) {
+    _cpCurrentId = uniqueId;
+    _cpContext = context || 'students';
+    clearTimeout(_cpHideTimer);
+
+    const popup = document.getElementById('colorPickerPopup');
+    if (!popup) return;
+
+    popup.style.display = 'flex';
+
+    // Mark the active swatch based on context
+    const s = window.studentsData.find(st => (st.firestoreId || st.id) === uniqueId);
+    const activeColor = _cpContext === 'status' ? (s && s.statusRowColor) : (s && s.rowColor);
+    popup.querySelectorAll('.cp-swatch[data-color]').forEach(sw => {
+        sw.classList.toggle('cp-active', !!(activeColor && sw.dataset.color === activeColor));
+    });
+
+    // Position above the wrapper element (fixed, avoids overflow clipping)
+    const rect = wrapperEl.getBoundingClientRect();
+    const popupW = 128;
+    const popupH = 76;
+    let left = rect.left + rect.width / 2 - popupW / 2;
+    let top = rect.top - popupH - 8;
+
+    if (left < 6) left = 6;
+    if (left + popupW > window.innerWidth - 6) left = window.innerWidth - popupW - 6;
+    if (top < 6) top = rect.bottom + 8; // flip below if no room
+
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+}
+
+function startHideColorPicker() {
+    _cpHideTimer = setTimeout(hideColorPicker, 130);
+}
+
+function cancelHideColorPicker() {
+    clearTimeout(_cpHideTimer);
+}
+
+function hideColorPicker() {
+    const popup = document.getElementById('colorPickerPopup');
+    if (popup) popup.style.display = 'none';
+    _cpCurrentId = null;
+}
+
+function setRowColor(colorName) {
+    const uniqueId = _cpCurrentId;
+    if (uniqueId === null) return;
+
+    const s = window.studentsData.find(st => (st.firestoreId || st.id) === uniqueId);
+    if (!s) return;
+
+    if (_cpContext === 'status') {
+        // STATUS tab uses its own separate color field
+        s.statusRowColor = (s.statusRowColor === colorName || colorName === '') ? '' : colorName;
+        if (typeof updateStudentInFirestore === 'function' && s.firestoreId) {
+            updateStudentInFirestore(s.firestoreId, { statusRowColor: s.statusRowColor });
+        }
+        hideColorPicker();
+        applyStatusFilters(false);
+    } else {
+        // STUDENTS tab uses the original rowColor field
+        s.rowColor = (s.rowColor === colorName || colorName === '') ? '' : colorName;
+        if (typeof updateStudentInFirestore === 'function' && s.firestoreId) {
+            updateStudentInFirestore(s.firestoreId, { rowColor: s.rowColor });
+        }
+        hideColorPicker();
+        applyFilters(false);
+    }
 }
 
 
@@ -200,6 +330,7 @@ function getTariffDisplayValue(tariffName) {
 
 function showTab(tabName) {
     document.getElementById('students-tab').style.display = 'none';
+    document.getElementById('status-tab').style.display = 'none';
     document.getElementById('payments-tab').style.display = 'none';
     document.getElementById('admissions-tab').style.display = 'none';
 
@@ -208,6 +339,11 @@ function showTab(tabName) {
     document.querySelectorAll('.nav-link-apple').forEach(link => link.classList.remove('active'));
     document.getElementById(`${tabName}-tab`).style.display = 'block';
     document.getElementById(`nav-${tabName}`).classList.add('active');
+
+    // Render status table when status tab is activated
+    if (tabName === 'status') {
+        renderStatus();
+    }
 
     // Render payment students when payments tab is activated
     if (tabName === 'payments' && typeof renderPaymentStudents === 'function') {
@@ -280,9 +416,9 @@ function saveStudent() {
 
 // Main render function - delegates to applyFilters for consistency
 function renderStudents() {
-    // If this is called directly (e.g. after add/delete), we maintain current filters
-    // Passing false to avoid resetting to page 1
     applyFilters(false);
+    // Keep status tab in sync whenever students data changes
+    if (typeof applyStatusFilters === 'function') applyStatusFilters(false);
 }
 
 // View student details in modal - now uses unique ID instead of array index
@@ -578,9 +714,9 @@ function viewStudentDetails(uniqueId) {
                         <textarea class="form-control ios-input form-control-sm mb-2" id="edit-notes" rows="2">${s.notes || ''}</textarea>
                         <select class="form-select ios-input form-control-sm mb-2" id="edit-noteImportance">
                             <option value="">No Priority</option>
-                            <option value="GREEN" ${s.noteImportance === 'GREEN' ? 'selected' : ''}>ðŸŸ¢ GREEN (Low)</option>
-                            <option value="YELLOW" ${s.noteImportance === 'YELLOW' ? 'selected' : ''}>ðŸŸ¡ YELLOW (Medium)</option>
-                            <option value="RED" ${s.noteImportance === 'RED' ? 'selected' : ''}>ðŸ”´ RED (High)</option>
+                            <option value="GREEN" ${s.noteImportance === 'GREEN' ? 'selected' : ''}>🟢 GREEN (Low)</option>
+                            <option value="YELLOW" ${s.noteImportance === 'YELLOW' ? 'selected' : ''}>🟡 YELLOW (Medium)</option>
+                            <option value="RED" ${s.noteImportance === 'RED' ? 'selected' : ''}>🔴 RED (High)</option>
                         </select>
                         <div class="edit-actions"><button class="save-btn" onclick="saveEdit('notes')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('notes')"><i class="bi bi-x"></i></button></div>
                     </div>
@@ -983,7 +1119,6 @@ function applyFilters(resetPage = true) {
         studentsPage = 1;
     }
 
-    const container = document.getElementById('studentsList');
     const searchInput = document.getElementById('searchInput');
     const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
 
@@ -1078,16 +1213,33 @@ function applyFilters(resetPage = true) {
     if (tbody) {
         tbody.innerHTML = paginatedData.map((s) => {
             const uniqueId = s.firestoreId || s.id;
+
+            // --- Row style: noteImportance border + rowColor background ---
             const importanceColors = { 'GREEN': '#28a745', 'YELLOW': '#ffc107', 'RED': '#dc3545' };
-            const rowColor = s.noteImportance ? importanceColors[s.noteImportance] : null;
-            const rowStyle = rowColor ? `style="border-left: 3px solid ${rowColor};"` : '';
+            const borderColor = s.noteImportance ? importanceColors[s.noteImportance] : null;
+            const bgEntry = s.rowColor ? ROW_COLOR_MAP[s.rowColor] : null;
+            const bgColor = bgEntry ? bgEntry.bg : null;
+            let inlineStyle = '';
+            if (borderColor && bgColor) {
+                inlineStyle = `style="border-left:3px solid ${borderColor}; background-color:${bgColor};"`;
+            } else if (borderColor) {
+                inlineStyle = `style="border-left:3px solid ${borderColor};"`;
+            } else if (bgColor) {
+                inlineStyle = `style="background-color:${bgColor};"`;
+            }
+
+            // --- Action cell: colour ball ---
+            const ballColor = bgEntry ? bgEntry.ball : null;
+            const ballStyle = ballColor
+                ? `background:${ballColor}; border-color:${ballColor}; box-shadow:0 0 0 2px ${ballColor}33;`
+                : '';
 
             const certText = (s.languageCertificate && s.languageCertificate !== 'NO CERTIFICATE')
                 ? `${s.languageCertificate}${s.certificateScore ? ': ' + s.certificateScore : ''}`
                 : '';
 
             return `
-            <tr class="student-table-row ${s.deleted ? 'deleted-row' : ''}" ${rowStyle}
+            <tr class="student-table-row ${s.deleted ? 'deleted-row' : ''}" ${inlineStyle}
                 onclick="viewStudentDetails('${uniqueId}')">
 
                 <!-- ID -->
@@ -1102,20 +1254,29 @@ function applyFilters(resetPage = true) {
 
                 <!-- Phone 1 + Phone 2 ghost -->
                 <td class="table-phone-cell">
-                    <span class="table-phone-main">${s.phone1 || '—'}</span>
+                    <span class="table-phone-main">${s.phone1 || '\u2014'}</span>
                     ${s.phone2 ? `<span class="table-ghost-sub">${s.phone2}</span>` : ''}
                 </td>
 
                 <!-- Level + Certificate ghost -->
                 <td class="table-level-cell">
-                    ${s.level ? `<span class="table-pill pill-level">${s.level}</span>` : '<span class="text-muted">—</span>'}
+                    ${s.level ? `<span class="table-pill pill-level">${s.level}</span>` : '<span class="text-muted">\u2014</span>'}
                     ${certText ? `<span class="table-ghost-sub">${certText}</span>` : ''}
                 </td>
 
                 <!-- University 1 + University 2 as bullets -->
                 <td class="table-uni-cell">
-                    ${s.university1 ? `<span class="table-uni-item">· ${s.university1}</span>` : '<span class="text-muted">—</span>'}
-                    ${s.university2 ? `<span class="table-uni-item">· ${s.university2}</span>` : ''}
+                    ${s.university1 ? `<span class="table-uni-item">\u00b7 ${s.university1}</span>` : '<span class="text-muted">\u2014</span>'}
+                    ${s.university2 ? `<span class="table-uni-item">\u00b7 ${s.university2}</span>` : ''}
+                </td>
+
+                <!-- Action: colour ball triggers picker on hover -->
+                <td class="table-action-cell" onclick="event.stopPropagation()">
+                    <div class="cp-ball-wrapper"
+                         onmouseenter="showColorPicker(this, '${uniqueId}')"
+                         onmouseleave="startHideColorPicker()">
+                        <div class="cp-ball" style="${ballStyle}"></div>
+                    </div>
                 </td>
 
             </tr>
@@ -1172,15 +1333,410 @@ document.addEventListener('DOMContentLoaded', function () {
             populateExcelModal();
         });
     }
+    // Status tab — debounced search
+    let statusSearchTimer = null;
+    const statusSearch = document.getElementById('statusSearchInput');
+    if (statusSearch) {
+        statusSearch.addEventListener('input', function () {
+            clearTimeout(statusSearchTimer);
+            statusSearchTimer = setTimeout(() => applyStatusFilters(), 300);
+        });
+    }
+    const statusTariff = document.getElementById('statusFilterTariff');
+    if (statusTariff) statusTariff.addEventListener('change', applyStatusFilters);
+    const statusLevel = document.getElementById('statusFilterLevel');
+    if (statusLevel) statusLevel.addEventListener('change', applyStatusFilters);
+    const statusGroup = document.getElementById('statusFilterGroup');
+    if (statusGroup) statusGroup.addEventListener('change', applyStatusFilters);
+    const statusInvoice = document.getElementById('statusFilterInvoice');
+    if (statusInvoice) statusInvoice.addEventListener('change', applyStatusFilters);
+    const statusAdmission = document.getElementById('statusFilterAdmission');
+    if (statusAdmission) statusAdmission.addEventListener('change', applyStatusFilters);
+
+    // Close status dropdown popup when clicking outside
+    document.addEventListener('click', function (e) {
+        const popup = document.getElementById('statusDropdownPopup');
+        if (popup && popup.style.display !== 'none') {
+            if (!popup.contains(e.target) && !e.target.closest('.sms-trigger')) {
+                closeStatusDropdown();
+            }
+        }
+    });
 });
 
 // ==========================================
-// EXCEL EXPORT FUNCTIONALITY
+// STATUS TAB — render (no Phone column)
 // ==========================================
+
+function renderStatus() { applyStatusFilters(false); }
+
+// ---- Status multi-select popup ----
+let _sdOpen = false;
+
+function openStatusDropdown(triggerEl, type, uniqueId) {
+    const popup = document.getElementById('statusDropdownPopup');
+    if (!popup) return;
+    event.stopPropagation();
+
+    // Toggle off if same trigger clicked again
+    if (_sdOpen && popup.dataset.uid === uniqueId && popup.dataset.type === type) {
+        closeStatusDropdown(); return;
+    }
+    _sdOpen = true;
+    popup.dataset.uid = uniqueId;
+    popup.dataset.type = type;
+
+    const s = window.studentsData.find(st => (st.firestoreId || st.id) === uniqueId);
+    const fieldName = type === 'invoice' ? 'invoiceStatuses' : 'admissionStatuses';
+    // Use ONLY the new array field — do NOT fall back to old string fields
+    // (admissionStatus is used by the Admissions tab with different values)
+    const currentValues = s
+        ? (Array.isArray(s[fieldName]) ? s[fieldName] : [])
+        : [];
+    const options = type === 'invoice'
+        ? ['NOT APPLIED', 'APPLIED', 'RECEIVED', 'PAYED', 'NO RESULT', 'CANCELLED']
+        : ['1 MONTH KDB', '1 MONTH KDB OK', 'COA RECEIVED', 'COA MISTAKE', '1 DAY KDB NEED', '1 DAY KDB OK', 'NO RESULT', 'CANCELLED'];
+    const colorMap = type === 'invoice' ? INVOICE_COLORS : ADMISSION_COLORS;
+    const at2 = currentValues.length >= 2;
+
+    // Any stored values not in the standard list (legacy data from other fields)
+    const unknownValues = currentValues.filter(v => !options.includes(v));
+
+    popup.innerHTML = `
+        <div class="sdp-header">${type === 'invoice' ? 'INVOICES' : 'ADMISSION'} <span class="sdp-hint">(max 2)</span></div>
+        ${options.map(opt => {
+        const c = colorMap[opt] || { ball: '#94a3b8' };
+        const checked = currentValues.includes(opt);
+        const disabled = !checked && at2;
+        return `
+                <label class="sdp-option${checked ? ' sdp-checked' : ''}${disabled ? ' sdp-disabled' : ''}">
+                    <input type="checkbox" value="${opt}" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''}
+                        onclick="event.stopPropagation()" onchange="toggleStatusOption(this)">
+                    <span class="sdp-dot" style="background:${c.ball};"></span>
+                    <span class="sdp-label" ${checked ? `style="color:${c.text || c.ball};"` : ''}>${opt}</span>
+                </label>`;
+    }).join('')}
+        ${unknownValues.length ? `
+        <div class="sdp-separator"></div>
+        ${unknownValues.map(opt => `
+                <label class="sdp-option sdp-checked sdp-unknown" title="Legacy value — uncheck to remove">
+                    <input type="checkbox" value="${opt}" checked
+                        onclick="event.stopPropagation()" onchange="toggleStatusOption(this)">
+                    <span class="sdp-dot" style="background:#6b7280;"></span>
+                    <span class="sdp-label" style="color:#9ca3af;text-decoration:line-through;">${opt}</span>
+                </label>`).join('')}` : ''}
+        <div class="sdp-separator"></div>
+        <div class="sdp-clear" onclick="clearStatusDropdown()">&#x2715; Clear all</div>
+    `;
+
+    // Position (fixed, below trigger; flip above if needed)
+    const rect = triggerEl.getBoundingClientRect();
+    const popupW = 214;
+    let left = rect.left;
+    let top = rect.bottom + 4;
+    if (left + popupW > window.innerWidth - 8) left = window.innerWidth - popupW - 8;
+    if (left < 8) left = 8;
+    if (top + 320 > window.innerHeight) top = rect.top - 320;
+
+    popup.style.display = 'block';
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+}
+
+function toggleStatusOption(checkbox) {
+    const popup = document.getElementById('statusDropdownPopup');
+    if (!popup) return;
+    const type = popup.dataset.type;
+    const uniqueId = popup.dataset.uid;
+
+    const s = window.studentsData.find(st => (st.firestoreId || st.id) === uniqueId);
+    if (!s) return;
+
+    const fieldName = type === 'invoice' ? 'invoiceStatuses' : 'admissionStatuses';
+    // Use ONLY the new array field — do NOT fall back to old string fields
+    let current = Array.isArray(s[fieldName]) ? [...s[fieldName]] : [];
+
+    if (checkbox.checked) {
+        if (current.length >= 2) { checkbox.checked = false; return; }
+        if (!current.includes(checkbox.value)) current.push(checkbox.value);
+    } else {
+        current = current.filter(v => v !== checkbox.value);
+    }
+    s[fieldName] = current;
+
+    // Update label styling
+    const colorMap = type === 'invoice' ? INVOICE_COLORS : ADMISSION_COLORS;
+    const c = colorMap[checkbox.value] || {};
+    const label = checkbox.closest('.sdp-option');
+    if (label) {
+        label.classList.toggle('sdp-checked', checkbox.checked);
+        const lbl = label.querySelector('.sdp-label');
+        if (lbl) lbl.style.color = checkbox.checked ? (c.text || c.ball || '') : '';
+    }
+
+    // Disable/enable unchecked items when at limit
+    const at2 = current.length >= 2;
+    popup.querySelectorAll('.sdp-option').forEach(opt => {
+        const inp = opt.querySelector('input');
+        if (inp && !inp.checked) {
+            inp.disabled = at2;
+            opt.classList.toggle('sdp-disabled', at2);
+        }
+    });
+
+    // Update the trigger badge in the row
+    const trigger = document.querySelector(`.sms-trigger[data-uid="${uniqueId}"][data-type="${type}"]`);
+    if (trigger) {
+        trigger.innerHTML = renderStatusBadges(type, current) + '<i class="bi bi-chevron-down sms-chevron"></i>';
+    }
+
+    // Save to Firestore
+    const saveData = {};
+    saveData[fieldName] = current;
+    if (typeof updateStudentInFirestore === 'function' && s.firestoreId) {
+        updateStudentInFirestore(s.firestoreId, saveData);
+    }
+}
+
+function closeStatusDropdown() {
+    const popup = document.getElementById('statusDropdownPopup');
+    if (popup) popup.style.display = 'none';
+    _sdOpen = false;
+}
+
+function clearStatusDropdown() {
+    const popup = document.getElementById('statusDropdownPopup');
+    if (!popup) return;
+    const type = popup.dataset.type;
+    const uniqueId = popup.dataset.uid;
+    const s = window.studentsData.find(st => (st.firestoreId || st.id) === uniqueId);
+    if (!s) return;
+
+    const fieldName = type === 'invoice' ? 'invoiceStatuses' : 'admissionStatuses';
+    s[fieldName] = [];
+
+    // Update the trigger badge in the row
+    const trigger = document.querySelector(`.sms-trigger[data-uid="${uniqueId}"][data-type="${type}"]`);
+    if (trigger) {
+        trigger.innerHTML = renderStatusBadges(type, []) + '<i class="bi bi-chevron-down sms-chevron"></i>';
+    }
+
+    // Save to Firestore
+    if (typeof updateStudentInFirestore === 'function' && s.firestoreId) {
+        const saveData = {};
+        saveData[fieldName] = [];
+        updateStudentInFirestore(s.firestoreId, saveData);
+    }
+    closeStatusDropdown();
+}
+
+function applyStatusFilters(resetPage = true) {
+    if (resetPage) statusPage = 1;
+
+    const searchInput = document.getElementById('statusSearchInput');
+    const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
+
+    const tariffDropdown = document.getElementById('statusFilterTariff');
+    const tariffFilter = tariffDropdown ? tariffDropdown.value : '';
+
+    const levelDropdown = document.getElementById('statusFilterLevel');
+    const levelFilter = levelDropdown ? levelDropdown.value : '';
+
+    const groupDropdown = document.getElementById('statusFilterGroup');
+    const groupFilter = groupDropdown ? groupDropdown.value : '';
+
+    const invoiceDropdown = document.getElementById('statusFilterInvoice');
+    const invoiceFilter = invoiceDropdown ? invoiceDropdown.value : '';
+
+    const admissionDropdown = document.getElementById('statusFilterAdmission');
+    const admissionFilter = admissionDropdown ? admissionDropdown.value : '';
+
+    const filtered = window.studentsData.filter(s => {
+        if (levelFilter === 'DELETED') {
+            return s.deleted === true;
+        } else {
+            if (s.deleted) return false;
+        }
+
+        const matchesSearch = !searchQuery ||
+            s.fullName.toLowerCase().includes(searchQuery) ||
+            s.id.toLowerCase().includes(searchQuery) ||
+            (s.email && s.email.toLowerCase().includes(searchQuery)) ||
+            (s.university1 && s.university1.toLowerCase().includes(searchQuery)) ||
+            (s.university2 && s.university2.toLowerCase().includes(searchQuery));
+
+        const matchesTariff = !tariffFilter || s.tariff === tariffFilter;
+        const matchesLevel = !levelFilter || s.level === levelFilter;
+
+        let matchesGroup;
+        if (!groupFilter) {
+            matchesGroup = true;
+        } else if (groupFilter === 'NO_GROUP') {
+            matchesGroup = !s.group || s.group === '';
+        } else {
+            matchesGroup = s.group === groupFilter;
+        }
+
+        // Invoice filter: student must have the selected value in their invoiceStatuses array
+        const invArr = Array.isArray(s.invoiceStatuses) ? s.invoiceStatuses : [];
+        const matchesInvoice = !invoiceFilter || invArr.includes(invoiceFilter);
+
+        // Admission filter: student must have the selected value in their admissionStatuses array
+        const admArr = Array.isArray(s.admissionStatuses) ? s.admissionStatuses : [];
+        const matchesAdmission = !admissionFilter || admArr.includes(admissionFilter);
+
+        return matchesSearch && matchesTariff && matchesLevel && matchesGroup && matchesInvoice && matchesAdmission;
+    });
+
+    // Counter
+    const counterEl = document.getElementById('statusCounter');
+    if (counterEl) {
+        if (searchQuery || tariffFilter || levelFilter || groupFilter) {
+            counterEl.textContent = `Found ${filtered.length} student${filtered.length !== 1 ? 's' : ''}`;
+        } else {
+            counterEl.textContent = `Total ${filtered.length} student${filtered.length !== 1 ? 's' : ''}`;
+        }
+    }
+
+    // Sort by numeric ID
+    filtered.sort((a, b) => {
+        const numA = parseInt((a.id || '').replace(/\D+/, ''), 10);
+        const numB = parseInt((b.id || '').replace(/\D+/, ''), 10);
+        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+        return (a.id || '').localeCompare(b.id || '');
+    });
+
+    // Pagination
+    const totalItems = filtered.length;
+    const startIndex = (statusPage - 1) * ITEMS_PER_PAGE;
+    const paginatedData = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+    // Empty state
+    const tbody = document.getElementById('statusTableBody');
+    if (!tbody) return;
+
+    if (paginatedData.length === 0) {
+        renderPaginationControls('statusPagination', 1, 0, ITEMS_PER_PAGE, 'changeStatusPage');
+        tbody.innerHTML = levelFilter === 'DELETED'
+            ? '<tr><td colspan="7" class="text-center py-5 text-secondary"><i class="bi bi-trash me-2"></i>No deleted students.</td></tr>'
+            : '<tr><td colspan="7" class="text-center py-5 text-secondary"><i class="bi bi-search me-2"></i>No students match your filters.</td></tr>';
+        return;
+    }
+
+    // Render rows — uni1 only, + Invoices & Admission dropdowns
+    tbody.innerHTML = paginatedData.map(s => {
+        const uniqueId = s.firestoreId || s.id;
+
+        const importanceColors = { 'GREEN': '#28a745', 'YELLOW': '#ffc107', 'RED': '#dc3545' };
+        const borderColor = s.noteImportance ? importanceColors[s.noteImportance] : null;
+        // STATUS tab has its own separate row color field (statusRowColor)
+        const bgEntry = s.statusRowColor ? ROW_COLOR_MAP[s.statusRowColor] : null;
+        const bgColor = bgEntry ? bgEntry.bg : null;
+        let inlineStyle = '';
+        if (borderColor && bgColor) {
+            inlineStyle = `style="border-left:3px solid ${borderColor}; background-color:${bgColor};"`;
+        } else if (borderColor) {
+            inlineStyle = `style="border-left:3px solid ${borderColor};"`;
+        } else if (bgColor) {
+            inlineStyle = `style="background-color:${bgColor};"`;
+        }
+
+        const ballColor = bgEntry ? bgEntry.ball : null;
+        const ballStyle = ballColor
+            ? `background:${ballColor}; border-color:${ballColor}; box-shadow:0 0 0 2px ${ballColor}33;`
+            : '';
+
+        const certText = (s.languageCertificate && s.languageCertificate !== 'NO CERTIFICATE')
+            ? `${s.languageCertificate}${s.certificateScore ? ': ' + s.certificateScore : ''}`
+            : '';
+
+        const inv = s.invoiceStatus || '';
+        const adm = s.admissionStatus || '';
+
+        // STATUS tab uses separate array fields — NOT the old admissionStatus/invoiceStatus
+        // strings which belong to other parts of the app (Admissions tab etc.)
+        const invStatuses = Array.isArray(s.invoiceStatuses) ? s.invoiceStatuses : [];
+        const admStatuses = Array.isArray(s.admissionStatuses) ? s.admissionStatuses : [];
+
+        return `
+        <tr class="student-table-row ${s.deleted ? 'deleted-row' : ''}" ${inlineStyle}
+            onclick="viewStudentDetails('${uniqueId}')">
+
+            <td><span class="table-id-badge">${s.id}</span></td>
+
+            <td class="student-name-cell">
+                ${s.deleted ? '<i class="bi bi-trash text-danger me-1" style="font-size:0.75rem;"></i>' : ''}
+                <span class="table-full-name">${s.fullName}</span>
+                ${s.tariff ? `<span class="table-tariff-ghost">${s.tariff}</span>` : ''}
+            </td>
+
+            <td class="table-level-cell">
+                ${s.level ? `<span class="table-pill pill-level">${s.level}</span>` : '<span class="text-muted">\u2014</span>'}
+                ${certText ? `<span class="table-ghost-sub">${certText}</span>` : ''}
+            </td>
+
+            <td class="table-uni-cell">
+                ${s.university1 ? `<span class="table-uni-item">\u00b7 ${s.university1}</span>` : '<span class="text-muted">\u2014</span>'}
+            </td>
+
+            <!-- INVOICES multi-select trigger -->
+            <td class="status-select-cell" onclick="event.stopPropagation()">
+                <div class="sms-trigger" data-uid="${uniqueId}" data-type="invoice"
+                     onclick="openStatusDropdown(this, 'invoice', '${uniqueId}')">
+                    ${renderStatusBadges('invoice', invStatuses)}
+                    <i class="bi bi-chevron-down sms-chevron"></i>
+                </div>
+            </td>
+
+            <!-- ADMISSION multi-select trigger -->
+            <td class="status-select-cell" onclick="event.stopPropagation()">
+                <div class="sms-trigger" data-uid="${uniqueId}" data-type="admission"
+                     onclick="openStatusDropdown(this, 'admission', '${uniqueId}')">
+                    ${renderStatusBadges('admission', admStatuses)}
+                    <i class="bi bi-chevron-down sms-chevron"></i>
+                </div>
+            </td>
+
+            <td class="table-action-cell" onclick="event.stopPropagation()">
+                <div class="cp-ball-wrapper"
+                     onmouseenter="showColorPicker(this, '${uniqueId}', 'status')"
+                     onmouseleave="startHideColorPicker()">
+                    <div class="cp-ball" style="${ballStyle}"></div>
+                </div>
+            </td>
+
+        </tr>
+        `;
+    }).join('');
+
+    renderPaginationControls('statusPagination', statusPage, totalItems, ITEMS_PER_PAGE, 'changeStatusPage');
+}
+
+// Save invoice status for a student
+function saveInvoiceStatus(uniqueId, value) {
+    const s = window.studentsData.find(st => (st.firestoreId || st.id) === uniqueId);
+    if (!s) return;
+    s.invoiceStatus = value;
+    if (typeof updateStudentInFirestore === 'function' && s.firestoreId) {
+        updateStudentInFirestore(s.firestoreId, { invoiceStatus: value });
+    }
+}
+
+// Save admission status for a student
+function saveAdmissionStatus(uniqueId, value) {
+    const s = window.studentsData.find(st => (st.firestoreId || st.id) === uniqueId);
+    if (!s) return;
+    s.admissionStatus = value;
+    if (typeof updateStudentInFirestore === 'function' && s.firestoreId) {
+        updateStudentInFirestore(s.firestoreId, { admissionStatus: value });
+    }
+}
+
 
 // Populate the Excel modal with students
 function populateExcelModal() {
     const filter = document.getElementById('excelLevelFilter').value;
+    const groupFilter = document.getElementById('excelGroupFilter').value;
     const container = document.getElementById('excelStudentList');
 
     // Filter students (exclude deleted)
@@ -1189,6 +1745,15 @@ function populateExcelModal() {
     // Apply level filter if selected
     if (filter) {
         students = students.filter(s => s.level === filter);
+    }
+
+    // Apply group filter if selected
+    if (groupFilter) {
+        if (groupFilter === 'NO_GROUP') {
+            students = students.filter(s => !s.group || s.group === '');
+        } else {
+            students = students.filter(s => s.group === groupFilter);
+        }
     }
 
     // Sort by ID
@@ -2473,7 +3038,7 @@ function confirmDeleteGroup(groupId) {
 
 // Update group filter dropdown
 function updateGroupDropdowns() {
-    const groupSelects = document.querySelectorAll('#filterGroup');
+    const groupSelects = document.querySelectorAll('#filterGroup, #statusFilterGroup, #excelGroupFilter');
 
     groupSelects.forEach(select => {
         const currentValue = select.value;
@@ -2733,7 +3298,7 @@ function executeSettingsDelete() {
 // ==========================================
 
 function updateTariffDropdowns() {
-    const tariffSelects = document.querySelectorAll('#tariff, #filterTariff, #paymentTariffFilter');
+    const tariffSelects = document.querySelectorAll('#tariff, #filterTariff, #statusFilterTariff, #paymentTariffFilter');
 
     tariffSelects.forEach(select => {
         const currentValue = select.value;
@@ -2753,7 +3318,7 @@ function updateTariffDropdowns() {
 }
 
 function updateLevelDropdowns() {
-    const levelSelects = document.querySelectorAll('#levelSelect, #filterLevel, #excelLevelFilter');
+    const levelSelects = document.querySelectorAll('#levelSelect, #filterLevel, #statusFilterLevel, #excelLevelFilter');
 
     levelSelects.forEach(select => {
         const currentValue = select.value;
@@ -2769,8 +3334,8 @@ function updateLevelDropdowns() {
             select.innerHTML += `<option value="${l.name}">${l.name}</option>`;
         });
 
-        // Add deleted students option for filterLevel
-        if (select.id === 'filterLevel') {
+        // Add deleted students option for filterLevel and statusFilterLevel
+        if (select.id === 'filterLevel' || select.id === 'statusFilterLevel') {
             select.innerHTML += '<option value="DELETED" style="font-style: italic; color: #e53e3e;">Deleted students</option>';
         }
 
@@ -2992,7 +3557,6 @@ window.showTab = showTab;
 window.saveStudent = saveStudent;
 window.viewStudentDetails = viewStudentDetails;
 window.downloadStudentExcel = downloadStudentExcel;
-window.renderStudents = renderStudents;
 window.copyToClipboard = copyToClipboard;
 window.startEdit = startEdit;
 window.cancelEdit = cancelEdit;
@@ -3797,6 +4361,18 @@ window.viewStudentDetails = viewStudentDetails;
 window.downloadStudentExcel = downloadStudentExcel;
 window.renderStudents = renderStudents;
 window.applyFilters = applyFilters;
+window.showColorPicker = showColorPicker;
+window.startHideColorPicker = startHideColorPicker;
+window.cancelHideColorPicker = cancelHideColorPicker;
+window.hideColorPicker = hideColorPicker;
+window.setRowColor = setRowColor;
+window.renderStatus = renderStatus;
+window.applyStatusFilters = applyStatusFilters;
+window.changeStatusPage = changeStatusPage;
+window.openStatusDropdown = openStatusDropdown;
+window.toggleStatusOption = toggleStatusOption;
+window.closeStatusDropdown = closeStatusDropdown;
+window.clearStatusDropdown = clearStatusDropdown;
 window.copyToClipboard = copyToClipboard;
 window.startEdit = startEdit;
 window.cancelEdit = cancelEdit;

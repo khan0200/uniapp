@@ -62,9 +62,23 @@ async function sendTelegramNotification(message) {
 // ==========================================
 
 async function saveStudentToFirestore(studentData) {
+    const saveBtn = document.getElementById('saveStudentBtn');
+    const saveIcon = document.getElementById('saveStudentIcon');
+    const saveSpinner = document.getElementById('saveStudentSpinner');
+    const saveText = document.getElementById('saveStudentText');
+
+    // UI Loading state
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        if (saveSpinner) saveSpinner.classList.remove('d-none');
+        if (saveIcon) saveIcon.classList.add('d-none');
+        if (saveText) saveText.textContent = 'Saving...';
+    }
+
     if (!firebaseInitialized) {
         console.log('Firebase not available, saving to localStorage');
         saveToLocalStorage(studentData);
+        resetSaveButtonState(saveBtn, saveIcon, saveSpinner, saveText);
         return;
     }
 
@@ -103,7 +117,17 @@ async function saveStudentToFirestore(studentData) {
         }
         // Fallback to localStorage
         saveToLocalStorage(studentData);
+    } finally {
+        resetSaveButtonState(saveBtn, saveIcon, saveSpinner, saveText);
     }
+}
+
+// Helper to reset the save button
+function resetSaveButtonState(btn, icon, spinner, text) {
+    if (btn) btn.disabled = false;
+    if (spinner) spinner.classList.add('d-none');
+    if (icon) icon.classList.remove('d-none');
+    if (text) text.textContent = 'Save Student';
 }
 
 // ==========================================

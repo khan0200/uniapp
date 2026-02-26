@@ -109,11 +109,36 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ==========================================
-    // FORM RESET ON MODAL CLOSE
+    // FORM RESET ON MODAL CLOSE & LASTR REGISTERED STUDENT HINT
     // ==========================================
 
     const addStudentModal = document.getElementById('addStudentModal');
     if (addStudentModal) {
+        // Show last added student ID when opening modal
+        addStudentModal.addEventListener('show.bs.modal', function () {
+            if (window.studentsData && window.studentsData.length > 0) {
+                // Find latest student by createdAt
+                let latestStudent = window.studentsData[0];
+                for (let i = 1; i < window.studentsData.length; i++) {
+                    const s = window.studentsData[i];
+                    if (s.createdAt && latestStudent.createdAt) {
+                        if (new Date(s.createdAt) > new Date(latestStudent.createdAt)) {
+                            latestStudent = s;
+                        }
+                    } else if (s.createdAt) {
+                        latestStudent = s;
+                    }
+                }
+
+                const hintEl = document.getElementById('lastStudentHint');
+                const lastIdEl = document.getElementById('lastRegisteredStudent');
+                if (hintEl && lastIdEl) {
+                    lastIdEl.textContent = `${latestStudent.id} — ${latestStudent.fullName}`;
+                    hintEl.style.display = 'block';
+                }
+            }
+        });
+
         addStudentModal.addEventListener('hidden.bs.modal', function () {
             const form = document.getElementById('addStudentForm');
             if (form) {
@@ -127,6 +152,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     uni2Select.innerHTML = '<option value="">Choose University</option>';
                 }
             }
+
+            // Hide the hint
+            const hintEl = document.getElementById('lastStudentHint');
+            if (hintEl) hintEl.style.display = 'none';
         });
     }
 
@@ -141,13 +170,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Check required fields
             const requiredFields = [{
-                    id: 'studentId',
-                    name: 'Student ID'
-                },
-                {
-                    id: 'fullName',
-                    name: 'Full Name'
-                }
+                id: 'studentId',
+                name: 'Student ID'
+            },
+            {
+                id: 'fullName',
+                name: 'Full Name'
+            }
             ];
 
             let isValid = true;
