@@ -895,6 +895,12 @@ function viewStudentDetails(uniqueId) {
 
 // Start inline edit
 function startEdit(field, type) {
+  const pwd = prompt("Enter password to edit:");
+  if (pwd !== "1198") {
+    if (pwd !== null) showNotification("Incorrect password!", "error");
+    return;
+  }
+
   const group = document.querySelector(`[data-field="${field}"]`);
   group.querySelector(".detail-value-wrap").style.display = "none";
   group.querySelector(".edit-field").style.display = "block";
