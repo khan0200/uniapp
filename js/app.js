@@ -890,15 +890,29 @@ function viewStudentDetails(uniqueId) {
   if (!modal) {
     modal = new bootstrap.Modal(modalElement);
   }
+
+  // Set flag = 0 each time the modal opens just in case
+  window.editAuthFlag = 0;
+  
+  // Also explicitly reset when closed
+  modalElement.addEventListener('hidden.bs.modal', function() {
+    window.editAuthFlag = 0;
+  }, { once: true });
+
   modal.show();
 }
 
+window.editAuthFlag = 0;
+
 // Start inline edit
 function startEdit(field, type) {
-  const pwd = prompt("Enter password to edit:");
-  if (pwd !== "1198") {
-    if (pwd !== null) showNotification("Incorrect password!", "error");
-    return;
+  if (window.editAuthFlag === 0) {
+    const pwd = prompt("Enter password to edit:");
+    if (pwd !== "1198") {
+      if (pwd !== null) showNotification("Incorrect password!", "error");
+      return;
+    }
+    window.editAuthFlag = 1;
   }
 
   const group = document.querySelector(`[data-field="${field}"]`);
