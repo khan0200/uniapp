@@ -470,9 +470,11 @@ function showTab(tabName) {
 }
 
 function saveStudent() {
+  const officeEl = document.getElementById("studentOffice");
   const studentData = {
-    id: document.getElementById("studentId").value.trim(),
+    id: document.getElementById("studentId").value.trim().toUpperCase(),
     fullName: document.getElementById("fullName").value.trim().toUpperCase(),
+    office: officeEl ? officeEl.value.trim() : "",
     phone1: "",
     phone2: "",
     email: "",
@@ -494,6 +496,11 @@ function saveStudent() {
   // Validate required fields
   if (!studentData.id || !studentData.fullName) {
     showNotification("Please fill in Student ID and Full Name!", "error");
+    return;
+  }
+
+  if (!studentData.office) {
+    showNotification("Please select an Office!", "error");
     return;
   }
 
@@ -835,6 +842,100 @@ function viewStudentDetails(uniqueId) {
                     </div>
                 </div>
             </div>
+
+            <!-- ── Financial Summary Bar ── -->
+            <div class="col-12 mt-3">
+                ${(() => {
+                    // Compute payments done: sum of real (non-discount, non-withdrawal) positive payments for this student
+                    const allPayments = window.paymentsData || [];
+                    const studentPayments = allPayments.filter(p =>
+                        p.studentFirestoreId === s.firestoreId &&
+                        !p.isWithdrawal &&
+                        !p.isDiscount &&
+                        parseFloat(p.amount) > 0
+                    );
+                    const paymentsDone = studentPayments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+
+                    const balance = parseFloat(s.balance) || 0;
+                    const discount = parseFloat(s.discount) || 0;
+                    const office = s.office || '—';
+
+                    const fmt = (n) => new Intl.NumberFormat('en-US').format(Math.abs(n));
+                    const balanceSign = balance > 0 ? '+' : balance < 0 ? '-' : '';
+                    const balanceColor = balance > 0 ? '#16a34a' : balance < 0 ? '#dc2626' : '#6b7280';
+
+                    return `
+                    <div class="student-summary-bar" style="
+                        display: grid;
+                        grid-template-columns: repeat(4, 1fr);
+                        gap: 0;
+                        border-radius: 14px;
+                        overflow: hidden;
+                        border: 1px solid var(--border-subtle);
+                        background: var(--bg-elevated);
+                    ">
+                        <!-- OFFICE -->
+                        <div class="detail-group editable" data-field="office" style="
+                            padding: 0.85rem 1rem;
+                            border-right: 1px solid var(--border-subtle);
+                            display: flex; flex-direction: column; gap: 3px;
+                            background: transparent;
+                            border-radius: 0; box-shadow: none;
+                        ">
+                            <span class="student-summary-label" style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-tertiary);">Office</span>
+                            <div class="detail-value-wrap" style="gap: 6px;">
+                                <span class="detail-value student-summary-value" style="font-size: 0.88rem; font-weight: 600; color: var(--text-primary);">
+                                    <i class="bi bi-geo-alt-fill me-1" style="color: #5b8def; font-size: 0.78rem;"></i>${office}
+                                </span>
+                                <button class="edit-btn" onclick="startEdit('office', 'select'); event.stopPropagation();"><i class="bi bi-pencil"></i></button>
+                            </div>
+                            <div class="edit-field" style="display:none;">
+                                <select class="form-select ios-input form-control-sm" id="edit-office">
+                                    <option value="" ${!s.office ? 'selected' : ''}>Select office...</option>
+                                    <option value="ANDIJON OFFIS" ${s.office === 'ANDIJON OFFIS' ? 'selected' : ''}>ANDIJON OFFIS</option>
+                                    <option value="TOSHKENT OFFIS" ${s.office === 'TOSHKENT OFFIS' ? 'selected' : ''}>TOSHKENT OFFIS</option>
+                                </select>
+                                <div class="edit-actions"><button class="save-btn" onclick="saveEdit('office')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('office')"><i class="bi bi-x"></i></button></div>
+                            </div>
+                        </div>
+
+                        <!-- STUDENT BALANCE -->
+                        <div class="student-summary-bar-cell" style="
+                            padding: 0.85rem 1rem;
+                            border-right: 1px solid var(--border-subtle);
+                            display: flex; flex-direction: column; gap: 3px;
+                        ">
+                            <span class="student-summary-label" style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-tertiary);">Student Balance</span>
+                            <span style="font-size: 0.88rem; font-weight: 700; color: ${balanceColor};">
+                                ${balanceSign}${fmt(balance)} <span style="font-size:0.72rem; font-weight:400; opacity:0.7;">UZS</span>
+                            </span>
+                        </div>
+
+                        <!-- PAYMENTS DONE -->
+                        <div class="student-summary-bar-cell" style="
+                            padding: 0.85rem 1rem;
+                            border-right: 1px solid var(--border-subtle);
+                            display: flex; flex-direction: column; gap: 3px;
+                        ">
+                            <span class="student-summary-label" style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-tertiary);">Payments Done</span>
+                            <span style="font-size: 0.88rem; font-weight: 700; color: #16a34a;">
+                                +${fmt(paymentsDone)} <span style="font-size:0.72rem; font-weight:400; opacity:0.7;">UZS</span>
+                            </span>
+                        </div>
+
+                        <!-- DISCOUNT -->
+                        <div class="student-summary-bar-cell" style="
+                            padding: 0.85rem 1rem;
+                            display: flex; flex-direction: column; gap: 3px;
+                        ">
+                            <span class="student-summary-label" style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-tertiary);">Discount</span>
+                            <span style="font-size: 0.88rem; font-weight: 700; color: #d97706;">
+                                ${fmt(discount)} <span style="font-size:0.72rem; font-weight:400; opacity:0.7;">UZS</span>
+                            </span>
+                        </div>
+                    </div>`;
+                })()}
+            </div>
         </div>
     `;
 
@@ -1013,6 +1114,8 @@ function saveEdit(field) {
       valueSpan.innerHTML = `<span class="badge ${badgeClass}">${newValue || (field === "group" ? "No Group" : "-")}</span>`;
     } else if (field === "tariff") {
       valueSpan.innerHTML = `<span class="badge badge-tariff">${newValue}</span>`;
+    } else if (field === "office") {
+      valueSpan.innerHTML = `<i class="bi bi-geo-alt-fill me-1" style="color: #5b8def; font-size: 0.78rem;"></i>${newValue || "—"}`;
     } else {
       valueSpan.textContent = newValue || "-";
     }
