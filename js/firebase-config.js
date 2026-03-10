@@ -741,6 +741,83 @@ const defaultLevels = [{
 }
 ];
 
+function normalizeSettingName(name) {
+    return (name || '').trim().toUpperCase();
+}
+
+function dedupeTariffsByNameAndPrice(items) {
+    const unique = new Map();
+    (items || []).forEach((item) => {
+        const key = `${normalizeSettingName(item.name)}|${Number(item.price) || 0}`;
+        if (!unique.has(key)) {
+            unique.set(key, item);
+        }
+    });
+    return Array.from(unique.values());
+}
+
+function dedupeLevelsByName(items) {
+    const unique = new Map();
+    (items || []).forEach((item) => {
+        const key = normalizeSettingName(item.name);
+        if (key && !unique.has(key)) {
+            unique.set(key, item);
+        }
+    });
+    return Array.from(unique.values());
+}
+
+function buildDeterministicDocId(prefix, rawValue) {
+    const normalized = String(rawValue || '').trim().toLowerCase();
+    const encoded = encodeURIComponent(normalized)
+        .replace(/%/g, '')
+        .replace(/[^a-z0-9_-]/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^_+|_+$/g, '');
+    const suffix = encoded || 'item';
+    return `${prefix}_${suffix}`.slice(0, 120);
+}
+
+function normalizeVideoUrl(url) {
+    if (!url) return '';
+    try {
+        const parsed = new URL(url.trim());
+        let host = parsed.hostname.toLowerCase();
+        host = host.replace(/^www\./, '').replace(/^m\./, '');
+        let youtubeId = '';
+
+        if (host === 'youtu.be') {
+            youtubeId = parsed.pathname.replace(/^\/+/, '').split('/')[0];
+        } else if (host.includes('youtube.com')) {
+            youtubeId = parsed.searchParams.get('v') || '';
+            if (!youtubeId) {
+                const parts = parsed.pathname.split('/').filter(Boolean);
+                if (parts[0] === 'shorts' || parts[0] === 'embed' || parts[0] === 'live') {
+                    youtubeId = parts[1] || '';
+                }
+            }
+        }
+
+        if (youtubeId) {
+            return `https://youtube.com/watch?v=${youtubeId}`;
+        }
+
+        const path = parsed.pathname.replace(/\/+$/, '');
+        return `https://${host}${path}`;
+    } catch (e) {
+        return String(url).trim();
+    }
+}
+
+function dedupeVideosByUrl(items) {
+    const unique = new Map();
+    (items || []).forEach((item) => {
+        const key = normalizeVideoUrl(item.url) || normalizeSettingName(item.name);
+        if (key && !unique.has(key)) unique.set(key, item);
+    });
+    return Array.from(unique.values());
+}
+
 // ==========================================
 // TARIFFS FIRESTORE FUNCTIONS
 // ==========================================
@@ -753,28 +830,34 @@ async function saveTariffToFirestore(tariffData) {
     }
 
     try {
-        // ✨ DUPLICATE PREVENTION: Check if tariff with same name already exists
-        const existingTariffs = await db.collection('tariffs')
-            .where('name', '==', tariffData.name)
-            .get();
+        const normalizedName = normalizeSettingName(tariffData.name);
+        const tariffId = buildDeterministicDocId('tariff', normalizedName);
+        const existingTariffs = await db.collection('tariffs').get();
+        const hasDuplicate = existingTariffs.docs.some((doc) => {
+            const data = doc.data() || {};
+            return normalizeSettingName(data.name) === normalizedName;
+        });
 
-        if (!existingTariffs.empty) {
-            console.warn('⚠️ Tariff with this name already exists');
+        if (hasDuplicate) {
+            console.warn('Tariff with this name already exists');
             showNotification(`Tariff "${tariffData.name}" already exists!`, 'error');
             return;
         }
 
-        tariffData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-        const docRef = await db.collection('tariffs').add(tariffData);
-        console.log('✅ Tariff saved with ID:', docRef.id);
+        const payload = {
+            ...tariffData,
+            name: normalizedName,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        await db.collection('tariffs').doc(tariffId).set(payload);
+        console.log('Tariff saved with ID:', tariffId);
         showNotification('Tariff saved successfully!', 'success');
         await loadTariffsFromFirestore();
     } catch (error) {
-        console.error('❌ Error saving tariff:', error);
+        console.error('Error saving tariff:', error);
         showNotification('Error saving tariff: ' + error.message, 'error');
     }
 }
-
 async function loadTariffsFromFirestore() {
     if (!firebaseInitialized) {
         console.log('Firebase not available, using default tariffs');
@@ -795,8 +878,11 @@ async function loadTariffsFromFirestore() {
         if (snapshot.empty) {
             console.log('📦 Seeding tariffs collection with defaults...');
             for (const tariff of defaultTariffs) {
-                await db.collection('tariffs').add({
+                const tariffName = normalizeSettingName(tariff.name);
+                const tariffId = buildDeterministicDocId('tariff', tariffName);
+                await db.collection('tariffs').doc(tariffId).set({
                     ...tariff,
+                    name: tariffName,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
             }
@@ -811,8 +897,8 @@ async function loadTariffsFromFirestore() {
             });
         });
 
-        // Remove duplicates by firestoreId
-        window.tariffsData = Array.from(new Map(window.tariffsData.map(t => [t.firestoreId, t])).values());
+        // Remove duplicates by content (name + price), not only by Firestore doc ID
+        window.tariffsData = dedupeTariffsByNameAndPrice(window.tariffsData);
 
         console.log(`✅ Loaded ${window.tariffsData.length} tariffs from Firestore`);
 
@@ -827,17 +913,30 @@ async function updateTariffInFirestore(firestoreId, updatedData) {
     if (!firebaseInitialized || !firestoreId) return;
 
     try {
+        const normalizedName = normalizeSettingName(updatedData.name);
+        const existingTariffs = await db.collection('tariffs').get();
+        const hasDuplicate = existingTariffs.docs.some((doc) => {
+            if (doc.id === firestoreId) return false;
+            const data = doc.data() || {};
+            return normalizeSettingName(data.name) === normalizedName;
+        });
+
+        if (hasDuplicate) {
+            showNotification(`Tariff "${updatedData.name}" already exists!`, 'error');
+            return;
+        }
+
+        updatedData.name = normalizedName;
         updatedData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
         await db.collection('tariffs').doc(firestoreId).update(updatedData);
-        console.log('✅ Tariff updated');
+        console.log('Tariff updated');
         showNotification('Tariff updated successfully!', 'success');
         await loadTariffsFromFirestore();
     } catch (error) {
-        console.error('❌ Error updating tariff:', error);
+        console.error('Error updating tariff:', error);
         showNotification('Error updating tariff: ' + error.message, 'error');
     }
 }
-
 async function deleteTariffFromFirestore(firestoreId) {
     if (!firebaseInitialized || !firestoreId) return;
 
@@ -864,28 +963,34 @@ async function saveLevelToFirestore(levelData) {
     }
 
     try {
-        // ✨ DUPLICATE PREVENTION: Check if level with same name already exists
-        const existingLevels = await db.collection('levels')
-            .where('name', '==', levelData.name)
-            .get();
+        const normalizedName = normalizeSettingName(levelData.name);
+        const levelId = buildDeterministicDocId('level', normalizedName);
+        const existingLevels = await db.collection('levels').get();
+        const hasDuplicate = existingLevels.docs.some((doc) => {
+            const data = doc.data() || {};
+            return normalizeSettingName(data.name) === normalizedName;
+        });
 
-        if (!existingLevels.empty) {
-            console.warn('⚠️ Education level with this name already exists');
+        if (hasDuplicate) {
+            console.warn('Education level with this name already exists');
             showNotification(`Education level "${levelData.name}" already exists!`, 'error');
             return;
         }
 
-        levelData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-        const docRef = await db.collection('levels').add(levelData);
-        console.log('✅ Level saved with ID:', docRef.id);
+        const payload = {
+            ...levelData,
+            name: normalizedName,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        await db.collection('levels').doc(levelId).set(payload);
+        console.log('Level saved with ID:', levelId);
         showNotification('Education level saved successfully!', 'success');
         await loadLevelsFromFirestore();
     } catch (error) {
-        console.error('❌ Error saving level:', error);
+        console.error('Error saving level:', error);
         showNotification('Error saving level: ' + error.message, 'error');
     }
 }
-
 async function loadLevelsFromFirestore() {
     if (!firebaseInitialized) {
         console.log('Firebase not available, using default levels');
@@ -906,8 +1011,11 @@ async function loadLevelsFromFirestore() {
         if (snapshot.empty) {
             console.log('📦 Seeding levels collection with defaults...');
             for (const level of defaultLevels) {
-                await db.collection('levels').add({
+                const levelName = normalizeSettingName(level.name);
+                const levelId = buildDeterministicDocId('level', levelName);
+                await db.collection('levels').doc(levelId).set({
                     ...level,
+                    name: levelName,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
             }
@@ -922,8 +1030,8 @@ async function loadLevelsFromFirestore() {
             });
         });
 
-        // Remove duplicates by firestoreId
-        window.levelsData = Array.from(new Map(window.levelsData.map(l => [l.firestoreId, l])).values());
+        // Remove duplicates by level name, not only by Firestore doc ID
+        window.levelsData = dedupeLevelsByName(window.levelsData);
 
         console.log(`✅ Loaded ${window.levelsData.length} levels from Firestore`);
 
@@ -938,17 +1046,30 @@ async function updateLevelInFirestore(firestoreId, updatedData) {
     if (!firebaseInitialized || !firestoreId) return;
 
     try {
+        const normalizedName = normalizeSettingName(updatedData.name);
+        const existingLevels = await db.collection('levels').get();
+        const hasDuplicate = existingLevels.docs.some((doc) => {
+            if (doc.id === firestoreId) return false;
+            const data = doc.data() || {};
+            return normalizeSettingName(data.name) === normalizedName;
+        });
+
+        if (hasDuplicate) {
+            showNotification(`Education level "${updatedData.name}" already exists!`, 'error');
+            return;
+        }
+
+        updatedData.name = normalizedName;
         updatedData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
         await db.collection('levels').doc(firestoreId).update(updatedData);
-        console.log('✅ Level updated');
+        console.log('Level updated');
         showNotification('Education level updated successfully!', 'success');
         await loadLevelsFromFirestore();
     } catch (error) {
-        console.error('❌ Error updating level:', error);
+        console.error('Error updating level:', error);
         showNotification('Error updating level: ' + error.message, 'error');
     }
 }
-
 async function deleteLevelFromFirestore(firestoreId) {
     if (!firebaseInitialized || !firestoreId) return;
 
@@ -1660,17 +1781,36 @@ async function saveVideoToFirestore(videoData) {
     }
 
     try {
-        videoData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-        const docRef = await db.collection('videos').add(videoData);
-        console.log('✅ Video saved with ID:', docRef.id);
+        const normalizedUrl = normalizeVideoUrl(videoData.url);
+        const normalizedName = (videoData.name || '').trim();
+        const videoId = buildDeterministicDocId('video', normalizedUrl || normalizedName);
+
+        const existingVideos = await db.collection('videos').get();
+        const hasDuplicate = existingVideos.docs.some((doc) => {
+            const data = doc.data() || {};
+            return normalizeVideoUrl(data.url) === normalizedUrl && normalizedUrl;
+        });
+
+        if (hasDuplicate) {
+            console.warn('Video with this link already exists');
+            showNotification('This video link already exists!', 'error');
+            return;
+        }
+
+        const payload = {
+            ...videoData,
+            name: normalizedName,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        await db.collection('videos').doc(videoId).set(payload);
+        console.log('Video saved with ID:', videoId);
         showNotification('Video saved successfully!', 'success');
         await loadVideosFromFirestore();
     } catch (error) {
-        console.error('❌ Error saving video:', error);
+        console.error('Error saving video:', error);
         showNotification('Error saving video: ' + error.message, 'error');
     }
 }
-
 async function loadVideosFromFirestore() {
     if (!firebaseInitialized) {
         console.log('Firebase not available, using default videos');
@@ -1683,14 +1823,16 @@ async function loadVideosFromFirestore() {
     }
 
     try {
-        const snapshot = await db.collection('videos').orderBy('createdAt', 'asc').get();
+        // Do not query with orderBy(createdAt): docs missing createdAt can be excluded and falsely trigger reseeding.
+        const snapshot = await db.collection('videos').get();
         window.videosData = [];
 
         // If empty, seed with default data
         if (snapshot.empty) {
             console.log('📦 Seeding videos collection with defaults...');
             for (const video of defaultVideos) {
-                await db.collection('videos').add({
+                const videoId = buildDeterministicDocId('video', normalizeVideoUrl(video.url) || video.name);
+                await db.collection('videos').doc(videoId).set({
                     ...video,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
@@ -1706,8 +1848,13 @@ async function loadVideosFromFirestore() {
             });
         });
 
-        // Remove duplicates by firestoreId
-        window.videosData = Array.from(new Map(window.videosData.map(v => [v.firestoreId, v])).values());
+        // Remove duplicates by normalized URL (or name fallback)
+        window.videosData = dedupeVideosByUrl(window.videosData);
+        window.videosData.sort((a, b) => {
+            const aSec = a.createdAt && typeof a.createdAt.seconds === 'number' ? a.createdAt.seconds : 0;
+            const bSec = b.createdAt && typeof b.createdAt.seconds === 'number' ? b.createdAt.seconds : 0;
+            return aSec - bSec;
+        });
 
         console.log(`✅ Loaded ${window.videosData.length} videos from Firestore`);
 
@@ -1721,17 +1868,31 @@ async function updateVideoInFirestore(firestoreId, updatedData) {
     if (!firebaseInitialized || !firestoreId) return;
 
     try {
+        const normalizedUrl = normalizeVideoUrl(updatedData.url);
+        const existingVideos = await db.collection('videos').get();
+        const hasDuplicate = existingVideos.docs.some((doc) => {
+            if (doc.id === firestoreId) return false;
+            const data = doc.data() || {};
+            return normalizeVideoUrl(data.url) === normalizedUrl && normalizedUrl;
+        });
+
+        if (hasDuplicate) {
+            showNotification('This video link already exists!', 'error');
+            return;
+        }
+
+        updatedData.name = updatedData.name ? updatedData.name.trim() : '';
+        updatedData.url = updatedData.url ? updatedData.url.trim() : '';
         updatedData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
         await db.collection('videos').doc(firestoreId).update(updatedData);
-        console.log('✅ Video updated');
+        console.log('Video updated');
         showNotification('Video updated successfully!', 'success');
         await loadVideosFromFirestore();
     } catch (error) {
-        console.error('❌ Error updating video:', error);
+        console.error('Error updating video:', error);
         showNotification('Error updating video: ' + error.message, 'error');
     }
 }
-
 async function deleteVideoFromFirestore(firestoreId) {
     if (!firebaseInitialized || !firestoreId) return;
 
@@ -1751,3 +1912,6 @@ window.saveVideoToFirestore = saveVideoToFirestore;
 window.loadVideosFromFirestore = loadVideosFromFirestore;
 window.updateVideoInFirestore = updateVideoInFirestore;
 window.deleteVideoFromFirestore = deleteVideoFromFirestore;
+
+
+
