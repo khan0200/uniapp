@@ -2394,6 +2394,193 @@ body {
   color: var(--text-secondary);
 }
 
+/* ==========================================
+   ADD PAYMENT MODAL - POLISHED UI
+   ========================================== */
+
+#addPaymentModal .modal-dialog {
+  max-width: 760px;
+}
+
+#addPaymentModal .modal-content {
+  background: linear-gradient(
+    160deg,
+    var(--bg-card) 0%,
+    var(--bg-elevated) 100%
+  );
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  box-shadow: var(--shadow-xl);
+}
+
+#addPaymentModal .modal-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  background: linear-gradient(
+    90deg,
+    var(--accent-success-bg) 0%,
+    rgba(0, 120, 212, 0.12) 100%
+  );
+}
+
+#addPaymentModal .modal-title {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+#addPaymentModal .modal-title i {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-success-bg);
+  color: var(--accent-success) !important;
+  box-shadow: 0 0 0 1px rgba(16, 124, 16, 0.24) inset;
+}
+
+#addPaymentModal .btn-close {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  opacity: 1;
+}
+
+#addPaymentModal .btn-close:hover {
+  background-color: var(--bg-card);
+}
+
+[data-bs-theme="dark"] #addPaymentModal .btn-close {
+  background-color: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.22);
+  filter: brightness(0) invert(1);
+  opacity: 1;
+}
+
+[data-bs-theme="dark"] #addPaymentModal .btn-close:hover {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.34);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16) inset;
+}
+
+#addPaymentModal .modal-body {
+  padding: 1.35rem 1.5rem !important;
+}
+
+#addPaymentModal .form-label {
+  font-size: 0.79rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 0.45rem;
+}
+
+#addPaymentModal .ios-input {
+  min-height: 43px;
+  border-radius: 10px;
+  background: var(--bg-elevated);
+  border-color: var(--border-default);
+}
+
+#addPaymentModal textarea.ios-input {
+  min-height: 88px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+#addPaymentModal .ios-input:focus {
+  border-color: var(--accent-success);
+  box-shadow:
+    0 0 0 3px rgba(54, 179, 95, 0.2),
+    0 0 0 1px rgba(54, 179, 95, 0.35) inset;
+  background: var(--bg-card);
+}
+
+#addPaymentModal .input-group-text-styled {
+  border: 1px solid rgba(16, 124, 16, 0.28);
+  background: var(--accent-success-bg);
+  color: var(--accent-success);
+  font-weight: 600;
+}
+
+#addPaymentModal .quick-note-pill {
+  border: 1px solid var(--border-default);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-weight: 500;
+  padding: 0.4rem 0.85rem;
+}
+
+#addPaymentModal .quick-note-pill:hover {
+  transform: translateY(-1px);
+  border-color: rgba(0, 120, 212, 0.55);
+  background: rgba(0, 120, 212, 0.2);
+  color: #ffffff;
+}
+
+#addPaymentModal .modal-footer {
+  padding: 1rem 1.5rem;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border-subtle) !important;
+}
+
+#addPaymentModal .modal-footer .btn {
+  min-width: 150px;
+  font-weight: 600;
+}
+
+#addPaymentModal .modal-footer .btn-success {
+  border: 1px solid #117711;
+  background: linear-gradient(135deg, #16992d 0%, #107c10 100%);
+  box-shadow: 0 6px 16px rgba(16, 124, 16, 0.35);
+}
+
+#addPaymentModal .modal-footer .btn-success:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+[data-bs-theme="light"] #addPaymentModal .modal-content {
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.16),
+    0 0 0 1px rgba(255, 255, 255, 0.72) inset;
+}
+
+[data-bs-theme="light"] #addPaymentModal .modal-header {
+  background: linear-gradient(
+    90deg,
+    rgba(16, 124, 16, 0.09) 0%,
+    rgba(0, 120, 212, 0.07) 100%
+  );
+}
+
+[data-bs-theme="light"] #addPaymentModal .quick-note-pill {
+  background: #ffffff;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 576px) {
+  #addPaymentModal .modal-header,
+  #addPaymentModal .modal-body,
+  #addPaymentModal .modal-footer {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  #addPaymentModal .modal-footer {
+    gap: 0.5rem;
+  }
+
+  #addPaymentModal .modal-footer .btn {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
 /* Max height scroll container */
 .scroll-container-md {
   max-height: 400px;
