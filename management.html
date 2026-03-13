@@ -126,11 +126,23 @@
             <!-- Search and Filters Card -->
             <div class="filters-card mb-4">
                 <div class="filters-row">
+                    <!-- Search Type -->
+                    <div class="filter-item">
+                        <i class="bi bi-funnel filter-icon"></i>
+                        <select class="form-select filter-input" id="searchType" onchange="applyFilters()" aria-label="Search Type">
+                            <option value="all">All Fields</option>
+                            <option value="id">ID</option>
+                            <option value="name">Name</option>
+                            <option value="phone">Phone</option>
+                            <option value="university">University</option>
+                        </select>
+                    </div>
+
                     <!-- Search Input -->
                     <div class="filter-item filter-search">
                         <i class="bi bi-search filter-icon"></i>
                         <input type="text" id="searchInput" class="form-control filter-input"
-                            placeholder="Search by name, ID, phone, university...">
+                            placeholder="Search...">
                     </div>
 
                     <!-- Tariff Filter -->
@@ -204,7 +216,9 @@
                         </colgroup>
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th onclick="toggleSortOrder('students')" style="cursor: pointer; user-select: none;" title="Sort by ID">
+                                    ID <i id="studentsSortIcon" class="bi bi-chevron-down ms-1"></i>
+                                </th>
                                 <th>Full Name</th>
                                 <th>Phone</th>
                                 <th>Level</th>
@@ -232,11 +246,22 @@
             <!-- Search and Filters Card -->
             <div class="filters-card mb-4">
                 <div class="filters-row">
+                    <!-- Search Type -->
+                    <div class="filter-item">
+                        <i class="bi bi-funnel filter-icon"></i>
+                        <select class="form-select filter-input" id="statusSearchType" onchange="applyStatusFilters()" aria-label="Search Type">
+                            <option value="all">All Fields</option>
+                            <option value="id">ID</option>
+                            <option value="name">Name</option>
+                            <option value="university">University</option>
+                        </select>
+                    </div>
+
                     <!-- Search Input -->
                     <div class="filter-item filter-search">
                         <i class="bi bi-search filter-icon"></i>
                         <input type="text" id="statusSearchInput" class="form-control filter-input"
-                            placeholder="Search by name, ID, university...">
+                            placeholder="Search...">
                     </div>
 
                     <!-- Tariff Filter -->
@@ -343,7 +368,9 @@
                         </colgroup>
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th onclick="toggleSortOrder('status')" style="cursor: pointer; user-select: none;" title="Sort by ID">
+                                    ID <i id="statusSortIcon" class="bi bi-chevron-down ms-1"></i>
+                                </th>
                                 <th>Full Name</th>
                                 <th>Level</th>
                                 <th>University</th>

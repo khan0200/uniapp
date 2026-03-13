@@ -121,6 +121,24 @@ let statusPage = 1;
 let paymentStudentsPage = 1;
 let paymentHistoryPage = 1;
 
+// Sorting State
+let studentsSortOrder = 'asc';
+let statusSortOrder = 'asc';
+
+window.toggleSortOrder = function(tab) {
+  if (tab === 'students') {
+    studentsSortOrder = studentsSortOrder === 'asc' ? 'desc' : 'asc';
+    const icon = document.getElementById("studentsSortIcon");
+    if (icon) icon.className = studentsSortOrder === 'asc' ? "bi bi-chevron-down ms-1" : "bi bi-chevron-up ms-1";
+    applyFilters(true);
+  } else if (tab === 'status') {
+    statusSortOrder = statusSortOrder === 'asc' ? 'desc' : 'asc';
+    const icon = document.getElementById("statusSortIcon");
+    if (icon) icon.className = statusSortOrder === 'asc' ? "bi bi-chevron-down ms-1" : "bi bi-chevron-up ms-1";
+    applyStatusFilters(true);
+  }
+};
+
 // Row Colorization — color map (ball colour + row background tint)
 const ROW_COLOR_MAP = {
   RED: { ball: "#ef4444", bg: "rgba(239,68,68,0.22)" },
@@ -1384,6 +1402,9 @@ function applyFilters(resetPage = true) {
   const searchInput = document.getElementById("searchInput");
   const searchQuery = searchInput ? searchInput.value.toLowerCase() : "";
 
+  const searchTypeDropdown = document.getElementById("searchType");
+  const searchType = searchTypeDropdown ? searchTypeDropdown.value : "all";
+
   const tariffDropdown = document.getElementById("filterTariff");
   const tariffFilter = tariffDropdown ? tariffDropdown.value : "";
 
@@ -1403,16 +1424,31 @@ function applyFilters(resetPage = true) {
       if (s.deleted) return false;
     }
 
-    // Search filter (name, ID, phone, email, university)
-    const matchesSearch =
-      !searchQuery ||
-      s.fullName.toLowerCase().includes(searchQuery) ||
-      s.id.toLowerCase().includes(searchQuery) ||
-      s.phone1.toLowerCase().includes(searchQuery) ||
-      (s.phone2 && s.phone2.toLowerCase().includes(searchQuery)) ||
-      (s.email && s.email.toLowerCase().includes(searchQuery)) ||
-      (s.university1 && s.university1.toLowerCase().includes(searchQuery)) ||
-      (s.university2 && s.university2.toLowerCase().includes(searchQuery));
+    // Search filter
+    let matchesSearch = false;
+    if (!searchQuery) {
+      matchesSearch = true;
+    } else {
+      const nameMatch = s.fullName.toLowerCase().includes(searchQuery);
+      const idMatch = s.id.toLowerCase().includes(searchQuery);
+      const phoneMatch = s.phone1.toLowerCase().includes(searchQuery) ||
+          (s.phone2 && s.phone2.toLowerCase().includes(searchQuery));
+      const emailMatch = s.email && s.email.toLowerCase().includes(searchQuery);
+      const uniMatch = (s.university1 && s.university1.toLowerCase().includes(searchQuery)) ||
+          (s.university2 && s.university2.toLowerCase().includes(searchQuery));
+
+      if (searchType === "all") {
+        matchesSearch = nameMatch || idMatch || phoneMatch || emailMatch || uniMatch;
+      } else if (searchType === "id") {
+        matchesSearch = idMatch;
+      } else if (searchType === "name") {
+        matchesSearch = nameMatch;
+      } else if (searchType === "phone") {
+        matchesSearch = phoneMatch;
+      } else if (searchType === "university") {
+        matchesSearch = uniMatch;
+      }
+    }
 
     // Tariff filter
     const matchesTariff = !tariffFilter || s.tariff === tariffFilter;
@@ -1450,8 +1486,12 @@ function applyFilters(resetPage = true) {
   filtered.sort((a, b) => {
     const numA = parseInt((a.id || "").replace(/\D+/, ""), 10);
     const numB = parseInt((b.id || "").replace(/\D+/, ""), 10);
-    if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
-    return (a.id || "").localeCompare(b.id || "");
+    if (!isNaN(numA) && !isNaN(numB)) {
+      return studentsSortOrder === 'asc' ? numA - numB : numB - numA;
+    }
+    return studentsSortOrder === 'asc' ? 
+      (a.id || "").localeCompare(b.id || "") : 
+      (b.id || "").localeCompare(a.id || "");
   });
 
   // Pagination Logic
@@ -1880,6 +1920,9 @@ function applyStatusFilters(resetPage = true) {
   const searchInput = document.getElementById("statusSearchInput");
   const searchQuery = searchInput ? searchInput.value.toLowerCase() : "";
 
+  const searchTypeDropdown = document.getElementById("statusSearchType");
+  const searchType = searchTypeDropdown ? searchTypeDropdown.value : "all";
+
   const tariffDropdown = document.getElementById("statusFilterTariff");
   const tariffFilter = tariffDropdown ? tariffDropdown.value : "";
 
@@ -1902,13 +1945,27 @@ function applyStatusFilters(resetPage = true) {
       if (s.deleted) return false;
     }
 
-    const matchesSearch =
-      !searchQuery ||
-      s.fullName.toLowerCase().includes(searchQuery) ||
-      s.id.toLowerCase().includes(searchQuery) ||
-      (s.email && s.email.toLowerCase().includes(searchQuery)) ||
-      (s.university1 && s.university1.toLowerCase().includes(searchQuery)) ||
-      (s.university2 && s.university2.toLowerCase().includes(searchQuery));
+    // Search filter
+    let matchesSearch = false;
+    if (!searchQuery) {
+      matchesSearch = true;
+    } else {
+      const nameMatch = s.fullName.toLowerCase().includes(searchQuery);
+      const idMatch = s.id.toLowerCase().includes(searchQuery);
+      const emailMatch = s.email && s.email.toLowerCase().includes(searchQuery);
+      const uniMatch = (s.university1 && s.university1.toLowerCase().includes(searchQuery)) ||
+          (s.university2 && s.university2.toLowerCase().includes(searchQuery));
+
+      if (searchType === "all") {
+        matchesSearch = nameMatch || idMatch || emailMatch || uniMatch;
+      } else if (searchType === "id") {
+        matchesSearch = idMatch;
+      } else if (searchType === "name") {
+        matchesSearch = nameMatch;
+      } else if (searchType === "university") {
+        matchesSearch = uniMatch;
+      }
+    }
 
     const matchesTariff = !tariffFilter || s.tariff === tariffFilter;
     const matchesLevel = !levelFilter || s.level === levelFilter;
@@ -1957,8 +2014,12 @@ function applyStatusFilters(resetPage = true) {
   filtered.sort((a, b) => {
     const numA = parseInt((a.id || "").replace(/\D+/, ""), 10);
     const numB = parseInt((b.id || "").replace(/\D+/, ""), 10);
-    if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
-    return (a.id || "").localeCompare(b.id || "");
+    if (!isNaN(numA) && !isNaN(numB)) {
+      return statusSortOrder === 'asc' ? numA - numB : numB - numA;
+    }
+    return statusSortOrder === 'asc' ? 
+      (a.id || "").localeCompare(b.id || "") : 
+      (b.id || "").localeCompare(a.id || "");
   });
 
   // Pagination
