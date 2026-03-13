@@ -2752,6 +2752,9 @@ function renderPaymentHistory(filteredData = null) {
 function filterPaymentStudents(resetPage = true) {
   if (resetPage) paymentStudentsPage = 1;
 
+  const searchType = document.getElementById("paymentSearchType")
+    ? document.getElementById("paymentSearchType").value
+    : "all";
   const searchTerm = document
     .getElementById("paymentSearchInput")
     .value.toLowerCase();
@@ -2764,11 +2767,14 @@ function filterPaymentStudents(resetPage = true) {
 
   // Apply search
   if (searchTerm) {
-    filtered = filtered.filter(
-      (s) =>
-        s.fullName.toLowerCase().includes(searchTerm) ||
-        s.id.toLowerCase().includes(searchTerm),
-    );
+    filtered = filtered.filter((s) => {
+      const matchName = (s.fullName || "").toLowerCase().includes(searchTerm);
+      const matchId = (s.id || "").toLowerCase().includes(searchTerm);
+      
+      if (searchType === "id") return matchId;
+      if (searchType === "name") return matchName;
+      return matchName || matchId;
+    });
   }
 
   // Apply tariff filter
@@ -2809,6 +2815,9 @@ function filterPaymentStudents(resetPage = true) {
 function filterPaymentHistory(resetPage = true) {
   if (resetPage) paymentHistoryPage = 1;
 
+  const searchType = document.getElementById("paymentHistorySearchType")
+    ? document.getElementById("paymentHistorySearchType").value
+    : "all";
   const searchTerm = document
     .getElementById("paymentHistorySearch")
     .value.toLowerCase();
@@ -2819,12 +2828,16 @@ function filterPaymentHistory(resetPage = true) {
 
   // Apply search
   if (searchTerm) {
-    filtered = filtered.filter(
-      (p) =>
-        (p.studentName && p.studentName.toLowerCase().includes(searchTerm)) ||
-        (p.studentId && p.studentId.toLowerCase().includes(searchTerm)) ||
-        (p.notes && p.notes.toLowerCase().includes(searchTerm)),
-    );
+    filtered = filtered.filter((p) => {
+      const matchName = p.studentName && p.studentName.toLowerCase().includes(searchTerm);
+      const matchId = p.studentId && p.studentId.toLowerCase().includes(searchTerm);
+      const matchNotes = p.notes && p.notes.toLowerCase().includes(searchTerm);
+
+      if (searchType === "id") return matchId;
+      if (searchType === "name") return matchName;
+      if (searchType === "notes") return matchNotes;
+      return matchName || matchId || matchNotes;
+    });
   }
 
   // Apply method filter

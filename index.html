@@ -409,6 +409,12 @@
             <div id="payment-students-subtab" class="payment-subtab">
                 <!-- Search and Filter Row -->
                 <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+                    <select class="form-select ios-input filter-select-compact" id="paymentSearchType"
+                        aria-label="Search Type" onchange="filterPaymentStudents()">
+                        <option value="all">Name & ID</option>
+                        <option value="id">ID Only</option>
+                        <option value="name">Name Only</option>
+                    </select>
                     <div class="search-wrapper flex-grow-1 search-wrapper-md">
                         <i class="bi bi-search search-icon"></i>
                         <input type="text" class="form-control ios-input ps-5" id="paymentSearchInput"
@@ -457,6 +463,13 @@
             <div id="payment-history-subtab" class="payment-subtab section-hidden">
                 <!-- Filter Row for History -->
                 <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+                    <select class="form-select ios-input filter-select-compact" id="paymentHistorySearchType"
+                        aria-label="Search Type" onchange="filterPaymentHistory()">
+                        <option value="all">Name/ID/Notes</option>
+                        <option value="id">ID Only</option>
+                        <option value="name">Name Only</option>
+                        <option value="notes">Notes Only</option>
+                    </select>
                     <div class="search-wrapper flex-grow-1 search-wrapper-md">
                         <i class="bi bi-search search-icon"></i>
                         <input type="text" class="form-control ios-input ps-5" id="paymentHistorySearch"
