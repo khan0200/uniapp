@@ -1450,11 +1450,25 @@ function applyFilters(resetPage = true) {
       }
     }
 
-    // Tariff filter
-    const matchesTariff = !tariffFilter || s.tariff === tariffFilter;
+    // Tariff filter - handle "No Tariff" special case
+    let matchesTariff;
+    if (!tariffFilter) {
+      matchesTariff = true;
+    } else if (tariffFilter === "NO_TARIFF") {
+      matchesTariff = !s.tariff || s.tariff === "";
+    } else {
+      matchesTariff = s.tariff === tariffFilter;
+    }
 
-    // Level filter
-    const matchesLevel = !levelFilter || s.level === levelFilter;
+    // Level filter - handle "No Level" special case
+    let matchesLevel;
+    if (!levelFilter) {
+      matchesLevel = true;
+    } else if (levelFilter === "NO_LEVEL") {
+      matchesLevel = !s.level || s.level === "";
+    } else {
+      matchesLevel = s.level === levelFilter;
+    }
 
     // Group filter - handle "No Group" special case
     let matchesGroup;
@@ -1967,8 +1981,24 @@ function applyStatusFilters(resetPage = true) {
       }
     }
 
-    const matchesTariff = !tariffFilter || s.tariff === tariffFilter;
-    const matchesLevel = !levelFilter || s.level === levelFilter;
+    // Tariff filter - handle "No Tariff" special case
+    let matchesTariff;
+    if (!tariffFilter) {
+      matchesTariff = true;
+    } else if (tariffFilter === "NO_TARIFF") {
+      matchesTariff = !s.tariff || s.tariff === "";
+    } else {
+      matchesTariff = s.tariff === tariffFilter;
+    }
+    // Level filter - handle "No Level" special case
+    let matchesLevel;
+    if (!levelFilter) {
+      matchesLevel = true;
+    } else if (levelFilter === "NO_LEVEL") {
+      matchesLevel = !s.level || s.level === "";
+    } else {
+      matchesLevel = s.level === levelFilter;
+    }
 
     let matchesGroup;
     if (!groupFilter) {
@@ -2779,7 +2809,11 @@ function filterPaymentStudents(resetPage = true) {
 
   // Apply tariff filter
   if (tariffFilter) {
-    filtered = filtered.filter((s) => s.tariff === tariffFilter);
+    if (tariffFilter === "NO_TARIFF") {
+      filtered = filtered.filter((s) => !s.tariff || s.tariff === "");
+    } else {
+      filtered = filtered.filter((s) => s.tariff === tariffFilter);
+    }
   }
 
   // Apply balance filter
@@ -4205,6 +4239,11 @@ function updateTariffDropdowns() {
       select.innerHTML += `<option value="${t.name}">${t.name}${priceDisplay}</option>`;
     });
 
+    // Add "No Tariff" option for filter dropdowns
+    if (isFilter) {
+      select.innerHTML += '<option value="NO_TARIFF">No Tariff</option>';
+    }
+
     select.value = currentValue;
   });
 }
@@ -4229,8 +4268,10 @@ function updateLevelDropdowns() {
       select.innerHTML += `<option value="${l.name}">${l.name}</option>`;
     });
 
-    // Add deleted students option for filterLevel and statusFilterLevel
+    // Add "No Level" and deleted students option for filterLevel and statusFilterLevel
     if (select.id === "filterLevel" || select.id === "statusFilterLevel") {
+      select.innerHTML +=
+        '<option value="NO_LEVEL">No Level</option>';
       select.innerHTML +=
         '<option value="DELETED" style="font-style: italic; color: #e53e3e;">Deleted students</option>';
     }
