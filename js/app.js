@@ -1418,7 +1418,7 @@ function applyFilters(resetPage = true) {
     // Handle deleted students filter
     if (levelFilter === "DELETED") {
       // Only show deleted students
-      return s.deleted === true;
+      if (s.deleted !== true) return false;
     } else {
       // Hide deleted students from normal filters
       if (s.deleted) return false;
@@ -1462,7 +1462,7 @@ function applyFilters(resetPage = true) {
 
     // Level filter - handle "No Level" special case
     let matchesLevel;
-    if (!levelFilter) {
+    if (!levelFilter || levelFilter === "DELETED") {
       matchesLevel = true;
     } else if (levelFilter === "NO_LEVEL") {
       matchesLevel = !s.level || s.level === "";
@@ -2792,6 +2792,9 @@ function filterPaymentStudents(resetPage = true) {
   const balanceFilter = document.getElementById("paymentBalanceFilter")
     ? document.getElementById("paymentBalanceFilter").value
     : "";
+  const groupFilter = document.getElementById("paymentGroupFilter")
+    ? document.getElementById("paymentGroupFilter").value
+    : "";
 
   let filtered = window.studentsData.filter((s) => !s.deleted);
 
@@ -2840,6 +2843,15 @@ function filterPaymentStudents(resetPage = true) {
           return true;
       }
     });
+  }
+
+  // Apply group filter
+  if (groupFilter) {
+    if (groupFilter === "NO_GROUP") {
+      filtered = filtered.filter((s) => !s.group || s.group === "");
+    } else {
+      filtered = filtered.filter((s) => s.group === groupFilter);
+    }
   }
 
   renderPaymentStudents(filtered);
@@ -2905,17 +2917,121 @@ function populateStudentDropdown() {
       .join("");
 }
 
-// Select student for payment (from card click)
+// Update the 3-panel payment modal when a student is selected/deselected
+function updatePaymentStudentInfo() {
+  const dropdown   = document.getElementById("paymentStudent");
+  const leftPanel  = document.getElementById("pmtLeftPanel");
+  const rightPanel = document.getElementById("pmtRightPanel");
+  const dialog     = document.getElementById("addPaymentModalDialog");
+  const subtitle   = document.getElementById("addPaymentModalSubtitle");
+  const pickerRow  = document.getElementById("paymentStudentPickerRow");
+
+  if (!dropdown) return;
+
+  const firestoreId = dropdown.value;
+
+  // ── No student: compact single-column ───────────────────────
+  if (!firestoreId) {
+    if (leftPanel)  leftPanel.style.display  = "none";
+    if (rightPanel) rightPanel.style.display = "none";
+    if (dialog)     dialog.style.maxWidth    = "520px";
+    if (subtitle)   subtitle.textContent     = "Select a student or submit a general payment";
+    return;
+  }
+
+  // ── Find student ─────────────────────────────────────────────
+  const s = (window.studentsData || []).find(
+    (st) => (st.firestoreId || st.id) === firestoreId
+  );
+  if (!s) {
+    if (leftPanel)  leftPanel.style.display  = "none";
+    if (rightPanel) rightPanel.style.display = "none";
+    if (dialog)     dialog.style.maxWidth    = "520px";
+    return;
+  }
+
+  // ── Expand dialog ────────────────────────────────────────────
+  if (dialog)   dialog.style.maxWidth = "920px";
+  if (subtitle) subtitle.textContent  = s.id + " · " + (s.fullName || "");
+
+  // ── LEFT PANEL ───────────────────────────────────────────────
+  if (leftPanel) {
+    leftPanel.style.display = "flex";
+
+    const fmt = (v) => v ? new Intl.NumberFormat("uz-UZ").format(v) + " UZS" : "—";
+    const balance  = parseFloat(s.balance)  || 0;
+    const balColor = balance > 0 ? "#22c55e" : balance < 0 ? "#ef4444" : "";
+
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val || "—";
+    };
+
+    set("psiStudentId", s.id);
+    set("psiFullName",  s.fullName);
+    set("psiTariff",    s.tariff || "—");
+    set("psiDiscount",  s.discount ? fmt(s.discount) : "—");
+    set("psiNotes",     s.notes   || "—");
+
+    const balEl = document.getElementById("psiBalance");
+    if (balEl) {
+      const prefix = balance > 0 ? "+" : "";
+      balEl.textContent = balance !== 0 ? prefix + fmt(Math.abs(balance)) : "0 UZS";
+      balEl.style.color = balColor || "";
+    }
+  }
+
+  // ── RIGHT PANEL: Payment history ─────────────────────────────
+  if (rightPanel) {
+    rightPanel.style.display = "flex";
+
+    const histEl = document.getElementById("pmtHistoryList");
+    if (histEl) {
+      const payments = (window.paymentsData || [])
+        .filter(p => p.studentFirestoreId === firestoreId || p.studentId === s.id)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 25);
+
+      if (!payments.length) {
+        histEl.innerHTML = `<div class="pmt-history-empty">No payments yet.</div>`;
+      } else {
+        histEl.innerHTML = payments.map(p => {
+          const amt    = parseFloat(p.amount) || 0;
+          const isNeg  = p.isWithdrawal || amt < 0;
+          const color  = isNeg ? "#ef4444" : "#22c55e";
+          const prefix = isNeg ? "−" : "+";
+          const amtStr = new Intl.NumberFormat("uz-UZ").format(Math.abs(amt));
+          const date   = p.createdAt
+            ? new Date(p.createdAt).toLocaleDateString("en-GB", {day:"2-digit", month:"2-digit", year:"2-digit"})
+            : "";
+          const note   = p.notes
+            ? `<div class="pmt-h-note">${p.notes}</div>` : "";
+
+          return `
+            <div class="pmt-h-entry">
+              <div class="pmt-h-top">
+                <span class="pmt-h-amt" style="color:${color}">${prefix}${amtStr}</span>
+                <span class="pmt-h-date">${date}</span>
+              </div>
+              <div class="pmt-h-meta">${p.method || ""} ${p.receivedBy ? "· " + p.receivedBy : ""}</div>
+              ${note}
+            </div>`;
+        }).join("");
+      }
+    }
+  }
+}
+
+// Select student for payment (from student card click)
 function selectStudentForPayment(firestoreId, studentId, studentName) {
-  // Open modal and pre-select the student
   const modal = new bootstrap.Modal(document.getElementById("addPaymentModal"));
   modal.show();
 
-  // Wait for modal to render, then set the student
   setTimeout(() => {
     const dropdown = document.getElementById("paymentStudent");
     if (dropdown) {
       dropdown.value = firestoreId || studentId;
+      updatePaymentStudentInfo();
     }
   }, 200);
 }
@@ -3053,6 +3169,16 @@ function submitPayment() {
     modal.hide();
   }
   document.getElementById("addPaymentForm").reset();
+
+  // Collapse the 3-column modal back to single-column
+  const pmtDialog = document.getElementById("addPaymentModalDialog");
+  const pmtLeft   = document.getElementById("pmtLeftPanel");
+  const pmtRight  = document.getElementById("pmtRightPanel");
+  const pmtSub    = document.getElementById("addPaymentModalSubtitle");
+  if (pmtDialog) pmtDialog.style.maxWidth = "560px";
+  if (pmtLeft)   pmtLeft.style.display   = "none";
+  if (pmtRight)  pmtRight.style.display  = "none";
+  if (pmtSub)    pmtSub.textContent      = "Fill in payment details below";
 
   // Refresh payment students view
   setTimeout(() => {
@@ -3947,7 +4073,7 @@ function confirmDeleteGroup(groupId) {
 // Update group filter dropdown
 function updateGroupDropdowns() {
   const groupSelects = document.querySelectorAll(
-    "#filterGroup, #statusFilterGroup, #excelGroupFilter",
+    "#filterGroup, #statusFilterGroup, #excelGroupFilter, #paymentGroupFilter",
   );
 
   groupSelects.forEach((select) => {
@@ -4536,6 +4662,7 @@ window.populateStudentDropdown = populateStudentDropdown;
 window.selectStudentForPayment = selectStudentForPayment;
 window.addQuickNote = addQuickNote;
 window.submitPayment = submitPayment;
+window.updatePaymentStudentInfo = updatePaymentStudentInfo;
 window.getTariffPrice = getTariffPrice;
 window.getTariffDisplayValue = getTariffDisplayValue;
 window.downloadPaymentHistoryAsExcel = downloadPaymentHistoryAsExcel;
@@ -5535,6 +5662,7 @@ window.populateStudentDropdown = populateStudentDropdown;
 window.selectStudentForPayment = selectStudentForPayment;
 window.addQuickNote = addQuickNote;
 window.submitPayment = submitPayment;
+window.updatePaymentStudentInfo = updatePaymentStudentInfo;
 window.downloadPaymentHistoryAsExcel = downloadPaymentHistoryAsExcel;
 window.editPayment = editPayment;
 window.savePaymentEdit = savePaymentEdit;

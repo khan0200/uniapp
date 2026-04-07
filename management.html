@@ -456,13 +456,19 @@
                     <select class="form-select ios-input filter-select-compact" id="paymentBalanceFilter"
                         aria-label="Filter by balance" onchange="filterPaymentStudents()">
                         <option value="">All Balances</option>
-                        <option value="NEGATIVE">Balance < 0 (Debt)</option>
+                        <option value="NEGATIVE">Balance &lt; 0 (Debt)</option>
                         <option value="ZERO">Balance = 0 (Fully Paid)</option>
-                        <option value="GT_500K">Balance > 500,000</option>
-                        <option value="GT_1M">Balance > 1,000,000</option>
-                        <option value="GT_2M">Balance > 2,000,000</option>
-                        <option value="GT_5M">Balance > 5,000,000</option>
-                        <option value="GT_10M">Balance > 10,000,000</option>
+                        <option value="GT_500K">Balance &gt; 500,000</option>
+                        <option value="GT_1M">Balance &gt; 1,000,000</option>
+                        <option value="GT_2M">Balance &gt; 2,000,000</option>
+                        <option value="GT_5M">Balance &gt; 5,000,000</option>
+                        <option value="GT_10M">Balance &gt; 10,000,000</option>
+                    </select>
+                    <select class="form-select ios-input filter-select-compact" id="paymentGroupFilter"
+                        aria-label="Filter by group" onchange="filterPaymentStudents()">
+                        <option value="">All Groups</option>
+                        <option value="NO_GROUP">No Group</option>
+                        <!-- Groups populated dynamically -->
                     </select>
                 </div>
 
@@ -973,102 +979,145 @@
         </div>
     </div>
 
-    <!-- Add Payment Modal -->
-    <div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content ios-modal">
-                <div class="modal-header border-bottom border-secondary">
-                    <h5 class="modal-title" id="addPaymentModalLabel">
-                        <i class="bi bi-cash-stack text-success me-2"></i>Add New Payment
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <form id="addPaymentForm">
-                        <!-- Row 1: Amount and Payment Method -->
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="paymentAmount" class="form-label">Amount <span
-                                        class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control ios-input" id="paymentAmount" placeholder="0"
-                                        required>
-                                    <span class="input-group-text input-group-text-styled">UZS</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="paymentMethod" class="form-label">Payment Method <span
-                                        class="text-danger">*</span></label>
-                                <select class="form-select ios-input" id="paymentMethod" required>
-                                    <option value="">Select method...</option>
-                                    <option value="Karta J.A">Karta J.A</option>
-                                    <option value="Naqd">Naqd</option>
-                                    <option value="Karta M.A">Karta M.A</option>
-                                    <option value="Bank">Bank</option>
-                                    <option value="Discount">Discount</option>
-                                </select>
-                            </div>
-                        </div>
+    <!-- ========================================
+         ADD PAYMENT MODAL — Premium 3-panel
+         ======================================== -->
+    <div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" id="addPaymentModalDialog">
+            <div class="modal-content pmt-modal-content">
 
-                        <!-- Row 2: Received By and Student -->
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="receivedBy" class="form-label">Received By <span
-                                        class="text-danger">*</span></label>
-                                <select class="form-select ios-input" id="receivedBy" required>
-                                    <option value="">Select receiver...</option>
-                                    <option value="Abdulaziz">Abdulaziz</option>
-                                    <option value="Jasurbek">Jasurbek</option>
-                                    <option value="Muhammadali">Muhammadali</option>
-                                    <option value="Muslihiddin">Muslihiddin</option>
-                                    <option value="Admin">Admin</option>
-                                    <option value="Discount">Discount</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="paymentStudent" class="form-label">Choose Student</label>
-                                <select class="form-select ios-input" id="paymentStudent">
-                                    <option value="">No student (General payment)</option>
-                                    <!-- Students will be populated here -->
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Row 3: Notes -->
-                        <div class="mb-3">
-                            <label for="paymentNotes" class="form-label">Notes</label>
-                            <textarea class="form-control ios-input" id="paymentNotes" rows="2"
-                                placeholder="Add notes..."></textarea>
-                            <!-- Quick Pick Pills -->
-                            <div class="d-flex flex-wrap gap-2 mt-2">
-                                <button type="button"
-                                    class="btn btn-sm btn-outline-secondary rounded-pill quick-note-pill"
-                                    onclick="addQuickNote('Shartnoma uchun')">Shartnoma uchun</button>
-                                <button type="button"
-                                    class="btn btn-sm btn-outline-secondary rounded-pill quick-note-pill"
-                                    onclick="addQuickNote('Qarz')">Qarz</button>
-                                <button type="button"
-                                    class="btn btn-sm btn-outline-secondary rounded-pill quick-note-pill"
-                                    onclick="addQuickNote('Elchixona uchun')">Elchixona uchun</button>
-                                <button type="button"
-                                    class="btn btn-sm btn-outline-secondary rounded-pill quick-note-pill"
-                                    onclick="addQuickNote('Appfee')">Appfee</button>
-                                <button type="button"
-                                    class="btn btn-sm btn-outline-warning rounded-pill quick-note-pill"
-                                    onclick="addQuickNote('DISCOUNT')">DISCOUNT</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-top border-secondary">
-                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
-                        data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-success rounded-pill px-4" onclick="submitPayment()">
-                        <i class="bi bi-check-circle me-2"></i>Submit Payment
+                <!-- HEADER -->
+                <div class="pmt-header">
+                    <div class="pmt-header-icon"><i class="bi bi-cash-stack"></i></div>
+                    <div class="pmt-header-text">
+                        <div class="pmt-header-title" id="addPaymentModalLabel">Add New Payment</div>
+                        <div class="pmt-header-sub" id="addPaymentModalSubtitle">Select a student or submit a general payment</div>
+                    </div>
+                    <button type="button" class="pmt-close-btn" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
+
+                <!-- BODY -->
+                <div class="pmt-body">
+
+                    <!-- LEFT: Student info card -->
+                    <div class="pmt-panel pmt-panel-left" id="pmtLeftPanel">
+                        <div class="pmt-student-id-badge" id="psiStudentId">—</div>
+                        <div class="pmt-student-name" id="psiFullName">—</div>
+                        <div class="pmt-info-rows">
+                            <div class="pmt-info-row">
+                                <span class="pmt-info-lbl"><i class="bi bi-tag-fill"></i></span>
+                                <span class="pmt-info-val" id="psiTariff">—</span>
+                            </div>
+                            <div class="pmt-info-row">
+                                <span class="pmt-info-lbl"><i class="bi bi-wallet2"></i></span>
+                                <span class="pmt-info-val" id="psiBalance">—</span>
+                            </div>
+                            <div class="pmt-info-row">
+                                <span class="pmt-info-lbl"><i class="bi bi-percent"></i></span>
+                                <span class="pmt-info-val" id="psiDiscount">—</span>
+                            </div>
+                            <div class="pmt-info-row">
+                                <span class="pmt-info-lbl"><i class="bi bi-sticky"></i></span>
+                                <span class="pmt-info-val pmt-info-notes" id="psiNotes">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CENTER: Payment form -->
+                    <div class="pmt-panel pmt-panel-center">
+                        <form id="addPaymentForm" autocomplete="off">
+
+                            <!-- Student picker row (visible when no pre-selection) -->
+                            <div class="pmt-field" id="paymentStudentPickerRow">
+                                <label class="pmt-label" for="paymentStudent">
+                                    <i class="bi bi-person-check-fill me-1"></i>Student
+                                </label>
+                                <select class="pmt-select" id="paymentStudent" onchange="updatePaymentStudentInfo()">
+                                    <option value="">— No student (General payment) —</option>
+                                </select>
+                            </div>
+
+                            <!-- Amount -->
+                            <div class="pmt-field">
+                                <label class="pmt-label" for="paymentAmount">
+                                    <i class="bi bi-cash me-1"></i>Amount <span class="text-danger">*</span>
+                                </label>
+                                <div class="pmt-amount-group">
+                                    <input type="text" class="pmt-input pmt-amount-input" id="paymentAmount"
+                                        placeholder="0" required inputmode="numeric">
+                                    <span class="pmt-amount-badge">UZS</span>
+                                </div>
+                            </div>
+
+                            <!-- Method + Received By -->
+                            <div class="pmt-field-row">
+                                <div class="pmt-field">
+                                    <label class="pmt-label" for="paymentMethod">
+                                        <i class="bi bi-credit-card me-1"></i>Method <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="pmt-select" id="paymentMethod" required>
+                                        <option value="">Select...</option>
+                                        <option value="Karta J.A">Karta J.A</option>
+                                        <option value="Naqd">Naqd</option>
+                                        <option value="Karta M.A">Karta M.A</option>
+                                        <option value="Bank">Bank</option>
+                                        <option value="Discount">Discount</option>
+                                    </select>
+                                </div>
+                                <div class="pmt-field">
+                                    <label class="pmt-label" for="receivedBy">
+                                        <i class="bi bi-person-badge me-1"></i>Received By <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="pmt-select" id="receivedBy" required>
+                                        <option value="">Select...</option>
+                                        <option value="Abdulaziz">Abdulaziz</option>
+                                        <option value="Jasurbek">Jasurbek</option>
+                                        <option value="Muhammadali">Muhammadali</option>
+                                        <option value="Muslihiddin">Muslihiddin</option>
+                                        <option value="Admin">Admin</option>
+                                        <option value="Discount">Discount</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Notes -->
+                            <div class="pmt-field">
+                                <label class="pmt-label" for="paymentNotes">
+                                    <i class="bi bi-pencil me-1"></i>Notes
+                                </label>
+                                <textarea class="pmt-input" id="paymentNotes" rows="2" placeholder="Add notes..."></textarea>
+                                <div class="pmt-pills">
+                                    <button type="button" class="pmt-pill" onclick="addQuickNote('Shartnoma uchun')">Shartnoma uchun</button>
+                                    <button type="button" class="pmt-pill" onclick="addQuickNote('Qarz')">Qarz</button>
+                                    <button type="button" class="pmt-pill" onclick="addQuickNote('Elchixona uchun')">Elchixona uchun</button>
+                                    <button type="button" class="pmt-pill" onclick="addQuickNote('Appfee')">Appfee</button>
+                                    <button type="button" class="pmt-pill pmt-pill-warn" onclick="addQuickNote('DISCOUNT')">DISCOUNT</button>
+                                </div>
+                            </div>
+
+                        </form>
+                    </div>
+
+                    <!-- RIGHT: Payment history -->
+                    <div class="pmt-panel pmt-panel-right" id="pmtRightPanel">
+                        <div class="pmt-history-header"><i class="bi bi-clock-history me-1"></i>History</div>
+                        <div class="pmt-history-list" id="pmtHistoryList">
+                            <div class="pmt-history-empty">No payments yet.</div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- FOOTER -->
+                <div class="pmt-footer">
+                    <button type="button" class="pmt-btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="pmt-btn-submit" onclick="submitPayment()">
+                        <i class="bi bi-check-circle-fill me-2"></i>Submit Payment
+                    </button>
+                </div>
+
             </div>
         </div>
     </div>

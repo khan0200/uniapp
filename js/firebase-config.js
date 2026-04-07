@@ -98,7 +98,8 @@ async function saveStudentToFirestore(studentData) {
 
         // Send Telegram Notification
         const safeName = studentData.fullName ? studentData.fullName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'Unknown';
-        const notifMsg = `🆕 <b>New Registration!</b>\n\n👤 <b>Name:</b> ${safeName}\n🆔 <b>ID:</b> ${studentData.id || '-'}`;
+        const safeOffice = studentData.office ? studentData.office.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : '-';
+        const notifMsg = `🆕 <b>New Registration!</b>\n\n👤 <b>Name:</b> ${safeName}\n🆔 <b>ID:</b> ${studentData.id || '-'}\n🏢 <b>Office:</b> ${safeOffice}`;
         sendTelegramNotification(notifMsg);
 
         // Close modal and reset form

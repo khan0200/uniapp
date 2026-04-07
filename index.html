@@ -432,13 +432,19 @@
                     <select class="form-select ios-input filter-select-compact" id="paymentBalanceFilter"
                         aria-label="Filter by balance" onchange="filterPaymentStudents()">
                         <option value="">All Balances</option>
-                        <option value="NEGATIVE">Balance < 0 (Debt)</option>
+                        <option value="NEGATIVE">Balance &lt; 0 (Debt)</option>
                         <option value="ZERO">Balance = 0 (Fully Paid)</option>
-                        <option value="GT_500K">Balance > 500,000</option>
-                        <option value="GT_1M">Balance > 1,000,000</option>
-                        <option value="GT_2M">Balance > 2,000,000</option>
-                        <option value="GT_5M">Balance > 5,000,000</option>
-                        <option value="GT_10M">Balance > 10,000,000</option>
+                        <option value="GT_500K">Balance &gt; 500,000</option>
+                        <option value="GT_1M">Balance &gt; 1,000,000</option>
+                        <option value="GT_2M">Balance &gt; 2,000,000</option>
+                        <option value="GT_5M">Balance &gt; 5,000,000</option>
+                        <option value="GT_10M">Balance &gt; 10,000,000</option>
+                    </select>
+                    <select class="form-select ios-input filter-select-compact" id="paymentGroupFilter"
+                        aria-label="Filter by group" onchange="filterPaymentStudents()">
+                        <option value="">All Groups</option>
+                        <option value="NO_GROUP">No Group</option>
+                        <!-- Groups will be populated dynamically -->
                     </select>
                 </div>
 
