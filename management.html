@@ -991,7 +991,6 @@
                     <div class="pmt-header-icon"><i class="bi bi-cash-stack"></i></div>
                     <div class="pmt-header-text">
                         <div class="pmt-header-title" id="addPaymentModalLabel">Add New Payment</div>
-                        <div class="pmt-header-sub" id="addPaymentModalSubtitle">Select a student or submit a general payment</div>
                     </div>
                     <button type="button" class="pmt-close-btn" data-bs-dismiss="modal" aria-label="Close">
                         <i class="bi bi-x-lg"></i>
@@ -1003,22 +1002,36 @@
 
                     <!-- LEFT: Student info card -->
                     <div class="pmt-panel pmt-panel-left" id="pmtLeftPanel">
-                        <div class="pmt-student-id-badge" id="psiStudentId">—</div>
-                        <div class="pmt-student-name" id="psiFullName">—</div>
                         <div class="pmt-info-rows">
-                            <div class="pmt-info-row">
+                            <div class="pmt-info-row" data-label="Phone 1">
+                                <span class="pmt-info-lbl"><i class="bi bi-telephone-fill"></i></span>
+                                <span class="pmt-info-val" id="psiPhone1">—</span>
+                            </div>
+                            <div class="pmt-info-row" data-label="Phone 2">
+                                <span class="pmt-info-lbl"><i class="bi bi-telephone"></i></span>
+                                <span class="pmt-info-val" id="psiPhone2">—</span>
+                            </div>
+                            <div class="pmt-info-row" data-label="Education Level">
+                                <span class="pmt-info-lbl"><i class="bi bi-mortarboard-fill"></i></span>
+                                <span class="pmt-info-val" id="psiLevel">—</span>
+                            </div>
+                            <div class="pmt-info-row" data-label="Language Certificate">
+                                <span class="pmt-info-lbl"><i class="bi bi-award-fill"></i></span>
+                                <span class="pmt-info-val" id="psiLangCert">—</span>
+                            </div>
+                            <div class="pmt-info-row" data-label="Tariff">
                                 <span class="pmt-info-lbl"><i class="bi bi-tag-fill"></i></span>
                                 <span class="pmt-info-val" id="psiTariff">—</span>
                             </div>
-                            <div class="pmt-info-row">
+                            <div class="pmt-info-row" data-label="Balance">
                                 <span class="pmt-info-lbl"><i class="bi bi-wallet2"></i></span>
                                 <span class="pmt-info-val" id="psiBalance">—</span>
                             </div>
-                            <div class="pmt-info-row">
+                            <div class="pmt-info-row pmt-info-row--discount" data-label="Discount">
                                 <span class="pmt-info-lbl"><i class="bi bi-percent"></i></span>
                                 <span class="pmt-info-val" id="psiDiscount">—</span>
                             </div>
-                            <div class="pmt-info-row">
+                            <div class="pmt-info-row" data-label="Notes">
                                 <span class="pmt-info-lbl"><i class="bi bi-sticky"></i></span>
                                 <span class="pmt-info-val pmt-info-notes" id="psiNotes">—</span>
                             </div>

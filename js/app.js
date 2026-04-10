@@ -2923,7 +2923,6 @@ function updatePaymentStudentInfo() {
   const leftPanel  = document.getElementById("pmtLeftPanel");
   const rightPanel = document.getElementById("pmtRightPanel");
   const dialog     = document.getElementById("addPaymentModalDialog");
-  const subtitle   = document.getElementById("addPaymentModalSubtitle");
   const pickerRow  = document.getElementById("paymentStudentPickerRow");
 
   if (!dropdown) return;
@@ -2935,7 +2934,6 @@ function updatePaymentStudentInfo() {
     if (leftPanel)  leftPanel.style.display  = "none";
     if (rightPanel) rightPanel.style.display = "none";
     if (dialog)     dialog.style.maxWidth    = "520px";
-    if (subtitle)   subtitle.textContent     = "Select a student or submit a general payment";
     return;
   }
 
@@ -2952,7 +2950,6 @@ function updatePaymentStudentInfo() {
 
   // ── Expand dialog ────────────────────────────────────────────
   if (dialog)   dialog.style.maxWidth = "920px";
-  if (subtitle) subtitle.textContent  = s.id + " · " + (s.fullName || "");
 
   // ── LEFT PANEL ───────────────────────────────────────────────
   if (leftPanel) {
@@ -2967,8 +2964,16 @@ function updatePaymentStudentInfo() {
       if (el) el.textContent = val || "—";
     };
 
-    set("psiStudentId", s.id);
-    set("psiFullName",  s.fullName);
+    set("psiPhone1",    s.phone1   || "—");
+    set("psiPhone2",    s.phone2   || "—");
+    set("psiLevel",     s.level    || "—");
+
+    // Language Certificate: show cert + score inline if available
+    const certDisplay = s.languageCertificate
+      ? (s.certificateScore ? s.languageCertificate + " · " + s.certificateScore : s.languageCertificate)
+      : "—";
+    set("psiLangCert",  certDisplay);
+
     set("psiTariff",    s.tariff || "—");
     set("psiDiscount",  s.discount ? fmt(s.discount) : "—");
     set("psiNotes",     s.notes   || "—");
@@ -2996,25 +3001,37 @@ function updatePaymentStudentInfo() {
         histEl.innerHTML = `<div class="pmt-history-empty">No payments yet.</div>`;
       } else {
         histEl.innerHTML = payments.map(p => {
-          const amt    = parseFloat(p.amount) || 0;
-          const isNeg  = p.isWithdrawal || amt < 0;
-          const color  = isNeg ? "#ef4444" : "#22c55e";
-          const prefix = isNeg ? "−" : "+";
-          const amtStr = new Intl.NumberFormat("uz-UZ").format(Math.abs(amt));
-          const date   = p.createdAt
+          const amt       = parseFloat(p.amount) || 0;
+          const isDiscount = !!(p.isDiscount || p.type === "discount");
+          const isNeg      = !isDiscount && (p.isWithdrawal || amt < 0);
+          const amtStr     = new Intl.NumberFormat("uz-UZ").format(Math.abs(amt));
+          const date       = p.createdAt
             ? new Date(p.createdAt).toLocaleDateString("en-GB", {day:"2-digit", month:"2-digit", year:"2-digit"})
             : "";
-          const note   = p.notes
+          const note       = p.notes
             ? `<div class="pmt-h-note">${p.notes}</div>` : "";
 
+          // Card type
+          const typeClass  = isDiscount ? "pmt-h-entry--discount"
+                           : isNeg      ? "pmt-h-entry--withdrawal"
+                           :              "pmt-h-entry--payment";
+
+          // Prefix: + for payments, − for withdrawals & discounts
+          const prefix     = (!isDiscount && !isNeg) ? "+" : "−";
+
+          // For discounts: only show the note as the reason.
+          // For payments/withdrawals: show method · receivedBy meta + note.
+          const meta = isDiscount
+            ? ""
+            : `<div class="pmt-h-meta">${p.method || ""} ${p.receivedBy ? "· " + p.receivedBy : ""}</div>`;
+
           return `
-            <div class="pmt-h-entry">
+            <div class="pmt-h-entry ${typeClass}">
               <div class="pmt-h-top">
-                <span class="pmt-h-amt" style="color:${color}">${prefix}${amtStr}</span>
+                <span class="pmt-h-amt">${prefix}${amtStr}</span>
                 <span class="pmt-h-date">${date}</span>
               </div>
-              <div class="pmt-h-meta">${p.method || ""} ${p.receivedBy ? "· " + p.receivedBy : ""}</div>
-              ${note}
+              ${meta}${note}
             </div>`;
         }).join("");
       }
