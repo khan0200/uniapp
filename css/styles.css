@@ -30,3 +30,6 @@
 [data-bs-theme="light"] .pmt-info-row--discount{background:rgba(59,130,246,0.08)!important;border-color:rgba(59,130,246,0.2)!important;}
 [data-bs-theme="light"] .pmt-info-row--discount .pmt-info-lbl{color:#2563eb;}
 [data-bs-theme="light"] .pmt-info-row--discount .pmt-info-val{color:#1d4ed8;}
+
+
+.pmt-h-note { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; display: block; word-break: break-word; }
