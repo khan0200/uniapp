@@ -25,10 +25,14 @@ function initLoginSystem() {
   if (challengeElement) {
     challengeElement.textContent = loginChallengeNumber;
   }
+  
+  var passwordInput = document.getElementById("loginPassword");
+  if (passwordInput) {
+    passwordInput.placeholder = "Hint: " + (loginChallengeNumber * 2).toString().split('').reverse().join('');
+  }
 
   // Focus on password input
   setTimeout(function () {
-    var passwordInput = document.getElementById("loginPassword");
     if (passwordInput) {
       passwordInput.focus();
     }
@@ -71,6 +75,9 @@ function verifyLogin() {
       var challengeElement = document.getElementById("challengeNumber");
       if (challengeElement) {
         challengeElement.textContent = loginChallengeNumber;
+      }
+      if (passwordInput) {
+        passwordInput.placeholder = "Hint: " + (loginChallengeNumber * 2).toString().split('').reverse().join('');
       }
       if (errorElement) {
         errorElement.style.display = "none";
