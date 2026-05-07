@@ -509,6 +509,10 @@ function saveStudent() {
     level: "",
     languageCertificate: "NO CERTIFICATE",
     certificateScore: "",
+    languageCertificate2: "NO CERTIFICATE",
+    certificateScore2: "",
+    languageCertificate3: "NO CERTIFICATE",
+    certificateScore3: "",
     university1: "",
     university2: "",
     address: "",
@@ -570,6 +574,27 @@ function viewStudentDetails(uniqueId) {
   }
 
   const s = window.studentsData[index];
+  s.languageCertificate2 = s.languageCertificate2 || "NO CERTIFICATE";
+  s.certificateScore2 = s.certificateScore2 || "";
+  s.languageCertificate3 = s.languageCertificate3 || "NO CERTIFICATE";
+  s.certificateScore3 = s.certificateScore3 || "";
+  const hasExtraLanguageCertificates =
+    (s.languageCertificate2 && s.languageCertificate2 !== "NO CERTIFICATE") ||
+    s.certificateScore2 ||
+    (s.languageCertificate3 && s.languageCertificate3 !== "NO CERTIFICATE") ||
+    s.certificateScore3;
+  if (typeof window.extraLanguageCertificatesVisible === "undefined") {
+    window.extraLanguageCertificatesVisible = false;
+  }
+  if (typeof window.extraLanguageCertificatesManuallyHidden === "undefined") {
+    window.extraLanguageCertificatesManuallyHidden = false;
+  }
+  if (window.extraLanguageCertificatesManuallyHidden) {
+    window.extraLanguageCertificatesVisible = false;
+  } else {
+    window.extraLanguageCertificatesVisible =
+      window.extraLanguageCertificatesVisible || hasExtraLanguageCertificates;
+  }
   // Store the firestoreId for reliable identification in saveEdit and other functions
   currentStudentId = index;
   // Also store the firestoreId separately for direct reference
@@ -777,7 +802,11 @@ function viewStudentDetails(uniqueId) {
                     <label class="detail-label">Language Certificate</label>
                     <div class="detail-value-wrap">
                         <span class="detail-value"><span class="badge badge-language">${s.languageCertificate}</span>${s.certificateScore ? ` <span class="score-text">Score: ${s.certificateScore}</span>` : ""}</span>
-                        <button class="edit-btn" onclick="startEdit('languageCertificate', 'select'); event.stopPropagation();"><i class="bi bi-pencil"></i></button>
+                        <div class="action-btns">
+                            <button class="edit-btn" onclick="showExtraLanguageCertificates(); event.stopPropagation();" title="Add more certificates"><i class="bi bi-plus-lg"></i></button>
+                            ${window.extraLanguageCertificatesVisible ? `<button class="edit-btn" onclick="hideExtraLanguageCertificates(); event.stopPropagation();" title="Hide extra certificates"><i class="bi bi-dash-lg"></i></button>` : ""}
+                            <button class="edit-btn" onclick="startEdit('languageCertificate', 'select'); event.stopPropagation();"><i class="bi bi-pencil"></i></button>
+                        </div>
                     </div>
                     <div class="edit-field" style="display:none;">
                         <div class="d-flex gap-2">
@@ -787,6 +816,8 @@ function viewStudentDetails(uniqueId) {
                                 <option value="SKA" ${s.languageCertificate === "SKA" ? "selected" : ""}>SKA</option>
                                 <option value="IELTS" ${s.languageCertificate === "IELTS" ? "selected" : ""}>IELTS</option>
                                 <option value="TOEFL" ${s.languageCertificate === "TOEFL" ? "selected" : ""}>TOEFL</option>
+                                <option value="SAT" ${s.languageCertificate === "SAT" ? "selected" : ""}>SAT</option>
+                                <option value="CEFR" ${s.languageCertificate === "CEFR" ? "selected" : ""}>CEFR</option>
                             </select>
                             <input type="text" class="form-control ios-input form-control-sm" value="${s.certificateScore || ""}" id="edit-certificateScore" placeholder="Score" style="width:80px;">
                         </div>
@@ -794,6 +825,56 @@ function viewStudentDetails(uniqueId) {
                     </div>
                 </div>
             </div>
+            ${window.extraLanguageCertificatesVisible ? `
+            <div class="col-md-4">
+                <div class="detail-group editable" data-field="languageCertificate2">
+                    <label class="detail-label">Language Certificate 2</label>
+                    <div class="detail-value-wrap">
+                        <span class="detail-value"><span class="badge badge-language">${s.languageCertificate2}</span>${s.certificateScore2 ? ` <span class="score-text">Score: ${s.certificateScore2}</span>` : ""}</span>
+                        <button class="edit-btn" onclick="startEdit('languageCertificate2', 'select'); event.stopPropagation();"><i class="bi bi-pencil"></i></button>
+                    </div>
+                    <div class="edit-field" style="display:none;">
+                        <div class="d-flex gap-2">
+                            <select class="form-select ios-input form-control-sm" id="edit-languageCertificate2" style="flex:1;">
+                                <option value="NO CERTIFICATE" ${s.languageCertificate2 === "NO CERTIFICATE" ? "selected" : ""}>NO CERTIFICATE</option>
+                                <option value="TOPIK" ${s.languageCertificate2 === "TOPIK" ? "selected" : ""}>TOPIK</option>
+                                <option value="SKA" ${s.languageCertificate2 === "SKA" ? "selected" : ""}>SKA</option>
+                                <option value="IELTS" ${s.languageCertificate2 === "IELTS" ? "selected" : ""}>IELTS</option>
+                                <option value="TOEFL" ${s.languageCertificate2 === "TOEFL" ? "selected" : ""}>TOEFL</option>
+                                <option value="SAT" ${s.languageCertificate2 === "SAT" ? "selected" : ""}>SAT</option>
+                                <option value="CEFR" ${s.languageCertificate2 === "CEFR" ? "selected" : ""}>CEFR</option>
+                            </select>
+                            <input type="text" class="form-control ios-input form-control-sm" value="${s.certificateScore2 || ""}" id="edit-certificateScore2" placeholder="Score" style="width:80px;">
+                        </div>
+                        <div class="edit-actions"><button class="save-btn" onclick="saveEdit('languageCertificate2')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('languageCertificate2')"><i class="bi bi-x"></i></button></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="detail-group editable" data-field="languageCertificate3">
+                    <label class="detail-label">Language Certificate 3</label>
+                    <div class="detail-value-wrap">
+                        <span class="detail-value"><span class="badge badge-language">${s.languageCertificate3}</span>${s.certificateScore3 ? ` <span class="score-text">Score: ${s.certificateScore3}</span>` : ""}</span>
+                        <button class="edit-btn" onclick="startEdit('languageCertificate3', 'select'); event.stopPropagation();"><i class="bi bi-pencil"></i></button>
+                    </div>
+                    <div class="edit-field" style="display:none;">
+                        <div class="d-flex gap-2">
+                            <select class="form-select ios-input form-control-sm" id="edit-languageCertificate3" style="flex:1;">
+                                <option value="NO CERTIFICATE" ${s.languageCertificate3 === "NO CERTIFICATE" ? "selected" : ""}>NO CERTIFICATE</option>
+                                <option value="TOPIK" ${s.languageCertificate3 === "TOPIK" ? "selected" : ""}>TOPIK</option>
+                                <option value="SKA" ${s.languageCertificate3 === "SKA" ? "selected" : ""}>SKA</option>
+                                <option value="IELTS" ${s.languageCertificate3 === "IELTS" ? "selected" : ""}>IELTS</option>
+                                <option value="TOEFL" ${s.languageCertificate3 === "TOEFL" ? "selected" : ""}>TOEFL</option>
+                                <option value="SAT" ${s.languageCertificate3 === "SAT" ? "selected" : ""}>SAT</option>
+                                <option value="CEFR" ${s.languageCertificate3 === "CEFR" ? "selected" : ""}>CEFR</option>
+                            </select>
+                            <input type="text" class="form-control ios-input form-control-sm" value="${s.certificateScore3 || ""}" id="edit-certificateScore3" placeholder="Score" style="width:80px;">
+                        </div>
+                        <div class="edit-actions"><button class="save-btn" onclick="saveEdit('languageCertificate3')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('languageCertificate3')"><i class="bi bi-x"></i></button></div>
+                    </div>
+                </div>
+            </div>
+            ` : ""}
 
             <!-- Row: University 1, University 2 -->
             <div class="col-md-6">
@@ -1019,10 +1100,16 @@ function viewStudentDetails(uniqueId) {
 
   // Set flag = 0 each time the modal opens just in case
   window.editAuthFlag = 0;
+  if (!hasExtraLanguageCertificates) {
+    window.extraLanguageCertificatesVisible = false;
+    window.extraLanguageCertificatesManuallyHidden = false;
+  }
   
   // Also explicitly reset when closed
   modalElement.addEventListener('hidden.bs.modal', function() {
     window.editAuthFlag = 0;
+    window.extraLanguageCertificatesVisible = false;
+    window.extraLanguageCertificatesManuallyHidden = false;
   }, { once: true });
 
   modal.show();
@@ -1046,6 +1133,22 @@ function startEdit(field, type) {
   group.querySelector(".edit-field").style.display = "block";
   const input = document.getElementById(`edit-${field}`);
   if (input) input.focus();
+}
+
+function showExtraLanguageCertificates() {
+  window.extraLanguageCertificatesVisible = true;
+  window.extraLanguageCertificatesManuallyHidden = false;
+  if (window.currentStudentFirestoreId) {
+    viewStudentDetails(window.currentStudentFirestoreId);
+  }
+}
+
+function hideExtraLanguageCertificates() {
+  window.extraLanguageCertificatesVisible = false;
+  window.extraLanguageCertificatesManuallyHidden = true;
+  if (window.currentStudentFirestoreId) {
+    viewStudentDetails(window.currentStudentFirestoreId);
+  }
 }
 
 // Cancel inline edit
@@ -1105,10 +1208,20 @@ function saveEdit(field) {
 
   s[field] = newValue;
 
-  // Handle certificate score separately
-  if (field === "languageCertificate") {
-    const scoreInput = document.getElementById("edit-certificateScore");
-    s.certificateScore = scoreInput.value;
+  // Handle certificate scores separately
+  if (field === "languageCertificate" || field === "languageCertificate2" || field === "languageCertificate3") {
+    const scoreFieldMap = {
+      languageCertificate: "certificateScore",
+      languageCertificate2: "certificateScore2",
+      languageCertificate3: "certificateScore3",
+    };
+    const inputIdMap = {
+      languageCertificate: "edit-certificateScore",
+      languageCertificate2: "edit-certificateScore2",
+      languageCertificate3: "edit-certificateScore3",
+    };
+    const scoreInput = document.getElementById(inputIdMap[field]);
+    s[scoreFieldMap[field]] = scoreInput ? scoreInput.value : "";
   }
 
   // Handle note importance separately
@@ -1130,9 +1243,14 @@ function saveEdit(field) {
   const group = document.querySelector(`[data-field="${field}"]`);
   const valueSpan = group.querySelector(".detail-value");
   if (valueSpan) {
-    if (field === "languageCertificate") {
-      // Reconstruct the full HTML for language certificate + score
-      valueSpan.innerHTML = `<span class="badge badge-language">${newValue}</span>${s.certificateScore ? ` <span class="score-text">Score: ${s.certificateScore}</span>` : ""}`;
+    if (field === "languageCertificate" || field === "languageCertificate2" || field === "languageCertificate3") {
+      const scoreFieldMap = {
+        languageCertificate: "certificateScore",
+        languageCertificate2: "certificateScore2",
+        languageCertificate3: "certificateScore3",
+      };
+      const scoreValue = s[scoreFieldMap[field]];
+      valueSpan.innerHTML = `<span class="badge badge-language">${newValue}</span>${scoreValue ? ` <span class="score-text">Score: ${scoreValue}</span>` : ""}`;
     } else if (field === "level" || field === "group") {
       // Handle other badges if necessary (though they don't have secondary fields like score)
       const badgeClass = field === "level" ? "badge-level" : "badge-group";
