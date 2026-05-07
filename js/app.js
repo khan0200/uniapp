@@ -1539,6 +1539,9 @@ function applyFilters(resetPage = true) {
   const groupDropdown = document.getElementById("filterGroup");
   const groupFilter = groupDropdown ? groupDropdown.value : "";
 
+  const languageCertificateDropdown = document.getElementById("filterLanguageCertificate");
+  const languageCertificateFilter = languageCertificateDropdown ? languageCertificateDropdown.value : "";
+
   const filtered = window.studentsData.filter((s) => {
     // Handle deleted students filter
     if (levelFilter === "DELETED") {
@@ -1608,13 +1611,24 @@ function applyFilters(resetPage = true) {
       matchesGroup = s.group === groupFilter;
     }
 
-    return matchesSearch && matchesTariff && matchesLevel && matchesGroup;
+    let matchesLanguageCertificate;
+    if (!languageCertificateFilter) {
+      matchesLanguageCertificate = true;
+    } else {
+      matchesLanguageCertificate = [
+        s.languageCertificate,
+        s.languageCertificate2,
+        s.languageCertificate3,
+      ].some((certificate) => certificate === languageCertificateFilter);
+    }
+
+    return matchesSearch && matchesTariff && matchesLevel && matchesGroup && matchesLanguageCertificate;
   });
 
   // Update Counter
   const counterEl = document.getElementById("studentsCounter");
   if (counterEl) {
-    if (searchQuery || tariffFilter || levelFilter || groupFilter) {
+    if (searchQuery || tariffFilter || levelFilter || groupFilter || languageCertificateFilter) {
       counterEl.textContent = `Found ${filtered.length} student${filtered.length !== 1 ? "s" : ""}`;
     } else {
       counterEl.textContent = `Total ${filtered.length} student${filtered.length !== 1 ? "s" : ""}`;
@@ -1788,6 +1802,11 @@ document.addEventListener("DOMContentLoaded", function () {
   const groupFilter = document.getElementById("filterGroup");
   if (groupFilter) {
     groupFilter.addEventListener("change", applyFilters);
+  }
+
+  const languageCertificateFilter = document.getElementById("filterLanguageCertificate");
+  if (languageCertificateFilter) {
+    languageCertificateFilter.addEventListener("change", applyFilters);
   }
 
   // Initialize Excel modal when opened
