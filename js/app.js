@@ -671,6 +671,9 @@ function filterDocuments(resetPage = true) {
   const languageCertificateDropdown = document.getElementById("documentsFilterLanguageCertificate");
   const languageCertificateFilter = languageCertificateDropdown ? languageCertificateDropdown.value : "";
 
+  const missingDocsDropdown = document.getElementById("filterMissingDocs");
+  const missingDocsFilter = missingDocsDropdown ? missingDocsDropdown.value : "";
+
   const filtered = (window.studentsData || []).filter((s) => {
     // Handle deleted students filter
     if (levelFilter === "DELETED") {
@@ -755,13 +758,20 @@ function filterDocuments(resetPage = true) {
       ].some((certificate) => certificate === languageCertificateFilter);
     }
 
-    return matchesSearch && matchesTariff && matchesLevel && matchesGroup && matchesLanguageCertificate;
+    // Missing Documents filter
+    let matchesMissingDocs = true;
+    if (missingDocsFilter) {
+      const pickNeeded = s.pickNeeded || [];
+      matchesMissingDocs = pickNeeded.includes(missingDocsFilter);
+    }
+
+    return matchesSearch && matchesTariff && matchesLevel && matchesGroup && matchesLanguageCertificate && matchesMissingDocs;
   });
 
   // Update Counter
   const counterEl = document.getElementById("documentsCounter");
   if (counterEl) {
-    if (searchQuery || tariffFilter || levelFilter || groupFilter || languageCertificateFilter) {
+    if (searchQuery || tariffFilter || levelFilter || groupFilter || languageCertificateFilter || missingDocsFilter) {
       counterEl.textContent = `Found ${filtered.length} student${filtered.length !== 1 ? "s" : ""}`;
     } else {
       counterEl.textContent = `Total ${filtered.length} student${filtered.length !== 1 ? "s" : ""}`;
