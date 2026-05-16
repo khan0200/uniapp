@@ -184,7 +184,7 @@ function loadStudentsFromFirestore() {
 // UPDATE STUDENT IN FIRESTORE
 // ==========================================
 
-async function updateStudentInFirestore(firestoreId, updatedData) {
+async function updateStudentInFirestore(firestoreId, updatedData, silent = false) {
     if (!firebaseInitialized || !firestoreId) {
         console.log('Firebase not available or no ID provided');
         return;
@@ -196,7 +196,7 @@ async function updateStudentInFirestore(firestoreId, updatedData) {
         await db.collection('students').doc(firestoreId).update(updatedData);
 
         console.log('✅ Student updated successfully');
-        if (typeof showNotification === 'function') {
+        if (!silent && typeof showNotification === 'function') {
             showNotification('Student updated successfully!', 'success');
         }
 

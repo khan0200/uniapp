@@ -482,7 +482,7 @@ window.saveFlags = function (shouldHide = true) {
 
   if (typeof updateStudentInFirestore === "function") {
     // Try firestoreId first, then id
-    updateStudentInFirestore(s.firestoreId || s.id, updateObj);
+    updateStudentInFirestore(s.firestoreId || s.id, updateObj, true);
   }
 
   if (shouldHide) hideFlagsPopover();
@@ -493,7 +493,7 @@ window.saveFlags = function (shouldHide = true) {
     applyFilters(false);
   }
   
-  showNotification("Task flags updated!", "success");
+
 }
 
 window.startHideFlagsPopover = function (delay = 500) {
