@@ -15,7 +15,7 @@
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <!-- Custom Styles -->
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css?v=3">
 </head>
 
 <body>
@@ -73,6 +73,23 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Navbar Global Search -->
+                <div class="navbar-search-wrapper d-none d-lg-flex">
+                    <div class="navbar-search-group">
+                        <select class="form-select search-type-select" id="headerSearchType" onchange="handleGlobalSearch()">
+                            <option value="all">All Fields</option>
+                            <option value="id">ID</option>
+                            <option value="name">Name</option>
+                            <option value="phone">Phone</option>
+                            <option value="university">University</option>
+                        </select>
+                        <div class="navbar-search-input-container">
+                            <i class="bi bi-search search-icon"></i>
+                            <input type="text" id="headerSearchInput" class="form-control" placeholder="Search..." oninput="handleGlobalSearch()">
+                        </div>
+                    </div>
+                </div>
+
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link nav-link-apple active" href="#" onclick="showTab('students'); return false;"
@@ -122,24 +139,7 @@
             <!-- Search and Filters Card -->
             <div class="filters-card mb-4">
                 <div class="filters-row">
-                    <!-- Search Type -->
-                    <div class="filter-item">
-                        <i class="bi bi-funnel filter-icon"></i>
-                        <select class="form-select filter-input" id="searchType" onchange="applyFilters()" aria-label="Search Type">
-                            <option value="all">All Fields</option>
-                            <option value="id">ID</option>
-                            <option value="name">Name</option>
-                            <option value="phone">Phone</option>
-                            <option value="university">University</option>
-                        </select>
-                    </div>
-
-                    <!-- Search Input -->
-                    <div class="filter-item filter-search">
-                        <i class="bi bi-search filter-icon"></i>
-                        <input type="text" id="searchInput" class="form-control filter-input"
-                            placeholder="Search...">
-                    </div>
+                    <!-- Search moved to top navbar -->
 
                     <!-- Tariff Filter -->
                     <div class="filter-item">
@@ -197,7 +197,21 @@
                         </select>
                     </div>
 
+                    <!-- Task Tags Filter -->
+                    <div class="filter-item tag-filter-item">
+                        <i class="bi bi-bookmark-check filter-icon"></i>
+                        <select class="form-select filter-input" id="filterTags" onchange="applyFilters()" aria-label="Filter by task tags">
+                            <option value="">All Tasks/Tags</option>
+                            <option value="Call">📞 Call</option>
+                            <option value="Apply">🎓 Apply</option>
+                            <option value="Documents">📄 Documents</option>
+                            <option value="Payment">💰 Payment</option>
+                            <option value="Custom">Custom Tags</option>
+                        </select>
+                    </div>
+
                     <!-- Actions -->
+
                     <div class="filter-actions">
                         <button class="btn btn-filter-action" data-bs-toggle="modal"
                             data-bs-target="#downloadExcelModal" title="Export to Excel">
@@ -237,7 +251,7 @@
                                 <th>Phone</th>
                                 <th>Level</th>
                                 <th>University</th>
-                                <th class="th-action">Color</th>
+                                <th class="th-action">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="studentsTableBody">
@@ -263,24 +277,7 @@
                     <h4 class="mb-0"><i class="bi bi-folder-fill me-2"></i>Documents</h4>
                 </div>
                 <div class="filters-row">
-                    <!-- Search Type -->
-                    <div class="filter-item">
-                        <i class="bi bi-funnel filter-icon"></i>
-                        <select class="form-select filter-input" id="documentsSearchType" onchange="filterDocuments()" aria-label="Search Type">
-                            <option value="all">All Fields</option>
-                            <option value="id">ID</option>
-                            <option value="name">Name</option>
-                            <option value="phone">Phone</option>
-                            <option value="university">University</option>
-                        </select>
-                    </div>
-
-                    <!-- Search Input -->
-                    <div class="filter-item filter-search">
-                        <i class="bi bi-search filter-icon"></i>
-                        <input type="text" id="documentsSearchInput" class="form-control filter-input"
-                            placeholder="Search...">
-                    </div>
+                    <!-- Search moved to top navbar -->
 
                     <!-- Tariff Filter -->
                     <div class="filter-item">
@@ -550,7 +547,7 @@
                                 <th>University</th>
                                 <th>Invoices</th>
                                 <th>Admission</th>
-                                <th class="th-action">Color</th>
+                                <th class="th-action">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="statusTableBody">
@@ -2108,22 +2105,43 @@
     <script src="js/app.js"></script>
     <script src="js/form-validation.js"></script>
 
-    <!-- Shared Row Color Picker Popup (fixed position, appended to body to escape overflow clipping) -->
-    <div id="colorPickerPopup" class="cp-popup" onmouseenter="cancelHideColorPicker()"
-        onmouseleave="startHideColorPicker()">
-        <div class="cp-swatch" data-color="RED" style="background:#ef4444" onclick="setRowColor('RED')" title="Red">
+    <!-- Shared Flags / Tasks Popover -->
+    <div id="flagsPopover" class="cp-popup flags-popover" onmouseenter="cancelHideFlagsPopover()"
+        onmouseleave="startHideFlagsPopover(200)">
+        
+        <div class="flags-section">
+            <div class="flags-section-title">Select Color</div>
+            <div class="flags-colors-grid" id="flagsColorsGrid">
+                <!-- Populated dynamically -->
+            </div>
         </div>
-        <div class="cp-swatch" data-color="YELLOW" style="background:#eab308" onclick="setRowColor('YELLOW')"
-            title="Yellow"></div>
-        <div class="cp-swatch" data-color="GREEN" style="background:#006400" onclick="setRowColor('GREEN')"
-            title="Green"></div>
-        <div class="cp-swatch" data-color="BLUE" style="background:#3b82f6" onclick="setRowColor('BLUE')" title="Blue">
+
+        <div class="flags-section">
+            <div class="flags-section-title">Predefined Tasks</div>
+            <div class="flags-tags-container" id="predefinedTagsContainer">
+                <div class="tag-chip" onclick="toggleTaskTag('Call')">📞 Call</div>
+                <div class="tag-chip" onclick="toggleTaskTag('Apply')">🎓 Apply</div>
+                <div class="tag-chip" onclick="toggleTaskTag('Documents')">📄 Documents</div>
+                <div class="tag-chip" onclick="toggleTaskTag('Payment')">💰 Payment</div>
+            </div>
         </div>
-        <div class="cp-swatch" data-color="MAGENTA" style="background:#d946ef" onclick="setRowColor('MAGENTA')"
-            title="Magenta"></div>
-        <div class="cp-swatch" data-color="CYAN" style="background:#06b6d4" onclick="setRowColor('CYAN')" title="Cyan">
+
+        <div class="flags-section">
+            <div class="flags-section-title">Custom Tags</div>
+            <div id="customTagsContainer" class="flags-tags-container mb-2">
+                <!-- Custom tags appear here -->
+            </div>
+            <div class="custom-tag-input-group">
+                <input type="text" id="customTagInput" class="custom-tag-input" placeholder="New tag..." 
+                    onkeypress="if(event.key==='Enter')addCustomTaskTag()">
+                <button class="btn btn-primary btn-add-tag" onclick="addCustomTaskTag()">
+                    <i class="bi bi-plus"></i>
+                </button>
+            </div>
         </div>
-        <div class="cp-swatch cp-clear" style="background:transparent" onclick="setRowColor('')" title="Clear color">✕
+
+        <div class="flags-actions">
+            <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearAllFlags()">Clear All Tasks & Color</button>
         </div>
     </div>
     <!-- Shared Status Multi-Select Dropdown Popup -->

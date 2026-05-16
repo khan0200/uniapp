@@ -155,12 +155,18 @@ window.toggleSortOrder = function(tab) {
 
 // Row Colorization — color map (ball colour + row background tint)
 const ROW_COLOR_MAP = {
-  RED: { ball: "#ef4444", bg: "rgba(239,68,68,0.22)" },
-  YELLOW: { ball: "#eab308", bg: "rgba(234,179,8,0.22)" },
-  GREEN: { ball: "#006400", bg: "rgba(0,100,0,0.22)" },
-  BLUE: { ball: "#3b82f6", bg: "rgba(59,130,246,0.22)" },
-  MAGENTA: { ball: "#d946ef", bg: "rgba(217,70,239,0.22)" },
-  CYAN: { ball: "#06b6d4", bg: "rgba(6,182,212,0.22)" },
+  DARK_RED: { bg: "rgba(139, 0, 0, 0.15)", ball: "#8b0000" },
+  DARK_GREEN: { bg: "rgba(0, 100, 0, 0.15)", ball: "#006400" },
+  DARK_BLUE: { bg: "rgba(0, 0, 139, 0.15)", ball: "#00008b" },
+  MUSTARD: { bg: "rgba(184, 134, 11, 0.15)", ball: "#b8860b" },
+  PURPLE: { bg: "rgba(75, 0, 130, 0.15)", ball: "#4b0082" },
+  ORANGE: { bg: "rgba(210, 105, 30, 0.15)", ball: "#d2691e" },
+  TEAL: { bg: "rgba(0, 128, 128, 0.15)", ball: "#008080" },
+  SLATE: { bg: "rgba(47, 79, 79, 0.15)", ball: "#2f4f4f" },
+  DARK_PINK: { bg: "rgba(139, 0, 139, 0.15)", ball: "#8b008b" },
+  BROWN: { bg: "rgba(93, 64, 55, 0.15)", ball: "#5d4037" },
+  INDIGO: { bg: "rgba(48, 63, 159, 0.15)", ball: "#303f9f" },
+  CYAN_DARK: { bg: "rgba(0, 131, 143, 0.15)", ball: "#00838f" },
 };
 
 // Status column color palettes (used by multi-select popup + badge rendering)
@@ -332,89 +338,177 @@ let _cpHideTimer = null;
 
 let _cpContext = "students"; // 'students' | 'status'
 
-function showColorPicker(wrapperEl, uniqueId, context) {
-  _cpCurrentId = uniqueId;
-  _cpContext = context || "students";
-  clearTimeout(_cpHideTimer);
+let _flagsCurrentId = null;
+let _flagsContext = "students"; // "students" or "status"
+let _flagsHideTimer = null;
+let _flagsWrapperEl = null; // Store trigger element
+let _tempTaskTags = [];
+let _tempRowColor = "";
 
-  const popup = document.getElementById("colorPickerPopup");
+window.showFlagsPopover = function (wrapperEl, uniqueId, context) {
+  _flagsCurrentId = uniqueId;
+  _flagsContext = context || "students";
+  _flagsWrapperEl = wrapperEl; // Save for re-renders
+  clearTimeout(_flagsHideTimer);
+
+  const student = window.studentsData.find(st => (st.firestoreId || st.id) === uniqueId);
+  if (!student) return;
+
+  // Initialize temporary state
+  _tempTaskTags = [...(student.taskTags || [])];
+  _tempRowColor = (_flagsContext === "status" ? student.statusRowColor : student.rowColor) || "";
+
+  renderFlagsPopover();
+};
+
+function renderFlagsPopover() {
+  const wrapperEl = _flagsWrapperEl;
+  if (!wrapperEl) return;
+  const popup = document.getElementById("flagsPopover");
   if (!popup) return;
 
   popup.style.display = "flex";
 
-  // Mark the active swatch based on context
-  const s = window.studentsData.find(
-    (st) => (st.firestoreId || st.id) === uniqueId,
-  );
-  const activeColor =
-    _cpContext === "status" ? s && s.statusRowColor : s && s.rowColor;
-  popup.querySelectorAll(".cp-swatch[data-color]").forEach((sw) => {
-    sw.classList.toggle(
-      "cp-active",
-      !!(activeColor && sw.dataset.color === activeColor),
-    );
+  // 1. Render Colors
+  const colorsGrid = document.getElementById("flagsColorsGrid");
+  colorsGrid.innerHTML = Object.entries(ROW_COLOR_MAP).map(([name, data]) => `
+    <div class="cp-swatch flag-swatch ${_tempRowColor === name ? 'active' : ''}" 
+         style="background:${data.ball}" 
+         onclick="setFlagColor('${name}')" 
+         title="${name.replace('_', ' ')}"></div>
+  `).join('') + `
+    <div class="cp-swatch flag-swatch cp-clear" onclick="setFlagColor('')" title="Clear Color">✕</div>
+  `;
+
+  // 2. Render Predefined Tags
+  const predefined = ["Call", "Apply", "Documents", "Payment"];
+  const predefinedContainer = document.getElementById("predefinedTagsContainer");
+  predefinedContainer.querySelectorAll('.tag-chip').forEach(chip => {
+    const tagName = chip.textContent.split(' ').pop(); // Get word after emoji
+    chip.classList.toggle('active', _tempTaskTags.includes(tagName));
   });
 
-  // Position above the wrapper element (fixed, avoids overflow clipping)
+  // 3. Render Custom Tags
+  const customTagsContainer = document.getElementById("customTagsContainer");
+  const customTags = _tempTaskTags.filter(t => !predefined.includes(t));
+  customTagsContainer.innerHTML = customTags.map(tag => `
+    <div class="tag-chip custom-tag">
+      ${tag}
+      <i class="bi bi-x-circle-fill tag-remove" onclick="removeTaskTag('${tag}')"></i>
+    </div>
+  `).join('');
+
+  // Position the popover
   const rect = wrapperEl.getBoundingClientRect();
-  const popupW = 128;
-  const popupH = 76;
+  const popupRect = popup.getBoundingClientRect();
+  const popupW = 260; // From CSS
+  
   let left = rect.left + rect.width / 2 - popupW / 2;
-  let top = rect.top - popupH - 8;
+  let top = rect.top - 400; // Guessing height, will adjust if needed
 
   if (left < 6) left = 6;
-  if (left + popupW > window.innerWidth - 6)
-    left = window.innerWidth - popupW - 6;
-  if (top < 6) top = rect.bottom + 8; // flip below if no room
-
+  if (left + popupW > window.innerWidth - 6) left = window.innerWidth - popupW - 6;
+  
+  // Actually, let's use a more robust positioning
   popup.style.left = left + "px";
-  popup.style.top = top + "px";
+  
+  // Adjust top based on actual height
+  setTimeout(() => {
+    const actualH = popup.offsetHeight;
+    let actualTop = rect.top - actualH - 8;
+    if (actualTop < 6) actualTop = rect.bottom + 8;
+    popup.style.top = actualTop + "px";
+  }, 0);
 }
 
-function startHideColorPicker() {
-  _cpHideTimer = setTimeout(hideColorPicker, 130);
-}
+window.setFlagColor = function (colorKey) {
+  _tempRowColor = colorKey;
+  renderFlagsPopover();
+  saveFlags(false); 
+};
 
-function cancelHideColorPicker() {
-  clearTimeout(_cpHideTimer);
-}
+window.toggleTaskTag = function (tagName) {
+  const index = _tempTaskTags.indexOf(tagName);
+  if (index > -1) {
+    _tempTaskTags.splice(index, 1);
+  } else {
+    _tempTaskTags.push(tagName);
+  }
+  renderFlagsPopover();
+  saveFlags(false);
+};
 
-function hideColorPicker() {
-  const popup = document.getElementById("colorPickerPopup");
-  if (popup) popup.style.display = "none";
-  _cpCurrentId = null;
-}
+window.addCustomTaskTag = function () {
+  const input = document.getElementById("customTagInput");
+  if (!input) return;
+  const tag = input.value.trim();
+  if (tag && !_tempTaskTags.includes(tag)) {
+    _tempTaskTags.push(tag);
+    input.value = "";
+    renderFlagsPopover();
+    saveFlags(false);
+  }
+};
 
-function setRowColor(colorName) {
-  const uniqueId = _cpCurrentId;
-  if (uniqueId === null) return;
+window.removeTaskTag = function (tag) {
+  _tempTaskTags = _tempTaskTags.filter(t => t !== tag);
+  renderFlagsPopover();
+  saveFlags(false);
+};
 
-  const s = window.studentsData.find(
-    (st) => (st.firestoreId || st.id) === uniqueId,
-  );
+window.clearAllFlags = function () {
+  _tempRowColor = "";
+  _tempTaskTags = [];
+  renderFlagsPopover();
+  saveFlags(false);
+};
+window.saveFlags = function (shouldHide = true) {
+  const uniqueId = _flagsCurrentId;
+  if (!uniqueId) return;
+
+  const s = window.studentsData.find(st => (st.firestoreId || st.id) === uniqueId);
   if (!s) return;
 
-  if (_cpContext === "status") {
-    // STATUS tab uses its own separate color field
-    s.statusRowColor =
-      s.statusRowColor === colorName || colorName === "" ? "" : colorName;
-    if (typeof updateStudentInFirestore === "function" && s.firestoreId) {
-      updateStudentInFirestore(s.firestoreId, {
-        statusRowColor: s.statusRowColor,
-      });
-    }
-    hideColorPicker();
+  s.taskTags = _tempTaskTags;
+  
+  const updateObj = { taskTags: s.taskTags };
+  if (_flagsContext === "status") {
+    s.statusRowColor = _tempRowColor;
+    updateObj.statusRowColor = s.statusRowColor;
+  } else {
+    s.rowColor = _tempRowColor;
+    updateObj.rowColor = s.rowColor;
+  }
+
+  if (typeof updateStudentInFirestore === "function") {
+    // Try firestoreId first, then id
+    updateStudentInFirestore(s.firestoreId || s.id, updateObj);
+  }
+
+  if (shouldHide) hideFlagsPopover();
+  
+  if (_flagsContext === "status") {
     applyStatusFilters(false);
   } else {
-    // STUDENTS tab uses the original rowColor field
-    s.rowColor = s.rowColor === colorName || colorName === "" ? "" : colorName;
-    if (typeof updateStudentInFirestore === "function" && s.firestoreId) {
-      updateStudentInFirestore(s.firestoreId, { rowColor: s.rowColor });
-    }
-    hideColorPicker();
     applyFilters(false);
   }
+  
+  showNotification("Task flags updated!", "success");
 }
+
+window.startHideFlagsPopover = function (delay = 500) {
+  _flagsHideTimer = setTimeout(hideFlagsPopover, delay); 
+};
+
+window.cancelHideFlagsPopover = function () {
+  clearTimeout(_flagsHideTimer);
+};
+
+window.hideFlagsPopover = function () {
+  const popup = document.getElementById("flagsPopover");
+  if (popup) popup.style.display = "none";
+  _flagsCurrentId = null;
+};
 
 // Dynamic University Data Function - returns universities for a given level from Firestore
 function getUniversitiesForLevel(level) {
@@ -463,6 +557,7 @@ function showTab(tabName) {
 
   const targetTab = document.getElementById(`${tabName}-tab`);
   if (targetTab) targetTab.style.display = "block";
+  window.currentTab = tabName;
   
   const targetNav = document.getElementById(`nav-${tabName}`);
   if (targetNav) targetNav.classList.add("active");
@@ -691,10 +786,10 @@ function filterDocuments(resetPage = true) {
     documentsPage = 1;
   }
 
-  const searchInput = document.getElementById("documentsSearchInput");
+  const searchInput = document.getElementById("headerSearchInput") || document.getElementById("documentsSearchInput");
   const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : "";
 
-  const searchTypeDropdown = document.getElementById("documentsSearchType");
+  const searchTypeDropdown = document.getElementById("headerSearchType") || document.getElementById("documentsSearchType");
   const searchType = searchTypeDropdown ? searchTypeDropdown.value : "all";
 
   const tariffDropdown = document.getElementById("documentsFilterTariff");
@@ -2142,10 +2237,10 @@ function applyFilters(resetPage = true) {
     studentsPage = 1;
   }
 
-  const searchInput = document.getElementById("searchInput");
+  const searchInput = document.getElementById("headerSearchInput") || document.getElementById("searchInput");
   const searchQuery = searchInput ? searchInput.value.toLowerCase() : "";
 
-  const searchTypeDropdown = document.getElementById("searchType");
+  const searchTypeDropdown = document.getElementById("headerSearchType") || document.getElementById("searchType");
   const searchType = searchTypeDropdown ? searchTypeDropdown.value : "all";
 
   const tariffDropdown = document.getElementById("filterTariff");
@@ -2159,6 +2254,9 @@ function applyFilters(resetPage = true) {
 
   const languageCertificateDropdown = document.getElementById("filterLanguageCertificate");
   const languageCertificateFilter = languageCertificateDropdown ? languageCertificateDropdown.value : "";
+
+  const tagsDropdown = document.getElementById("filterTags");
+  const tagsFilter = tagsDropdown ? tagsDropdown.value : "";
 
   const filtered = window.studentsData.filter((s) => {
     // Handle deleted students filter
@@ -2247,13 +2345,24 @@ function applyFilters(resetPage = true) {
       ].some((certificate) => certificate === languageCertificateFilter);
     }
 
-    return matchesSearch && matchesTariff && matchesLevel && matchesGroup && matchesLanguageCertificate;
+    let matchesTags = true;
+    if (tagsFilter) {
+      if (tagsFilter === "Custom") {
+        // Match if has any tag NOT in the predefined list
+        const predefined = ["Call", "Apply", "Documents", "Payment"];
+        matchesTags = s.taskTags && s.taskTags.some(t => !predefined.includes(t));
+      } else {
+        matchesTags = s.taskTags && s.taskTags.includes(tagsFilter);
+      }
+    }
+
+    return matchesSearch && matchesTariff && matchesLevel && matchesGroup && matchesLanguageCertificate && matchesTags;
   });
 
   // Update Counter
   const counterEl = document.getElementById("studentsCounter");
   if (counterEl) {
-    if (searchQuery || tariffFilter || levelFilter || groupFilter || languageCertificateFilter) {
+    if (searchQuery || tariffFilter || levelFilter || groupFilter || languageCertificateFilter || tagsFilter) {
       counterEl.textContent = `Found ${filtered.length} student${filtered.length !== 1 ? "s" : ""}`;
     } else {
       counterEl.textContent = `Total ${filtered.length} student${filtered.length !== 1 ? "s" : ""}`;
@@ -2369,9 +2478,21 @@ function applyFilters(resetPage = true) {
                 <!-- Action: colour ball triggers picker on hover -->
                 <td class="table-action-cell" onclick="event.stopPropagation()">
                     <div class="cp-ball-wrapper"
-                         onmouseenter="showColorPicker(this, '${uniqueId}')"
-                         onmouseleave="startHideColorPicker()">
+                         onmouseenter="showFlagsPopover(this, '${uniqueId}')"
+                         onmouseleave="startHideFlagsPopover()">
                         <div class="cp-ball" style="${ballStyle}"></div>
+                        <div class="table-tags-container">
+                            ${(s.taskTags || []).map(tag => {
+                                const tagIcons = {
+                                    'Call': '📞',
+                                    'Apply': '🎓',
+                                    'Documents': '📄',
+                                    'Payment': '💰'
+                                };
+                                const icon = tagIcons[tag] || '🚩';
+                                return `<span class="table-tag-chip icon-only" title="${tag}">${icon}</span>`;
+                            }).join('')}
+                        </div>
                     </div>
                 </td>
 
@@ -2973,9 +3094,21 @@ function applyStatusFilters(resetPage = true) {
 
             <td class="table-action-cell" onclick="event.stopPropagation()">
                 <div class="cp-ball-wrapper"
-                     onmouseenter="showColorPicker(this, '${uniqueId}', 'status')"
-                     onmouseleave="startHideColorPicker()">
+                     onmouseenter="showFlagsPopover(this, '${uniqueId}', 'status')"
+                     onmouseleave="startHideFlagsPopover()">
                     <div class="cp-ball" style="${ballStyle}"></div>
+                    <div class="table-tags-container">
+                        ${(s.taskTags || []).map(tag => {
+                            const tagIcons = {
+                                'Call': '📞',
+                                'Apply': '🎓',
+                                'Documents': '📄',
+                                'Payment': '💰'
+                            };
+                            const icon = tagIcons[tag] || '🚩';
+                            return `<span class="table-tag-chip icon-only" title="${tag}">${icon}</span>`;
+                        }).join('')}
+                    </div>
                 </div>
             </td>
 
@@ -6407,11 +6540,16 @@ window.viewStudentDetails = viewStudentDetails;
 window.downloadStudentExcel = downloadStudentExcel;
 window.renderStudents = renderStudents;
 window.applyFilters = applyFilters;
-window.showColorPicker = showColorPicker;
-window.startHideColorPicker = startHideColorPicker;
-window.cancelHideColorPicker = cancelHideColorPicker;
-window.hideColorPicker = hideColorPicker;
-window.setRowColor = setRowColor;
+window.showFlagsPopover = showFlagsPopover;
+window.startHideFlagsPopover = startHideFlagsPopover;
+window.cancelHideFlagsPopover = cancelHideFlagsPopover;
+window.hideFlagsPopover = hideFlagsPopover;
+window.setTempRowColor = setTempRowColor;
+window.toggleTaskTag = toggleTaskTag;
+window.addCustomTaskTag = addCustomTaskTag;
+window.removeTaskTag = removeTaskTag;
+window.clearAllFlags = clearAllFlags;
+window.saveFlags = saveFlags;
 window.renderStatus = renderStatus;
 window.applyStatusFilters = applyStatusFilters;
 window.changeStatusPage = changeStatusPage;
@@ -7674,3 +7812,18 @@ window.filterVisaCancelledStudents = filterVisaCancelledStudents;
 window.filterVisaApprovedStudents = filterVisaApprovedStudents;
 window.renderVisaAllStudentsList = renderVisaAllStudentsList;
 window.initializeVisaStatusTab = initializeVisaStatusTab;
+
+
+
+function handleGlobalSearch() {
+  const tab = window.currentTab || 'students';
+  if (tab === 'students') {
+    applyFilters();
+  } else if (tab === 'documents') {
+    filterDocuments();
+  } else if (tab === 'status') {
+    applyStatusFilters();
+  }
+}
+
+window.handleGlobalSearch = handleGlobalSearch;
