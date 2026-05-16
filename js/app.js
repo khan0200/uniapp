@@ -581,6 +581,44 @@ function changeDocumentsPage(page) {
   filterDocuments(false);
 }
 
+// Helper for dynamic missing documents calculation
+function getEffectiveMissingDocs(s) {
+    if (!s) return [];
+    
+    // Start with the manually selected ones
+    const manualMissing = s.pickNeeded || [];
+    
+    // If FULL OK is set, nothing else is missing
+    if (manualMissing.includes("FULL OK")) return ["FULL OK"];
+    
+    const effectiveList = [...manualMissing];
+    
+    const addIfMissing = (condition, docName) => {
+        if (condition && !effectiveList.includes(docName)) {
+            effectiveList.push(docName);
+        }
+    };
+    
+    // 1. Phone check: If both Phone 1 and Phone 2 are empty/dash -> "2 ta nomer"
+    const phone1Empty = !s.phone1 || s.phone1 === "-" || s.phone1.trim() === "";
+    const phone2Empty = !s.phone2 || s.phone2 === "-" || s.phone2.trim() === "";
+    addIfMissing(phone1Empty && phone2Empty, "2 ta nomer");
+    
+    // 2. Email check
+    addIfMissing(!s.email || s.email === "-" || s.email.trim() === "", "Email");
+    
+    // 3. Passport check -> "Foreign passport"
+    addIfMissing(!s.passport || s.passport === "-" || s.passport.trim() === "", "Foreign passport");
+    
+    // 4. Address check -> "Manzil"
+    addIfMissing(!s.address || s.address === "-" || s.address.trim() === "", "Manzil");
+    
+    // 5. Education Level check -> "Edu-Level"
+    addIfMissing(!s.level || s.level === "-" || s.level.trim() === "", "Edu-Level");
+    
+    return effectiveList;
+}
+
 // Helper for document pill colors
 function getDocPillStyle(docName) {
   const colors = [
@@ -603,7 +641,7 @@ function getDocPillStyle(docName) {
 
 // Helper to calculate the remaining physical copies for a student
 function getDocRemainingCount(s, docName) {
-  const missingList = s.pickNeeded || [];
+  const missingList = getEffectiveMissingDocs(s);
   const isFullOk = missingList.includes("FULL OK");
   const isMissing = !isFullOk && missingList.includes(docName);
   
@@ -631,7 +669,7 @@ function getDocStatusHtml(s, docName) {
     return `<span class="badge bg-secondary bg-opacity-10 text-secondary rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 24px; height: 24px; font-weight: 700; font-size: 0.65rem; border: 1px solid rgba(108, 117, 125, 0.2);" title="Not Applicable">N/A</span>`;
   }
 
-  const missingList = s.pickNeeded || [];
+  const missingList = getEffectiveMissingDocs(s);
   const isFullOk = missingList.includes("FULL OK");
   const isMissing = !isFullOk && missingList.includes(docName);
   
@@ -761,7 +799,7 @@ function filterDocuments(resetPage = true) {
     // Missing Documents filter
     let matchesMissingDocs = true;
     if (missingDocsFilter) {
-      const pickNeeded = s.pickNeeded || [];
+      const pickNeeded = getEffectiveMissingDocs(s);
       matchesMissingDocs = pickNeeded.includes(missingDocsFilter);
     }
 
@@ -810,7 +848,7 @@ function filterDocuments(resetPage = true) {
   tbody.innerHTML = filtered.map((student) => {
     const s = student;
     const uniqueId = s.firestoreId || s.id;
-    const missingDocs = s.pickNeeded || [];
+    const missingDocs = getEffectiveMissingDocs(s);
     
     let docsHtml = '<div class="text-secondary small fst-italic">No missing documents</div>';
     
@@ -920,7 +958,7 @@ function viewDocumentsModal(uniqueId) {
 
   // Render selected documents in the Missing documents container
   if (missingContainer) {
-    const missingList = s.pickNeeded || [];
+    const missingList = getEffectiveMissingDocs(s);
     if (missingList.length === 0) {
       missingContainer.innerHTML = '<div class="text-secondary small fst-italic">No missing documents specified.</div>';
     } else {
@@ -997,7 +1035,8 @@ function viewDocumentsModal(uniqueId) {
     
     let containerHtml = "";
     docsToManage.forEach(item => {
-      const isMissing = !s.pickNeeded?.includes("FULL OK") && s.pickNeeded?.includes(item.docName);
+      const missingDocsForCheck = getEffectiveMissingDocs(s);
+      const isMissing = !missingDocsForCheck.includes("FULL OK") && missingDocsForCheck.includes(item.docName);
       const isMcDisabled = (item.label === "MC" && s.hasMc === false);
       
       // Determine the current value
@@ -1386,9 +1425,12 @@ function viewStudentDetails(uniqueId) {
             <div class="detail-group" style="padding-top: 2px;">
               <label class="detail-label text-danger" style="font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">Missing documents</label>
               <div class="ghost-text" style="display: flex; flex-direction: column; gap: 2px;">
-                ${(s.pickNeeded && s.pickNeeded.length > 0) 
-                  ? s.pickNeeded.map(doc => `<div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-tertiary); opacity: 0.5;">•</span> ${doc}</div>`).join("") 
-                  : '<div style="margin-left: 4px; opacity: 0.5;">None</div>'}
+                ${(() => {
+                  const effective = getEffectiveMissingDocs(s);
+                  return (effective && effective.length > 0) 
+                    ? effective.map(doc => `<div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-tertiary); opacity: 0.5;">•</span> ${doc}</div>`).join("") 
+                    : '<div style="margin-left: 4px; opacity: 0.5;">None</div>';
+                })()}
               </div>
             </div>
           </div>
