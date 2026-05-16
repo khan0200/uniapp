@@ -1048,6 +1048,51 @@ function viewDocumentsModal(uniqueId) {
     titleEl.textContent = `Documents: ${s.fullName || "Unnamed Student"}`;
   }
 
+  // Update Student Info section
+  const infoContainer = document.getElementById("documentsModalStudentInfo");
+  if (infoContainer) {
+    const isDeleted = s.deleted === true;
+    const statusText = isDeleted ? "Deleted" : "Active";
+    const statusColor = isDeleted ? "#ef4444" : "#22c55e";
+
+    // Calculate Payments Done
+    const allPayments = window.paymentsData || [];
+    const studentPayments = allPayments.filter(p => p.studentFirestoreId === s.firestoreId && !p.isWithdrawal && !p.isDiscount && parseFloat(p.amount) > 0);
+    const paymentsDone = studentPayments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+    const fmt = (n) => new Intl.NumberFormat("en-US").format(n);
+    
+    infoContainer.innerHTML = `
+      <div style="display: grid; grid-template-columns: 0.8fr 1fr 1.2fr 1.2fr 1.5fr 1.8fr; gap: 1rem; align-items: start; width: 100%;">
+        <div>
+          <span class="d-block mb-1" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: #8e8e93; font-weight: 500;">Student ID</span>
+          <span class="fw-bold text-primary" style="font-size: 0.95rem;">${s.id || '-'}</span>
+        </div>
+        <div>
+          <span class="d-block mb-1" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: #8e8e93; font-weight: 500;">Status</span>
+          <span class="badge rounded-pill d-inline-flex align-items-center gap-1" style="background: ${statusColor}15; color: ${statusColor}; border: 1.5px solid ${statusColor}30; font-size: 0.68rem; padding: 0.2rem 0.6rem; font-weight: 700;">
+            <i class="bi bi-circle-fill" style="font-size: 0.4rem;"></i> ${statusText}
+          </span>
+        </div>
+        <div>
+          <span class="d-block mb-1" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: #8e8e93; font-weight: 500;">Group</span>
+          <span class="fw-bold" style="font-size: 0.9rem; color: var(--text-primary);">${s.group || 'No Group'}</span>
+        </div>
+        <div>
+          <span class="d-block mb-1" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: #8e8e93; font-weight: 500;">Edu-Level</span>
+          <span class="fw-bold" style="font-size: 0.9rem; color: var(--text-primary);">${s.level || 'No Level'}</span>
+        </div>
+        <div>
+          <span class="d-block mb-1" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: #8e8e93; font-weight: 500;">Office</span>
+          <span class="fw-bold" style="font-size: 0.9rem; color: var(--text-primary);">${s.office || '-'}</span>
+        </div>
+        <div class="text-end">
+          <span class="d-block mb-1" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: #8e8e93; font-weight: 500;">Payments Done</span>
+          <span class="fw-bold text-success" style="font-size: 1rem;">${fmt(paymentsDone)} <span style="font-size: 0.7rem; opacity: 0.7; font-weight: 400;">UZS</span></span>
+        </div>
+      </div>
+    `;
+  }
+
   const missingContainer = document.getElementById("missingDocumentsContainer");
   const pickNeededContainer = document.getElementById("pickNeededDocumentsContainer");
 
