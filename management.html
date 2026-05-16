@@ -337,6 +337,34 @@
                             <option value="CEFR">CEFR</option>
                         </select>
                     </div>
+
+                    <!-- Missing Documents Filter -->
+                    <div class="filter-item">
+                        <i class="bi bi-file-earmark-x filter-icon"></i>
+                        <select class="form-select filter-input" id="filterMissingDocs" onchange="filterDocuments()"
+                            aria-label="Filter by missing documents">
+                            <option value="">Missing: All</option>
+                            <option value="Foreign passport">Foreign passport</option>
+                            <option value="Birth certificate">Birth certificate</option>
+                            <option value="Translation of Passport">Translation of Passport</option>
+                            <option value="Family certificate">Family certificate</option>
+                            <option value="Language certificate">Language certificate</option>
+                            <option value="Photo 3.5x4.5">Photo 3.5x4.5</option>
+                            <option value="Apostille">Apostille</option>
+                            <option value="Diploma/Transcript">Diploma/Transcript</option>
+                            <option value="2 ta nomer">2 ta nomer</option>
+                            <option value="Email">Email</option>
+                            <option value="Manzil">Manzil</option>
+                            <option value="Edu-Level">Edu-Level</option>
+                            <option value="Bank reference">Bank reference</option>
+                            <option value="IELTS">IELTS</option>
+                            <option value="TOEFL">TOEFL</option>
+                            <option value="SKA">SKA</option>
+                            <option value="TOPIK">TOPIK</option>
+                            <option value="SAT">SAT</option>
+                            <option value="CEFR">CEFR</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -462,31 +490,20 @@
                         </select>
                     </div>
 
-                    <!-- Missing Documents Filter -->
+                    <!-- Admission Status Filter -->
                     <div class="filter-item">
-                        <i class="bi bi-file-earmark-x filter-icon"></i>
-                        <select class="form-select filter-input" id="filterMissingDocs" onchange="filterDocuments()"
-                            aria-label="Filter by missing documents">
-                            <option value="">Missing: All</option>
-                            <option value="Foreign passport">Foreign passport</option>
-                            <option value="Birth certificate">Birth certificate</option>
-                            <option value="Translation of Passport">Translation of Passport</option>
-                            <option value="Family certificate">Family certificate</option>
-                            <option value="Language certificate">Language certificate</option>
-                            <option value="Photo 3.5x4.5">Photo 3.5x4.5</option>
-                            <option value="Apostille">Apostille</option>
-                            <option value="Diploma/Transcript">Diploma/Transcript</option>
-                            <option value="2 ta nomer">2 ta nomer</option>
-                            <option value="Email">Email</option>
-                            <option value="Manzil">Manzil</option>
-                            <option value="Edu-Level">Edu-Level</option>
-                            <option value="Bank reference">Bank reference</option>
-                            <option value="IELTS">IELTS</option>
-                            <option value="TOEFL">TOEFL</option>
-                            <option value="SKA">SKA</option>
-                            <option value="TOPIK">TOPIK</option>
-                            <option value="SAT">SAT</option>
-                            <option value="CEFR">CEFR</option>
+                        <i class="bi bi-diagram-3 filter-icon"></i>
+                        <select class="form-select filter-input" id="statusFilterAdmission"
+                            aria-label="Filter by admission status">
+                            <option value="">All Admissions</option>
+                            <option value="1 MONTH KDB">1 MONTH KDB</option>
+                            <option value="1 MONTH KDB OK">1 MONTH KDB OK</option>
+                            <option value="COA RECEIVED">COA RECEIVED</option>
+                            <option value="COA MISTAKE">COA MISTAKE</option>
+                            <option value="1 DAY KDB NEED">1 DAY KDB NEED</option>
+                            <option value="1 DAY KDB OK">1 DAY KDB OK</option>
+                            <option value="NO RESULT">NO RESULT</option>
+                            <option value="CANCELLED">CANCELLED</option>
                         </select>
                     </div>
 
