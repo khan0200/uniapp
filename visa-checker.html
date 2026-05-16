@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNIAPP - Korean Visa Status Checker</title>
+    <link rel="icon" type="image/png" href="Logo.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .checker-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .checker-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 1px solid var(--border-default);
+        }
+        
+        .korea-flag {
+            width: 32px;
+            height: 24px;
+            margin-right: 8px;
+        }
+        
+        .status-legend {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .status-received { background: #f59e0b; }
+        .status-approved { background: #22c55e; }
+        .status-cancelled { background: #ef4444; }
+        
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: var(--apple-blue);
+            border-radius: 50%;
+            font-weight: bold;
+            margin-right: 0.75rem;
+        }
+        
+        .instruction-step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+        }
+        
+        .copy-instruction {
+            flex: 1;
+        }
+        
+        .copy-btn {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.875rem;
+        }
+        
+        .copied-feedback {
+            color: #22c55e;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="checker-container">
+        <div class="text-center mb-4">
+            <img src="Logo.png" alt="UNIAPP Logo" style="width: 60px; height: 60px; margin-bottom: 1rem;">
+            <h2><i class="bi bi-passport me-2"></i>Korean Visa Status Checker</h2>
+            <p class="text-secondary">Check visa status on the official Korea Visa Portal</p>
+        </div>
+        
+        <div class="checker-card mb-4">
+            <h5 class="mb-3"><i class="bi bi-person-fill me-2 text-primary"></i>Enter Student Information</h5>
+            
+            <form id="visaCheckerForm">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Passport Number <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control ios-input" id="passportNumber" 
+                               placeholder="e.g. FB1002884" required style="text-transform: uppercase;">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control ios-input" id="birthDate" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">English Name (as on passport) <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control ios-input" id="englishName" 
+                               placeholder="e.g. ISOKOV MAGRURBEK SAIDAKBAR UGLI" required style="text-transform: uppercase;">
+                        <small class="text-secondary">Enter exactly as shown on passport (SURNAME FIRSTNAME MIDDLENAME)</small>
+                    </div>
+                </div>
+                
+                <hr class="my-4">
+                
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-primary-apple btn-lg" onclick="openVisaPortal()">
+                        <i class="bi bi-box-arrow-up-right me-2"></i>Open Korea Visa Portal & Auto-Fill
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="copyDataToClipboard()">
+                        <i class="bi bi-clipboard me-2"></i>Copy Data to Clipboard
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Instructions -->
+        <div class="checker-card">
+            <h5 class="mb-3"><i class="bi bi-info-circle me-2 text-info"></i>How to Check Visa Status</h5>
+            
+            <div class="instruction-step">
+                <span class="step-number">1</span>
+                <div>
+                    <strong>Fill in the form above</strong><br>
+                    <span class="text-secondary">Enter passport number, birth date, and English name</span>
+                </div>
+            </div>
+            
+            <div class="instruction-step">
+                <span class="step-number">2</span>
+                <div>
+                    <strong>Click "Open Korea Visa Portal"</strong><br>
+                    <span class="text-secondary">This will open the official visa.go.kr website</span>
+                </div>
+            </div>
+            
+            <div class="instruction-step">
+                <span class="step-number">3</span>
+                <div>
+                    <strong>On the visa portal:</strong><br>
+                    <span class="text-secondary">
+                        • Select <strong>"재외공관"</strong> (Overseas Embassy)<br>
+                        • Select <strong>"여권번호"</strong> (Passport Number) from dropdown<br>
+                        • Paste/enter the information<br>
+                        • Click <strong>"Search"</strong>
+                    </span>
+                </div>
+            </div>
+            
+            <div class="instruction-step">
+                <span class="step-number">4</span>
+                <div>
+                    <strong>Check the result</strong><br>
+                    <span class="text-secondary">Look for "진행상태" (Status) in the results</span>
+                </div>
+            </div>
+            
+            <div class="status-legend">
+                <h6 class="mb-3">Status Meanings:</h6>
+                <div class="status-item">
+                    <span class="status-dot status-received"></span>
+                    <span><strong>접수</strong> (Received/Applied) - Application received, waiting for processing</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot status-approved"></span>
+                    <span><strong>허가</strong> (Approved) - Visa approved!</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot status-cancelled"></span>
+                    <span><strong>불허</strong> (Rejected) - Visa rejected</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Back to CRM link -->
+        <div class="text-center mt-4">
+            <a href="index.html" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="bi bi-arrow-left me-2"></i>Back to UNIAPP CRM
+            </a>
+        </div>
+        
+        <!-- Data display for copying -->
+        <div id="dataDisplay" class="checker-card mt-4" style="display: none;">
+            <h6><i class="bi bi-clipboard-check me-2"></i>Copy Data for Manual Entry:</h6>
+            <div class="row g-2 mt-2">
+                <div class="col-md-4">
+                    <label class="form-label small text-secondary">Passport Number</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control ios-input" id="copyPassport" readonly>
+                        <button class="btn btn-outline-primary copy-btn" onclick="copyField('copyPassport')">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-secondary">Birth Date (YYYY-MM-DD)</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control ios-input" id="copyBirthDate" readonly>
+                        <button class="btn btn-outline-primary copy-btn" onclick="copyField('copyBirthDate')">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-secondary">English Name</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control ios-input" id="copyName" readonly>
+                        <button class="btn btn-outline-primary copy-btn" onclick="copyField('copyName')">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast notification -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="copyToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi bi-check-circle me-2"></i>Copied to clipboard!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Get URL parameters (for pre-filling from CRM)
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Pre-fill form if parameters exist
+        if (urlParams.get('passport')) {
+            document.getElementById('passportNumber').value = urlParams.get('passport').toUpperCase();
+        }
+        if (urlParams.get('name')) {
+            document.getElementById('englishName').value = urlParams.get('name').toUpperCase();
+        }
+        if (urlParams.get('birthday')) {
+            document.getElementById('birthDate').value = urlParams.get('birthday');
+        }
+        
+        function openVisaPortal() {
+            const passport = document.getElementById('passportNumber').value.trim().toUpperCase();
+            const name = document.getElementById('englishName').value.trim().toUpperCase();
+            const birthDate = document.getElementById('birthDate').value;
+            
+            if (!passport || !name || !birthDate) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            // Show data for manual entry
+            document.getElementById('dataDisplay').style.display = 'block';
+            document.getElementById('copyPassport').value = passport;
+            document.getElementById('copyBirthDate').value = birthDate;
+            document.getElementById('copyName').value = name;
+            
+            // Open the visa portal
+            window.open('https://www.visa.go.kr/openPage.do?MENU_ID=10301', '_blank');
+            
+            // Copy data to clipboard automatically
+            const dataText = `Passport: ${passport}\nName: ${name}\nBirth Date: ${birthDate}`;
+            navigator.clipboard.writeText(dataText).then(() => {
+                showToast('Data copied! Paste in the visa portal.');
+            });
+        }
+        
+        function copyDataToClipboard() {
+            const passport = document.getElementById('passportNumber').value.trim().toUpperCase();
+            const name = document.getElementById('englishName').value.trim().toUpperCase();
+            const birthDate = document.getElementById('birthDate').value;
+            
+            if (!passport || !name || !birthDate) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            const dataText = `Passport: ${passport}\nName: ${name}\nBirth Date: ${birthDate}`;
+            navigator.clipboard.writeText(dataText).then(() => {
+                showToast('Data copied to clipboard!');
+            });
+        }
+        
+        function copyField(fieldId) {
+            const field = document.getElementById(fieldId);
+            navigator.clipboard.writeText(field.value).then(() => {
+                showToast('Copied!');
+            });
+        }
+        
+        function showToast(message) {
+            const toastEl = document.getElementById('copyToast');
+            toastEl.querySelector('.toast-body').innerHTML = `<i class="bi bi-check-circle me-2"></i>${message}`;
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        }
+    </script>
+</body>
+</html>

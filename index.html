@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="UNIAPP - Modern student management system with Apple iOS design">
+    <title>UNIAPP - Student Management</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="Logo.png">
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+
+    <!-- Login Overlay -->
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <div class="login-icon">
+                        <img src="Logo.png" alt="UNIAPP Logo" style="width: 80px; height: 80px; object-fit: contain;">
+                    </div>
+                    <h2 class="login-title">UNIAPP</h2>
+                    <p class="login-subtitle">Secure Access Required</p>
+                </div>
+                <div class="login-challenge">
+                    <span class="challenge-label">HELLO</span>
+                    <span class="challenge-number" id="challengeNumber">0000</span>
+                </div>
+                <div class="login-form">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text bg-transparent border-end-0">
+                            <i class="bi bi-key-fill text-primary"></i>
+                        </span>
+                        <input type="password" class="form-control border-start-0 login-input" id="loginPassword"
+                            placeholder="Enter access code" autocomplete="off"
+                            onkeypress="if(event.key==='Enter')verifyLogin()">
+                    </div>
+                    <button class="btn btn-primary w-100 login-btn" onclick="verifyLogin()">
+                        <i class="bi bi-unlock-fill me-2"></i>Access System
+                    </button>
+                    <div id="loginError" class="login-error" style="display: none;">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        <span>Invalid access code. Try again.</span>
+                    </div>
+                </div>
+                <div class="login-footer">
+                    <i class="bi bi-fingerprint"></i>
+                    <span>Protected by UNIAPP Security</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-glass sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
+                <img src="Logo.png" alt="UNIAPP Logo" style="width: 32px; height: 32px; object-fit: contain;"
+                    class="me-2">
+                UNIAPP
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-apple active" href="#" onclick="showTab('students'); return false;"
+                            id="nav-students">
+                            <i class="bi bi-people-fill me-1"></i> STUDENTS
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-apple" href="https://admissions-university.vercel.app/" id="nav-admissions" target="_blank">
+                            <i class="bi bi-mortarboard-fill me-1"></i> ADMISSIONS
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container-fluid main-content-container py-4" id="app">
+
+        <!-- STUDENTS TAB -->
+        <div id="students-tab" class="tab-content-section">
+            <!-- Search and Filters Card -->
+            <div class="filters-card mb-4">
+                <div class="filters-row">
+                    <!-- Search Type -->
+                    <div class="filter-item">
+                        <i class="bi bi-funnel filter-icon"></i>
+                        <select class="form-select filter-input" id="searchType" onchange="applyFilters()" aria-label="Search Type">
+                            <option value="all">All Fields</option>
+                            <option value="id">ID</option>
+                            <option value="name">Name</option>
+                            <option value="phone">Phone</option>
+                            <option value="university">University</option>
+                        </select>
+                    </div>
+
+                    <!-- Search Input -->
+                    <div class="filter-item filter-search">
+                        <i class="bi bi-search filter-icon"></i>
+                        <input type="text" id="searchInput" class="form-control filter-input"
+                            placeholder="Search...">
+                    </div>
+
+                    <!-- Tariff Filter -->
+                    <div class="filter-item">
+                        <i class="bi bi-tag filter-icon"></i>
+                        <select class="form-select filter-input" id="filterTariff" aria-label="Filter by tariff">
+                            <option value="">All Tariffs</option>
+                            <option value="STANDART">STANDART</option>
+                            <option value="PREMIUM">PREMIUM</option>
+                            <option value="VISA PLUS">VISA PLUS</option>
+                            <option value="E-VISA">E-VISA</option>
+                            <option value="REGIONAL VISA">REGIONAL VISA</option>
+                        </select>
+                    </div>
+
+                    <!-- Level Filter -->
+                    <div class="filter-item">
+                        <i class="bi bi-mortarboard filter-icon"></i>
+                        <select class="form-select filter-input" id="filterLevel"
+                            aria-label="Filter by education level">
+                            <option value="">All Levels</option>
+                            <option value="COLLEGE">COLLEGE</option>
+                            <option value="BACHELOR">BACHELOR</option>
+                            <option value="MASTERS">MASTERS</option>
+                            <option value="MASTER NO CERTIFICATE">MASTER NO CERTIFICATE</option>
+                            <option value="LANGUAGE COURSE">LANGUAGE COURSE</option>
+                            <option value="DELETED" class="option-deleted">🗑️ Deleted students</option>
+                        </select>
+                    </div>
+
+                    <!-- Group Filter -->
+                    <div class="filter-item">
+                        <i class="bi bi-people filter-icon"></i>
+                        <select class="form-select filter-input" id="filterGroup" aria-label="Filter by group">
+                            <option value="">All Groups</option>
+                            <option value="NO_GROUP">No Group</option>
+                            <!-- Groups will be populated dynamically -->
+                        </select>
+                    </div>
+
+                    <!-- Language Certificate Filter -->
+                    <div class="filter-item">
+                        <i class="bi bi-award filter-icon"></i>
+                        <select class="form-select filter-input" id="filterLanguageCertificate"
+                            aria-label="Filter by language certificate">
+                            <option value="">All Certificates</option>
+                            <option value="NO CERTIFICATE">NO CERTIFICATE</option>
+                            <option value="TOPIK">TOPIK</option>
+                            <option value="SKA">SKA</option>
+                            <option value="IELTS">IELTS</option>
+                            <option value="TOEFL">TOEFL</option>
+                            <option value="SAT">SAT</option>
+                            <option value="CEFR">CEFR</option>
+                        </select>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="filter-actions">
+                        <button class="btn btn-filter-action" data-bs-toggle="modal"
+                            data-bs-target="#downloadExcelModal" title="Export to Excel">
+                            <i class="bi bi-file-earmark-excel"></i>
+                        </button>
+                        <button class="btn btn-primary-apple rounded-pill px-4" data-bs-toggle="modal"
+                            data-bs-target="#addStudentModal">
+                            <i class="bi bi-plus-circle me-2"></i>Add Student
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Counter -->
+            <div class="d-flex justify-content-end mb-2 px-1">
+                <span id="studentsCounter" class="text-secondary small fst-italic">Loading...</span>
+            </div>
+
+            <!-- Students Table -->
+            <div id="studentsTableContainer">
+                <div class="students-table-wrapper">
+                    <table class="students-table" id="studentsTable">
+                        <colgroup>
+                            <col style="width:5%;">
+                            <col style="width:27%;">
+                            <col style="width:14%;">
+                            <col style="width:15%;">
+                            <col style="width:32%;">
+                            <col style="width:7%;">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th onclick="toggleSortOrder('students')" style="cursor: pointer; user-select: none;" title="Sort by ID">
+                                    ID <i id="studentsSortIcon" class="bi bi-chevron-down ms-1"></i>
+                                </th>
+                                <th>Full Name</th>
+                                <th>Phone</th>
+                                <th>Level</th>
+                                <th>University</th>
+                                <th class="th-action">Color</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody">
+                            <tr>
+                                <td colspan="9" class="text-center py-5 text-secondary">
+                                    <i class="bi bi-hourglass-split me-2"></i>Loading students...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Students Pagination -->
+            <div id="studentsPagination" class="d-flex justify-content-center align-items-center gap-3 mt-4"></div>
+        </div>
+
+        <!-- STATUS TAB -->
+        <div id="status-tab" class="tab-content-section section-hidden">
+            <!-- Search and Filters Card -->
+            <div class="filters-card mb-4">
+                <div class="filters-row">
+                    <!-- Search Type -->
+                    <div class="filter-item">
+                        <i class="bi bi-funnel filter-icon"></i>
+                        <select class="form-select filter-input" id="statusSearchType" onchange="applyStatusFilters()" aria-label="Search Type">
+                            <option value="all">All Fields</option>
+                            <option value="id">ID</option>
+                            <option value="name">Name</option>
+                            <option value="university">University</option>
+                        </select>
+                    </div>
+
+                    <!-- Search Input -->
+                    <div class="filter-item filter-search">
+                        <i class="bi bi-search filter-icon"></i>
+                        <input type="text" id="statusSearchInput" class="form-control filter-input"
+                            placeholder="Search...">
+                    </div>
+
+                    <!-- Tariff Filter -->
+                    <div class="filter-item">
+                        <i class="bi bi-tag filter-icon"></i>
+                        <select class="form-select filter-input" id="statusFilterTariff" aria-label="Filter by tariff">
+                            <option value="">All Tariffs</option>
+                            <option value="STANDART">STANDART</option>
+                            <option value="PREMIUM">PREMIUM</option>
+                            <option value="VISA PLUS">VISA PLUS</option>
+                            <option value="E-VISA">E-VISA</option>
+                            <option value="REGIONAL VISA">REGIONAL VISA</option>
+                        </select>
+                    </div>
+
+                    <!-- Level Filter -->
+                    <div class="filter-item">
+                        <i class="bi bi-mortarboard filter-icon"></i>
+                        <select class="form-select filter-input" id="statusFilterLevel"
+                            aria-label="Filter by education level">
+                            <option value="">All Levels</option>
+                            <option value="COLLEGE">COLLEGE</option>
+                            <option value="BACHELOR">BACHELOR</option>
+                            <option value="MASTERS">MASTERS</option>
+                            <option value="MASTER NO CERTIFICATE">MASTER NO CERTIFICATE</option>
+                            <option value="LANGUAGE COURSE">LANGUAGE COURSE</option>
+                            <option value="DELETED" class="option-deleted">🗑️ Deleted students</option>
+                        </select>
+                    </div>
+
+                    <!-- Group Filter -->
+                    <div class="filter-item">
+                        <i class="bi bi-people filter-icon"></i>
+                        <select class="form-select filter-input" id="statusFilterGroup" aria-label="Filter by group">
+                            <option value="">All Groups</option>
+                            <option value="NO_GROUP">No Group</option>
+                            <!-- Groups will be populated dynamically -->
+                        </select>
+                    </div>
+
+                    <!-- Invoice Status Filter -->
+                    <div class="filter-item">
+                        <i class="bi bi-receipt filter-icon"></i>
+                        <select class="form-select filter-input" id="statusFilterInvoice"
+                            aria-label="Filter by invoice status">
+                            <option value="">All Invoices</option>
+                            <option value="NOT APPLIED">NOT APPLIED</option>
+                            <option value="APPLIED">APPLIED</option>
+                            <option value="RECEIVED">RECEIVED</option>
+                            <option value="PAYED">PAYED</option>
+                            <option value="NO RESULT">NO RESULT</option>
+                            <option value="CANCELLED">CANCELLED</option>
+                        </select>
+                    </div>
+
+                    <!-- Admission Status Filter -->
+                    <div class="filter-item">
+                        <i class="bi bi-diagram-3 filter-icon"></i>
+                        <select class="form-select filter-input" id="statusFilterAdmission"
+                            aria-label="Filter by admission status">
+                            <option value="">All Admissions</option>
+                            <option value="1 MONTH KDB">1 MONTH KDB</option>
+                            <option value="1 MONTH KDB OK">1 MONTH KDB OK</option>
+                            <option value="COA RECEIVED">COA RECEIVED</option>
+                            <option value="COA MISTAKE">COA MISTAKE</option>
+                            <option value="1 DAY KDB NEED">1 DAY KDB NEED</option>
+                            <option value="1 DAY KDB OK">1 DAY KDB OK</option>
+                            <option value="NO RESULT">NO RESULT</option>
+                            <option value="CANCELLED">CANCELLED</option>
+                        </select>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="filter-actions">
+                        <button class="btn btn-filter-action" data-bs-toggle="modal"
+                            data-bs-target="#downloadExcelModal" title="Export to Excel">
+                            <i class="bi bi-file-earmark-excel"></i>
+                        </button>
+                        <button class="btn btn-primary-apple rounded-pill px-4" data-bs-toggle="modal"
+                            data-bs-target="#addStudentModal">
+                            <i class="bi bi-plus-circle me-2"></i>Add Student
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Counter -->
+            <div class="d-flex justify-content-end mb-2 px-1">
+                <span id="statusCounter" class="text-secondary small fst-italic">Loading...</span>
+            </div>
+
+            <!-- Status Table (no Phone column) -->
+            <div id="statusTableContainer">
+                <div class="students-table-wrapper">
+                    <table class="students-table" id="statusTable">
+                        <colgroup>
+                            <col style="width:5%;">
+                            <col style="width:22%;">
+                            <col style="width:12%;">
+                            <col style="width:20%;">
+                            <col style="width:16%;">
+                            <col style="width:18%;">
+                            <col style="width:7%;">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th onclick="toggleSortOrder('status')" style="cursor: pointer; user-select: none;" title="Sort by ID">
+                                    ID <i id="statusSortIcon" class="bi bi-chevron-down ms-1"></i>
+                                </th>
+                                <th>Full Name</th>
+                                <th>Level</th>
+                                <th>University</th>
+                                <th>Invoices</th>
+                                <th>Admission</th>
+                                <th class="th-action">Color</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statusTableBody">
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-secondary">
+                                    <i class="bi bi-hourglass-split me-2"></i>Loading students...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Status Pagination -->
+            <div id="statusPagination" class="d-flex justify-content-center align-items-center gap-3 mt-4"></div>
+        </div>
+
+        <!-- PAYMENTS TAB -->
+        <div id="payments-tab" class="tab-content-section section-hidden">
+            <!-- Header Row with Tabs and Actions -->
+            <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
+                <div class="payment-tabs-container mb-4">
+                    <div class="apple-segment-group" role="group" aria-label="Payment tabs">
+                        <button type="button" class="apple-segment-btn active" id="paymentStudentsTabBtn"
+                            onclick="showPaymentTab('students')">
+                            <i class="bi bi-people me-2"></i>Students
+                        </button>
+                        <button type="button" class="apple-segment-btn" id="paymentHistoryTabBtn"
+                            onclick="showPaymentTab('history')">
+                            <i class="bi bi-clock-history me-2"></i>Payment History
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Payment Action Buttons -->
+                <div class="d-flex gap-2">
+                    <button class="btn btn-success rounded-pill px-4 shadow-apple" data-bs-toggle="modal"
+                        data-bs-target="#addPaymentModal">
+                        <i class="bi bi-plus-circle me-2"></i>Add Payment
+                    </button>
+                    <button class="btn btn-danger rounded-pill px-4 shadow-apple" data-bs-toggle="modal"
+                        data-bs-target="#withdrawPaymentModal">
+                        <i class="bi bi-dash-circle me-2"></i>Withdraw Payment
+                    </button>
+                </div>
+            </div>
+
+            <!-- Payment Students Sub-Tab -->
+            <div id="payment-students-subtab" class="payment-subtab">
+                <!-- Search and Filter Row -->
+                <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+                    <select class="form-select ios-input filter-select-compact" id="paymentSearchType"
+                        aria-label="Search Type" onchange="filterPaymentStudents()">
+                        <option value="all">Name & ID</option>
+                        <option value="id">ID Only</option>
+                        <option value="name">Name Only</option>
+                    </select>
+                    <div class="search-wrapper flex-grow-1 search-wrapper-md">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" class="form-control ios-input ps-5" id="paymentSearchInput"
+                            placeholder="Search students..." oninput="filterPaymentStudents()">
+                    </div>
+                    <select class="form-select ios-input filter-select-compact" id="paymentTariffFilter"
+                        aria-label="Filter by tariff" onchange="filterPaymentStudents()">
+                        <option value="">All Tariffs</option>
+                        <option value="STANDART">STANDART</option>
+                        <option value="PREMIUM">PREMIUM</option>
+                        <option value="VISA PLUS">VISA PLUS</option>
+                        <option value="E-VISA">E-VISA</option>
+                        <option value="REGIONAL VISA">REGIONAL VISA</option>
+                    </select>
+                    <select class="form-select ios-input filter-select-compact" id="paymentBalanceFilter"
+                        aria-label="Filter by balance" onchange="filterPaymentStudents()">
+                        <option value="">All Balances</option>
+                        <option value="NEGATIVE">Balance &lt; 0 (Debt)</option>
+                        <option value="ZERO">Balance = 0 (Fully Paid)</option>
+                        <option value="GT_500K">Balance &gt; 500,000</option>
+                        <option value="GT_1M">Balance &gt; 1,000,000</option>
+                        <option value="GT_2M">Balance &gt; 2,000,000</option>
+                        <option value="GT_5M">Balance &gt; 5,000,000</option>
+                        <option value="GT_10M">Balance &gt; 10,000,000</option>
+                    </select>
+                    <select class="form-select ios-input filter-select-compact" id="paymentGroupFilter"
+                        aria-label="Filter by group" onchange="filterPaymentStudents()">
+                        <option value="">All Groups</option>
+                        <option value="NO_GROUP">No Group</option>
+                        <!-- Groups will be populated dynamically -->
+                    </select>
+                </div>
+
+                <!-- Payment Students Counter -->
+                <div class="d-flex justify-content-end mb-2 px-1">
+                    <span id="paymentStudentsCounter" class="text-secondary small fst-italic">Loading...</span>
+                </div>
+
+                <!-- Students Cards for Payments -->
+                <div id="paymentStudentsList" class="row g-3">
+                    <div class="col-12 text-center py-5">
+                        <i class="bi bi-wallet2 icon-empty-state"></i>
+                        <p class="text-secondary mt-3">Loading students...</p>
+                    </div>
+                </div>
+                <!-- Payment Students Pagination -->
+                <div id="paymentStudentsPagination" class="d-flex justify-content-center align-items-center gap-3 mt-4">
+                </div>
+            </div>
+
+            <!-- Payment History Sub-Tab -->
+            <div id="payment-history-subtab" class="payment-subtab section-hidden">
+                <!-- Filter Row for History -->
+                <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+                    <select class="form-select ios-input filter-select-compact" id="paymentHistorySearchType"
+                        aria-label="Search Type" onchange="filterPaymentHistory()">
+                        <option value="all">Name/ID/Notes</option>
+                        <option value="id">ID Only</option>
+                        <option value="name">Name Only</option>
+                        <option value="notes">Notes Only</option>
+                    </select>
+                    <div class="search-wrapper flex-grow-1 search-wrapper-md">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" class="form-control ios-input ps-5" id="paymentHistorySearch"
+                            placeholder="Search payments..." oninput="filterPaymentHistory()">
+                    </div>
+                    <select class="form-select ios-input filter-select-compact" id="paymentMethodFilter"
+                        aria-label="Filter by payment method" onchange="filterPaymentHistory()">
+                        <option value="">All Methods</option>
+                        <option value="Karta J.A">Karta J.A</option>
+                        <option value="Naqd">Naqd</option>
+                        <option value="Karta M.A">Karta M.A</option>
+                        <option value="Bank">Bank</option>
+                    </select>
+                    <select class="form-select ios-input filter-select-compact" id="receivedByFilter"
+                        aria-label="Filter by receiver" onchange="filterPaymentHistory()">
+                        <option value="">All Receivers</option>
+                        <option value="Azizbek">Azizbek</option>
+                        <option value="Jasurbek">Jasurbek</option>
+                        <option value="Muhammadali">Muhammadali</option>
+                        <option value="Muslihiddin">Muslihiddin</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                    <!-- Download Excel Button -->
+                    <button class="btn btn-outline-success rounded-pill px-3" onclick="downloadPaymentHistoryAsExcel()">
+                        <i class="bi bi-file-earmark-excel me-2"></i>Excel
+                    </button>
+                </div>
+
+                <!-- Payment History Counter -->
+                <div class="d-flex justify-content-end mb-2 px-1">
+                    <span id="paymentHistoryCounter" class="text-secondary small fst-italic">Loading...</span>
+                </div>
+
+                <!-- Payment History Cards -->
+                <div id="paymentHistoryList" class="row g-3">
+                    <div class="col-12 text-center py-5">
+                        <i class="bi bi-clock-history icon-empty-state"></i>
+                        <p class="text-secondary mt-3">No payments recorded yet.</p>
+                    </div>
+                </div>
+                <!-- Payment History Pagination -->
+                <div id="paymentHistoryPagination" class="d-flex justify-content-center align-items-center gap-3 mt-4">
+                </div>
+            </div>
+        </div>
+
+        <!-- ADMISSIONS TAB -->
+        <div id="admissions-tab" class="tab-content-section section-hidden">
+            <!-- Header with Add Button -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="mb-1"><i class="bi bi-mortarboard-fill me-2"></i>University Admissions</h4>
+                    <p class="text-secondary mb-0 small">Manage university admission announcements</p>
+                </div>
+                <button class="btn btn-primary-apple rounded-pill px-4" data-bs-toggle="modal"
+                    data-bs-target="#addAdmissionModal">
+                    <i class="bi bi-plus-circle me-2"></i>Add Admission
+                </button>
+            </div>
+
+            <!-- Search Bar and Filter -->
+            <div class="mb-3">
+                <div class="row g-2">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0"
+                                style="border-color: var(--border-default);">
+                                <i class="bi bi-search text-secondary"></i>
+                            </span>
+                            <input type="text" class="form-control border-start-0 ios-input" id="admissionsSearchInput"
+                                placeholder="Search by university name..." oninput="filterAdmissions()"
+                                style="border-color: var(--border-default);">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select ios-input" id="admissionsLevelFilter" onchange="filterAdmissions()">
+                            <option value="">All Education Levels</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admissions Counter -->
+            <div class="d-flex justify-content-end mb-2 px-1">
+                <span id="admissionsCounter" class="text-secondary small fst-italic">Loading...</span>
+            </div>
+
+            <!-- Admissions Cards Container -->
+            <div id="admissionsList" class="row g-3">
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-inbox icon-empty-state"></i>
+                    <p class="text-secondary mt-3">No admissions yet. Click "Add Admission" to get started.</p>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- NOTIFICATIONS TAB -->
+        <div id="notifications-tab" class="tab-content-section section-hidden">
+            <!-- Header with Add Button -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="mb-1"><i class="bi bi-bell-fill me-2"></i>Notifications</h4>
+                    <p class="text-secondary mb-0 small">Manage notification reminders</p>
+                </div>
+                <button class="btn btn-primary-apple rounded-pill px-4" data-bs-toggle="modal"
+                    data-bs-target="#addNotificationModal">
+                    <i class="bi bi-plus-circle me-2"></i>Add Notification
+                </button>
+            </div>
+
+            <!-- Notifications Counter -->
+            <div class="d-flex justify-content-end mb-2 px-1">
+                <span id="notificationsCounter" class="text-secondary small fst-italic">Loading...</span>
+            </div>
+
+            <!-- Notifications Cards Container -->
+            <div id="notificationsList" class="row g-3">
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-inbox icon-empty-state"></i>
+                    <p class="text-secondary mt-3">No notifications yet. Click "Add Notification" to get started.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS TAB -->
+        <div id="settings-tab" class="tab-content-section section-hidden">
+            <!-- Theme Toggle Section -->
+            <div class="card-apple p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1"><i class="bi bi-moon-stars-fill me-2"></i>Appearance</h5>
+                        <p class="text-secondary mb-0 small">Switch between dark and light mode</p>
+                    </div>
+                    <div class="theme-toggle-wrapper">
+                        <label class="theme-toggle" for="themeToggle">
+                            <input type="checkbox" id="themeToggle" onchange="toggleTheme()"
+                                aria-label="Toggle dark/light theme">
+                            <span class="theme-toggle-slider">
+                                <i class="bi bi-sun-fill sun-icon"></i>
+                                <i class="bi bi-moon-fill moon-icon"></i>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tariff, Education Levels & Groups Row (Side by Side on Desktop) -->
+            <div class="row g-4 mb-4">
+                <!-- Tariff Management Section -->
+                <div class="col-lg-4">
+                    <div class="card-apple p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="mb-1"><i class="bi bi-tag-fill me-2"></i>Tariff Options</h5>
+                                <p class="text-secondary mb-0 small">Manage pricing plans</p>
+                            </div>
+                            <button class="btn btn-primary-apple rounded-pill px-3" onclick="openTariffModal()">
+                                <i class="bi bi-plus-circle me-1"></i> Add
+                            </button>
+                        </div>
+                        <div id="tariffsListContainer" class="settings-list">
+                            <div class="text-center py-4 text-secondary">
+                                <i class="bi bi-hourglass-split"></i> Loading tariffs...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Education Levels Section -->
+                <div class="col-lg-4">
+                    <div class="card-apple p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="mb-1"><i class="bi bi-mortarboard-fill me-2"></i>Education Levels</h5>
+                                <p class="text-secondary mb-0 small">Manage education level options</p>
+                            </div>
+                            <button class="btn btn-primary-apple rounded-pill px-3" onclick="openLevelModal()">
+                                <i class="bi bi-plus-circle me-1"></i> Add
+                            </button>
+                        </div>
+                        <div id="levelsListContainer" class="settings-list">
+                            <div class="text-center py-4 text-secondary">
+                                <i class="bi bi-hourglass-split"></i> Loading levels...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Groups Section -->
+                <div class="col-lg-4">
+                    <div class="card-apple p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="mb-1"><i class="bi bi-people-fill me-2"></i>Student Groups</h5>
+                                <p class="text-secondary mb-0 small">Manage student groups</p>
+                            </div>
+                            <button class="btn btn-primary-apple rounded-pill px-3" onclick="openGroupModal()">
+                                <i class="bi bi-plus-circle me-1"></i> Add
+                            </button>
+                        </div>
+                        <div id="groupsListContainer" class="settings-list">
+                            <div class="text-center py-4 text-secondary">
+                                <i class="bi bi-hourglass-split"></i> Loading groups...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Universities Section -->
+            <div class="card-apple p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="mb-1"><i class="bi bi-building me-2"></i>Universities</h5>
+                        <p class="text-secondary mb-0 small">Manage university options by education level</p>
+                    </div>
+                    <button class="btn btn-primary-apple rounded-pill px-3" onclick="openUniversityModal()">
+                        <i class="bi bi-plus-circle me-1"></i> Add University
+                    </button>
+                </div>
+                <div id="universitiesListContainer" class="settings-list">
+                    <div class="text-center py-4 text-secondary">
+                        <i class="bi bi-hourglass-split"></i> Loading universities...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video Tutorials Section -->
+            <div class="card-apple p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="mb-1"><i class="bi bi-play-circle-fill me-2" style="color: #ef4444;"></i>Video
+                            Tutorials</h5>
+                        <p class="text-secondary mb-0 small">Manage video links shown on Student Portal</p>
+                    </div>
+                    <button class="btn btn-danger rounded-pill px-3" onclick="openVideoModal()">
+                        <i class="bi bi-plus-circle me-1"></i> Add Video
+                    </button>
+                </div>
+                <div id="videosListContainer" class="settings-list">
+                    <div class="text-center py-4 text-secondary">
+                        <i class="bi bi-hourglass-split"></i> Loading videos...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Student Modal -->
+    <div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+            <div class="modal-content modal-glass" style="border-radius: 20px; overflow: hidden;">
+
+                <!-- Header -->
+                <div class="modal-header border-0 pb-0 px-4 pt-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="
+                            width: 44px; height: 44px;
+                            background: linear-gradient(135deg, var(--accent-primary), #7c3aed);
+                            border-radius: 14px;
+                            display: flex; align-items: center; justify-content: center;
+                            box-shadow: 0 4px 14px rgba(91,141,239,0.4);
+                            flex-shrink: 0;
+                        ">
+                            <i class="bi bi-person-plus-fill text-white" style="font-size: 1.15rem;"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0" id="addStudentModalLabel" style="font-size: 1.1rem;">
+                                Add New Student</h5>
+                            <p class="mb-0 text-secondary" style="font-size: 0.78rem; margin-top: 2px;">Fill in the
+                                required fields below</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+
+                <!-- Body -->
+                <div class="modal-body px-4 py-4">
+                    <form id="addStudentForm">
+
+                        <!-- Student ID -->
+                        <div class="mb-3 position-relative">
+                            <label for="studentId" class="form-label d-flex align-items-center gap-1">
+                                Student ID
+                                <span class="text-danger">*</span>
+                                <span class="text-secondary ms-1" style="font-size:0.75rem; font-weight:400;">(e.g.
+                                    D120)</span>
+                            </label>
+                            <input type="text" class="form-control ios-input" id="studentId" placeholder="D120"
+                                autocomplete="off" style="font-size: 1rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;"
+                                oninput="this.value = this.value.toUpperCase()" required>
+                            <div id="lastStudentHint" class="text-secondary mt-1"
+                                style="font-size: 0.75rem; display: none;">
+                                Last added: <span id="lastRegisteredStudent" class="fw-bold"></span>
+                            </div>
+                        </div>
+
+
+                        <!-- Full Name -->
+                        <div class="mb-3">
+                            <label for="fullName" class="form-label d-flex align-items-center gap-1">
+                                Full Name
+                                <span class="text-danger">*</span>
+                                <span class="text-secondary ms-1" style="font-size:0.75rem; font-weight:400;">(SURNAME,
+                                    NAME)</span>
+                            </label>
+                            <input type="text" class="form-control ios-input text-uppercase-input" id="fullName"
+                                placeholder="SURNAME, NAME" autocomplete="off" style="font-size: 0.95rem;" required>
+                        </div>
+
+                        <!-- Office -->
+                        <div class="mb-4">
+                            <label for="studentOffice" class="form-label d-flex align-items-center gap-1">
+                                Office
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select ios-input" id="studentOffice" required>
+                                <option value="">Select office...</option>
+                                <option value="ANDIJON OFFIS">ANDIJON OFFIS</option>
+                                <option value="TOSHKENT OFFIS">TOSHKENT OFFIS</option>
+                            </select>
+                        </div>
+
+                        <!-- Info tip -->
+                        <div style="
+                            background: rgba(91,141,239,0.08);
+                            border: 1px solid rgba(91,141,239,0.2);
+                            border-radius: 12px;
+                            padding: 0.75rem 1rem;
+                            display: flex;
+                            align-items: flex-start;
+                            gap: 0.625rem;
+                        ">
+                            <i class="bi bi-lightbulb-fill"
+                                style="color: var(--accent-primary); font-size: 0.9rem; margin-top: 1px; flex-shrink:0;"></i>
+                            <p class="mb-0 text-secondary" style="font-size: 0.78rem; line-height: 1.5;">
+                                All other details — Phone, Email, Birthday, Passport, Tariff, University — can be added
+                                later by clicking on the student card.
+                            </p>
+                        </div>
+
+                    </form>
+                </div>
+
+                <!-- Footer -->
+                <div class="modal-footer border-0 px-4 pb-4 pt-0 gap-2">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary-apple rounded-pill px-4 shadow-apple"
+                        id="saveStudentBtn" onclick="saveStudent()" style="min-width: 140px;">
+                        <span class="spinner-border spinner-border-sm me-2 d-none" id="saveStudentSpinner" role="status"
+                            aria-hidden="true"></span>
+                        <i class="bi bi-check-circle-fill me-2" id="saveStudentIcon"></i>
+                        <span id="saveStudentText">Save Student</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- View Student Details Modal -->
+    <div class="modal fade" id="viewStudentModal" tabindex="-1" aria-labelledby="viewStudentModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable student-details-dialog">
+            <div class="modal-content modal-glass">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title fw-bold" id="viewStudentModalLabel">
+                        <i class="bi bi-person-circle me-2"></i> Student Details
+                    </h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" id="deleteStudentBtn"
+                            onclick="confirmDeleteStudent()">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                </div>
+                <div class="modal-body p-4" id="studentDetailsContent">
+                    <!-- Details will be populated dynamically -->
+                </div>
+                <div class="modal-footer border-top border-secondary">
+                    <!-- Actions for deleted students (hidden by default) -->
+                    <div id="deletedStudentActions" class="gap-2 w-100 section-hidden">
+                        <button type="button" class="btn btn-success rounded-pill px-4" onclick="restoreStudent()">
+                            <i class="bi bi-arrow-counterclockwise me-2"></i>Restore
+                        </button>
+                        <button type="button" class="btn btn-danger rounded-pill px-4"
+                            onclick="permanentlyDeleteStudent()">
+                            <i class="bi bi-trash-fill me-2"></i>Permanently Delete
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4 ms-auto"
+                            data-bs-dismiss="modal">Close</button>
+                    </div>
+                    <!-- Actions for active students (visible by default) -->
+                    <div id="activeStudentActions" class="section-visible">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                            data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Download Excel Modal -->
+    <div class="modal fade" id="downloadExcelModal" tabindex="-1" aria-labelledby="downloadExcelModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div class="modal-content ios-modal">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title" id="downloadExcelModalLabel">
+                        <i class="bi bi-file-earmark-excel text-success me-2"></i>Download as Excel
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Filters -->
+                    <div class="row mb-4">
+                        <!-- Level Filter -->
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label class="form-label text-secondary">Filter by Education Level</label>
+                            <select class="form-select ios-input" id="excelLevelFilter"
+                                onchange="filterExcelStudents()">
+                                <option value="">All Levels</option>
+                                <option value="COLLEGE">COLLEGE</option>
+                                <option value="BACHELOR">BACHELOR</option>
+                                <option value="MASTERS">MASTERS</option>
+                                <option value="MASTER NO CERTIFICATE">MASTER NO CERTIFICATE</option>
+                                <option value="LANGUAGE COURSE">LANGUAGE COURSE</option>
+                            </select>
+                        </div>
+
+                        <!-- Group Filter -->
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary">Filter by Group</label>
+                            <select class="form-select ios-input" id="excelGroupFilter"
+                                onchange="filterExcelStudents()">
+                                <option value="">All Groups</option>
+                                <option value="NO_GROUP">No Group</option>
+                                <!-- Groups will be populated dynamically -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Select All -->
+                    <div
+                        class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="selectAllStudents"
+                                onchange="toggleSelectAll()">
+                            <label class="form-check-label fw-bold" for="selectAllStudents">
+                                Select All
+                            </label>
+                        </div>
+                        <span id="selectedCount" class="badge bg-success">0 selected</span>
+                    </div>
+
+                    <!-- Student List -->
+                    <div id="excelStudentList" class="student-checkbox-list scroll-container-md">
+                        <!-- Students will be populated here -->
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success rounded-pill px-4" onclick="downloadSelectedAsExcel()">
+                        <i class="bi bi-download me-2"></i>Download Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Payment Modal -->
+    <div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content ios-modal">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title" id="addPaymentModalLabel">
+                        <i class="bi bi-cash-stack text-success me-2"></i>Add New Payment
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="addPaymentForm">
+                        <!-- Row 1: Amount and Payment Method -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="paymentAmount" class="form-label">Amount <span
+                                        class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control ios-input" id="paymentAmount" placeholder="0"
+                                        required>
+                                    <span class="input-group-text input-group-text-styled">UZS</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="paymentMethod" class="form-label">Payment Method <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select ios-input" id="paymentMethod" required>
+                                    <option value="">Select method...</option>
+                                    <option value="Karta J.A">Karta J.A</option>
+                                    <option value="Naqd">Naqd</option>
+                                    <option value="Karta M.A">Karta M.A</option>
+                                    <option value="Bank">Bank</option>
+                                    <option value="Discount">Discount</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Received By and Student -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="receivedBy" class="form-label">Received By <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select ios-input" id="receivedBy" required>
+                                    <option value="">Select receiver...</option>
+                                    <option value="Abdulaziz">Abdulaziz</option>
+                                    <option value="Jasurbek">Jasurbek</option>
+                                    <option value="Muhammadali">Muhammadali</option>
+                                    <option value="Muslihiddin">Muslihiddin</option>
+                                    <option value="Admin">Admin</option>
+                                    <option value="Discount">Discount</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="paymentStudent" class="form-label">Choose Student</label>
+                                <select class="form-select ios-input" id="paymentStudent">
+                                    <option value="">No student (General payment)</option>
+                                    <!-- Students will be populated here -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Row 3: Notes -->
+                        <div class="mb-3">
+                            <label for="paymentNotes" class="form-label">Notes</label>
+                            <textarea class="form-control ios-input" id="paymentNotes" rows="2"
+                                placeholder="Add notes..."></textarea>
+                            <!-- Quick Pick Pills -->
+                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                <button type="button"
+                                    class="btn btn-sm btn-outline-secondary rounded-pill quick-note-pill"
+                                    onclick="addQuickNote('Shartnoma uchun')">Shartnoma uchun</button>
+                                <button type="button"
+                                    class="btn btn-sm btn-outline-secondary rounded-pill quick-note-pill"
+                                    onclick="addQuickNote('Qarz')">Qarz</button>
+                                <button type="button"
+                                    class="btn btn-sm btn-outline-secondary rounded-pill quick-note-pill"
+                                    onclick="addQuickNote('Elchixona uchun')">Elchixona uchun</button>
+                                <button type="button"
+                                    class="btn btn-sm btn-outline-secondary rounded-pill quick-note-pill"
+                                    onclick="addQuickNote('Appfee')">Appfee</button>
+                                <button type="button"
+                                    class="btn btn-sm btn-outline-warning rounded-pill quick-note-pill"
+                                    onclick="addQuickNote('DISCOUNT')">DISCOUNT</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success rounded-pill px-4" onclick="submitPayment()">
+                        <i class="bi bi-check-circle me-2"></i>Submit Payment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Withdraw Payment Modal -->
+    <div class="modal fade" id="withdrawPaymentModal" tabindex="-1" aria-labelledby="withdrawPaymentModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content ios-modal">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title" id="withdrawPaymentModalLabel">
+                        <i class="bi bi-dash-circle text-danger me-2"></i>Withdraw Payment
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="withdrawPaymentForm">
+                        <!-- Amount -->
+                        <div class="mb-3">
+                            <label for="withdrawAmount" class="form-label">Amount <span
+                                    class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" class="form-control ios-input" id="withdrawAmount" placeholder="0"
+                                    required>
+                                <span class="input-group-text input-group-text-styled">UZS</span>
+                            </div>
+                        </div>
+
+                        <!-- Student Selection (Optional) -->
+                        <div class="mb-3">
+                            <label for="withdrawStudent" class="form-label">Choose Student <span
+                                    class="text-secondary small">(Optional)</span></label>
+                            <select class="form-select ios-input" id="withdrawStudent">
+                                <option value="">No student (General withdrawal)</option>
+                                <!-- Students will be populated here -->
+                            </select>
+                            <small class="text-secondary">Select a student if this withdrawal is for student refund or
+                                extra service</small>
+                        </div>
+
+                        <!-- Reason -->
+                        <div class="mb-3">
+                            <label for="withdrawReason" class="form-label">Reason <span
+                                    class="text-danger">*</span></label>
+                            <textarea class="form-control ios-input text-uppercase-input" id="withdrawReason" rows="3"
+                                placeholder="REASON FOR WITHDRAWAL..." required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger rounded-pill px-4" onclick="submitWithdrawal()">
+                        <i class="bi bi-check-circle me-2"></i>Submit Withdrawal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Payment Modal -->
+    <div class="modal fade" id="editPaymentModal" tabindex="-1" aria-labelledby="editPaymentModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content ios-modal">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title" id="editPaymentModalLabel">
+                        <i class="bi bi-pencil-square text-primary me-2"></i>Edit Payment
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="editPaymentForm">
+                        <input type="hidden" id="editPaymentId">
+                        <input type="hidden" id="editPaymentOriginalAmount">
+                        <input type="hidden" id="editPaymentStudentFirestoreId">
+                        <!-- Row 1: Amount and Payment Method -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editPaymentAmount" class="form-label">Amount <span
+                                        class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control ios-input" id="editPaymentAmount"
+                                        placeholder="0" required>
+                                    <span class="input-group-text input-group-text-styled">UZS</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editPaymentMethod" class="form-label">Payment Method <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select ios-input" id="editPaymentMethod" required>
+                                    <option value="">Select method...</option>
+                                    <option value="Karta J.A">Karta J.A</option>
+                                    <option value="Naqd">Naqd</option>
+                                    <option value="Karta M.A">Karta M.A</option>
+                                    <option value="Bank">Bank</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Received By and Student (Read-only display) -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editReceivedBy" class="form-label">Received By <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select ios-input" id="editReceivedBy" required>
+                                    <option value="">Select receiver...</option>
+                                    <option value="Azizbek">Azizbek</option>
+                                    <option value="Jasurbek">Jasurbek</option>
+                                    <option value="Muhammadali">Muhammadali</option>
+                                    <option value="Muslihiddin">Muslihiddin</option>
+                                    <option value="Admin">Admin</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Student</label>
+                                <input type="text" class="form-control ios-input input-readonly"
+                                    id="editPaymentStudentDisplay" readonly>
+                            </div>
+                        </div>
+
+                        <!-- Row 3: Notes -->
+                        <div class="mb-3">
+                            <label for="editPaymentNotes" class="form-label">Notes</label>
+                            <textarea class="form-control ios-input" id="editPaymentNotes" rows="2"
+                                placeholder="Add notes..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4" onclick="savePaymentEdit()">
+                        <i class="bi bi-check-circle me-2"></i>Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal (Reusable) -->
+    <div class="modal fade confirm-modal" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <h5 class="mb-2" id="confirmDeleteTitle">Delete Payment</h5>
+                    <p id="confirmDeleteMessage">Are you sure you want to delete this payment?</p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger rounded-pill px-4" id="confirmDeleteBtn"
+                        onclick="executeConfirmedDelete()">
+                        <span class="btn-text"><i class="bi bi-trash me-1"></i>Delete</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tariff Modal (Add/Edit) -->
+    <div class="modal fade" id="tariffModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-glass">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title fw-bold" id="tariffModalTitle">
+                        <i class="bi bi-tag-fill me-2"></i>Add Tariff
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="tariffForm">
+                        <input type="hidden" id="tariffEditId">
+                        <div class="mb-3">
+                            <label for="tariffName" class="form-label">Tariff Name <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control ios-input text-uppercase-input" id="tariffName"
+                                placeholder="e.g., PREMIUM" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tariffPrice" class="form-label">Price (UZS) <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control ios-input" id="tariffPrice"
+                                placeholder="e.g., 32500000" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary-apple rounded-pill px-4" onclick="saveTariff()">
+                        <i class="bi bi-check-circle me-2"></i>Save Tariff
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Level Modal (Add/Edit) -->
+    <div class="modal fade" id="levelModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-glass">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title fw-bold" id="levelModalTitle">
+                        <i class="bi bi-mortarboard-fill me-2"></i>Add Education Level
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="levelForm">
+                        <input type="hidden" id="levelEditId">
+                        <div class="mb-3">
+                            <label for="levelName" class="form-label">Level Name <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control ios-input text-uppercase-input" id="levelName"
+                                placeholder="e.g., BACHELOR" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary-apple rounded-pill px-4" onclick="saveLevel()">
+                        <i class="bi bi-check-circle me-2"></i>Save Level
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Group Modal (Add/Edit) -->
+    <div class="modal fade" id="groupModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-glass">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title fw-bold" id="groupModalTitle">
+                        <i class="bi bi-people-fill me-2"></i>Add Group
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="groupForm">
+                        <input type="hidden" id="groupEditId">
+                        <div class="mb-3">
+                            <label for="groupName" class="form-label">Group Name <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control ios-input text-uppercase-input" id="groupName"
+                                placeholder="e.g., GROUP 1" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary-apple rounded-pill px-4" onclick="saveGroup()">
+                        <i class="bi bi-check-circle me-2"></i>Save Group
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- University Modal (Add/Edit) -->
+    <div class="modal fade" id="universityModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-glass">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title fw-bold" id="universityModalTitle">
+                        <i class="bi bi-building me-2"></i>Add University
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="universityForm">
+                        <input type="hidden" id="universityEditId">
+                        <div class="mb-3">
+                            <label for="universityName" class="form-label">University Name <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control ios-input" id="universityName"
+                                placeholder="e.g., Seoul National University" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="universityLevel" class="form-label">Education Level <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select ios-input d-none" id="universityLevel">
+                                <option value="">Choose Level...</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary-apple rounded-pill px-4" onclick="saveUniversity()">
+                        <i class="bi bi-check-circle me-2"></i>Save University
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Video Modal (Add/Edit) -->
+    <div class="modal fade" id="videoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-glass">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title fw-bold" id="videoModalTitle">
+                        <i class="bi bi-play-circle-fill me-2" style="color: #ef4444;"></i>Add Video
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="videoForm">
+                        <input type="hidden" id="videoEditId">
+                        <div class="mb-3">
+                            <label for="videoName" class="form-label">Video Title <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control ios-input" id="videoName"
+                                placeholder="e.g., NIKOH HOLATI MA'LUMOTNOMASINI OLISH" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="videoUrl" class="form-label">YouTube URL <span
+                                    class="text-danger">*</span></label>
+                            <input type="url" class="form-control ios-input" id="videoUrl"
+                                placeholder="e.g., https://youtube.com/shorts/yjl4f1BVgEE" required>
+                            <small class="text-secondary">Paste the full YouTube video link</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger rounded-pill px-4" onclick="saveVideo()">
+                        <i class="bi bi-check-circle me-2"></i>Save Video
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Admission Modal - Elite Design -->
+    <div class="modal fade modal-admission-elite" id="addAdmissionModal" tabindex="-1"
+        aria-labelledby="addAdmissionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content modal-glass">
+                <div class="modal-header modal-header-elite">
+                    <h5 class="modal-title fw-bold" id="addAdmissionModalLabel">
+                        <span class="icon-badge"><i class="bi bi-mortarboard-fill"></i></span>
+                        <span id="admissionModalTitle">Add Admission Record</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body modal-body-elite">
+                    <form id="addAdmissionForm">
+                        <input type="hidden" id="admissionEditId">
+
+                        <div class="admission-form-grid">
+                            <!-- Education Level -->
+                            <div class="form-group">
+                                <label for="admissionEducationLevel" class="form-label form-label-elite">
+                                    Education Level <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select input-elite" id="admissionEducationLevel" required
+                                    onchange="updateAdmissionUniversities()">
+                                    <option value="">Select level...</option>
+                                </select>
+                            </div>
+
+                            <!-- University -->
+                            <div class="form-group">
+                                <label for="admissionUniversity" class="form-label form-label-elite">
+                                    University <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select input-elite" id="admissionUniversity" required>
+                                    <option value="">Select university...</option>
+                                </select>
+                            </div>
+
+                            <!-- Number of Rounds - Full Width -->
+                            <div class="form-group form-group-full">
+                                <label for="admissionRounds" class="form-label form-label-elite">
+                                    Number of Rounds <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select input-elite" id="admissionRounds" required
+                                    onchange="generateRoundDatePickers()" style="max-width: 200px;">
+                                    <option value="">Select...</option>
+                                    <option value="1">1 Round</option>
+                                    <option value="2">2 Rounds</option>
+                                    <option value="3">3 Rounds</option>
+                                </select>
+                            </div>
+
+                            <!-- Dynamic Rounds Container - Full Width -->
+                            <div class="form-group-full" id="roundsContainer">
+                                <!-- Round date pickers will be generated here -->
+                            </div>
+
+                            <!-- Information - Full Width -->
+                            <div class="form-group form-group-full">
+                                <label for="admissionInformation" class="form-label form-label-elite">
+                                    <i class="bi bi-info-circle me-1"></i> Information
+                                </label>
+                                <textarea class="form-control input-elite info-textarea-elite" id="admissionInformation"
+                                    rows="3" placeholder="General information about the admission..."></textarea>
+                            </div>
+
+                            <!-- Majors - Full Width -->
+                            <div class="form-group form-group-full">
+                                <label for="admissionMajors" class="form-label form-label-elite">
+                                    <i class="bi bi-book me-1"></i> Majors
+                                </label>
+                                <textarea class="form-control input-elite info-textarea-elite" id="admissionMajors"
+                                    rows="3" placeholder="Available majors and programs..."></textarea>
+                            </div>
+
+                            <!-- Scholarships Opportunities - Full Width -->
+                            <div class="form-group form-group-full">
+                                <label for="admissionScholarships" class="form-label form-label-elite">
+                                    <i class="bi bi-award me-1"></i> Scholarships Opportunities
+                                </label>
+                                <textarea class="form-control input-elite info-textarea-elite"
+                                    id="admissionScholarships" rows="3"
+                                    placeholder="Scholarship opportunities and requirements..."></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer modal-footer-elite">
+                    <button type="button" class="btn btn-elite-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-elite-primary rounded-pill px-4" onclick="saveAdmission()">
+                        <i class="bi bi-check-circle me-2"></i>Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Admission Modal - Elite Design -->
+    <div class="modal fade modal-admission-elite" id="viewAdmissionModal" tabindex="-1"
+        aria-labelledby="viewAdmissionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content modal-glass">
+                <div class="modal-header modal-header-elite">
+                    <h5 class="modal-title fw-bold" id="viewAdmissionModalLabel">
+                        <span class="icon-badge"><i class="bi bi-mortarboard-fill"></i></span>
+                        Admission Details
+                    </h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-sm rounded-pill px-3"
+                            style="background: var(--bg-card); border: 1px solid var(--border-default); color: var(--text-secondary);"
+                            onclick="editAdmission()">
+                            <i class="bi bi-pencil me-1"></i> Edit
+                        </button>
+                        <button type="button" class="btn btn-sm rounded-pill px-3"
+                            style="background: rgba(209, 52, 56, 0.15); border: 1px solid rgba(209, 52, 56, 0.3); color: #ef4444;"
+                            onclick="deleteAdmission()">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                </div>
+                <div class="modal-body modal-body-elite" id="admissionDetailsContent">
+                    <!-- Details will be populated dynamically -->
+                </div>
+                <div class="modal-footer modal-footer-elite">
+                    <button type="button" class="btn btn-elite-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Notification Modal -->
+    <div class="modal fade" id="addNotificationModal" tabindex="-1" aria-labelledby="addNotificationModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content modal-glass">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title fw-bold" id="addNotificationModalLabel">
+                        <i class="bi bi-bell-fill me-2"></i><span id="notificationModalTitle">Add Notification</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="addNotificationForm">
+                        <input type="hidden" id="notificationEditId">
+
+                        <!-- Notification Title/Text -->
+                        <div class="mb-3">
+                            <label for="notificationText" class="form-label">Notification Title <span
+                                    class="text-danger">*</span></label>
+                            <textarea class="form-control ios-input" id="notificationText" rows="3"
+                                placeholder="e.g., Korea University Interview" required></textarea>
+                        </div>
+
+                        <!-- Date -->
+                        <div class="mb-3">
+                            <label for="notificationDate" class="form-label">Date <span
+                                    class="text-danger">*</span></label>
+                            <input type="date" class="form-control ios-input" id="notificationDate" required>
+                        </div>
+
+                        <!-- Duration Period (Optional) -->
+                        <div class="mb-3">
+                            <label class="form-label">Notification Duration Period <span
+                                    class="text-secondary small">(Optional)</span></label>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label for="notificationDurationFrom"
+                                        class="form-label small text-secondary">From</label>
+                                    <input type="date" class="form-control ios-input" id="notificationDurationFrom">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="notificationDurationTo"
+                                        class="form-label small text-secondary">To</label>
+                                    <input type="date" class="form-control ios-input" id="notificationDurationTo">
+                                </div>
+                            </div>
+                            <small class="text-secondary">Leave empty if no duration period is needed</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary-apple rounded-pill px-4" onclick="saveNotification()">
+                        <i class="bi bi-check-circle me-2"></i>Save Notification
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Notification Modal -->
+    <div class="modal fade" id="viewNotificationModal" tabindex="-1" aria-labelledby="viewNotificationModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content modal-glass">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title fw-bold" id="viewNotificationModalLabel">
+                        <i class="bi bi-bell-fill me-2"></i>Notification Details
+                    </h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill"
+                            onclick="editNotification()">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill"
+                            onclick="deleteNotification()">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                </div>
+                <div class="modal-body p-4" id="notificationDetailsContent">
+                    <!-- Details will be populated dynamically -->
+                </div>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Delete Confirmation Modal -->
+    <div class="modal fade confirm-modal" id="confirmSettingsDeleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <h5 class="mb-2" id="confirmSettingsDeleteTitle">Delete Item</h5>
+                    <p id="confirmSettingsDeleteMessage">Are you sure you want to delete this item?</p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger rounded-pill px-4" id="confirmSettingsDeleteBtn">
+                        <span class="btn-text"><i class="bi bi-trash me-1"></i>Delete</span>
+                    </button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SheetJS Library for Excel Export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Cleave.js for Input Masking -->
+    <script src="https://cdn.jsdelivr.net/npm/cleave.js@1.6.0/dist/cleave.min.js"></script>
+
+
+    <!-- Firebase SDK v9 Compat for Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script type="module" src="js/firebase-config.js"></script>
+
+    <!-- Custom Scripts -->
+    <script src="js/app.js"></script>
+    <script src="js/form-validation.js"></script>
+
+    <!-- Shared Row Color Picker Popup (fixed position, appended to body to escape overflow clipping) -->
+    <div id="colorPickerPopup" class="cp-popup" onmouseenter="cancelHideColorPicker()"
+        onmouseleave="startHideColorPicker()">
+        <div class="cp-swatch" data-color="RED" style="background:#ef4444" onclick="setRowColor('RED')" title="Red">
+        </div>
+        <div class="cp-swatch" data-color="YELLOW" style="background:#eab308" onclick="setRowColor('YELLOW')"
+            title="Yellow"></div>
+        <div class="cp-swatch" data-color="GREEN" style="background:#006400" onclick="setRowColor('GREEN')"
+            title="Green"></div>
+        <div class="cp-swatch" data-color="BLUE" style="background:#3b82f6" onclick="setRowColor('BLUE')" title="Blue">
+        </div>
+        <div class="cp-swatch" data-color="MAGENTA" style="background:#d946ef" onclick="setRowColor('MAGENTA')"
+            title="Magenta"></div>
+        <div class="cp-swatch" data-color="CYAN" style="background:#06b6d4" onclick="setRowColor('CYAN')" title="Cyan">
+        </div>
+        <div class="cp-swatch cp-clear" style="background:transparent" onclick="setRowColor('')" title="Clear color">✕
+        </div>
+    </div>
+    <!-- Shared Status Multi-Select Dropdown Popup -->
+    <div id="statusDropdownPopup" class="sdp-popup" style="display:none"></div>
+    <!-- University Status Picker Popup -->
+    <div id="uniStatusPopup" class="uni-status-popup" style="display:none"></div>
+
+</body>
+
+</html>
