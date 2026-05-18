@@ -47,8 +47,9 @@
 }
 
 .cp-swatch.flag-swatch.active {
-  border-color: #fff;
-  box-shadow: 0 0 0 1px var(--accent-primary);
+  border: 2.5px solid #ffffff !important;
+  box-shadow: 0 0 0 2.5px #0078d4, 0 4px 10px rgba(0, 0, 0, 0.3) !important;
+  transform: scale(1.15);
 }
 
 .cp-swatch.flag-swatch.active::after {
@@ -59,7 +60,9 @@
   left: 50%;
   transform: translate(-50%, -50%);
   color: white;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 900;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 2px rgba(0, 0, 0, 1);
 }
 
 /* Tags Section */
@@ -1099,14 +1102,61 @@ body:not([data-bs-theme="light"]) .doc-missing-badge {
 
 /* Navbar Search Styles */
 .navbar-search-wrapper {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  max-width: 500px;
-  z-index: 1;
-  pointer-events: none; /* Let clicks through to the wrapper but not the space */
+  position: relative;
+  flex: 1;
+  max-width: 480px;
+  margin: 0 auto;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+/* Ensure navbar-collapse uses proper flex layout on large screens */
+@media (min-width: 992px) {
+  .navbar-collapse {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+}
+
+/* Prevent overlap of nav links on smaller desktop screens */
+@media (max-width: 1200px) and (min-width: 992px) {
+  .navbar-search-wrapper {
+    margin: 0 1rem;
+    max-width: 360px;
+  }
+  .nav-link-apple {
+    padding: 0.5rem 0.6rem !important;
+    font-size: 0.8rem !important;
+  }
+}
+
+/* Mobile Search Container - Sleek Fluent/Mica Design */
+.mobile-search-container {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(31, 41, 55, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.75rem 1rem;
+  z-index: 100;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.mobile-search-container .navbar-search-group {
+  max-width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-bs-theme="light"] .mobile-search-container {
+  background: rgba(255, 255, 255, 0.8);
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-bs-theme="light"] .mobile-search-container .navbar-search-group {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.08);
 }
 
 .navbar-search-group {

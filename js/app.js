@@ -155,18 +155,17 @@ window.toggleSortOrder = function(tab) {
 
 // Row Colorization — color map (ball colour + row background tint)
 const ROW_COLOR_MAP = {
-  DARK_RED: { bg: "rgba(139, 0, 0, 0.15)", ball: "#8b0000" },
-  DARK_GREEN: { bg: "rgba(0, 100, 0, 0.15)", ball: "#006400" },
-  DARK_BLUE: { bg: "rgba(0, 0, 139, 0.15)", ball: "#00008b" },
-  MUSTARD: { bg: "rgba(184, 134, 11, 0.15)", ball: "#b8860b" },
-  PURPLE: { bg: "rgba(75, 0, 130, 0.15)", ball: "#4b0082" },
-  ORANGE: { bg: "rgba(210, 105, 30, 0.15)", ball: "#d2691e" },
-  TEAL: { bg: "rgba(0, 128, 128, 0.15)", ball: "#008080" },
-  SLATE: { bg: "rgba(47, 79, 79, 0.15)", ball: "#2f4f4f" },
-  DARK_PINK: { bg: "rgba(139, 0, 139, 0.15)", ball: "#8b008b" },
-  BROWN: { bg: "rgba(93, 64, 55, 0.15)", ball: "#5d4037" },
-  INDIGO: { bg: "rgba(48, 63, 159, 0.15)", ball: "#303f9f" },
-  CYAN_DARK: { bg: "rgba(0, 131, 143, 0.15)", ball: "#00838f" },
+  DARK_BLUE: { bg: "rgba(30, 58, 138, 0.35)", ball: "#1E3A8A" },
+  DARK_GREEN: { bg: "rgba(22, 101, 52, 0.35)", ball: "#166534" },
+  DARK_RED: { bg: "rgba(153, 27, 27, 0.35)", ball: "#991B1B" },
+  PURPLE: { bg: "rgba(107, 33, 168, 0.35)", ball: "#6B21A8" },
+  ORANGE: { bg: "rgba(194, 65, 12, 0.35)", ball: "#C2410C" },
+  TEAL: { bg: "rgba(15, 118, 110, 0.35)", ball: "#0F766E" },
+  BROWN: { bg: "rgba(120, 53, 15, 0.35)", ball: "#78350F" },
+  DARK_PINK: { bg: "rgba(157, 23, 77, 0.35)", ball: "#9D174D" },
+  CYAN_DARK: { bg: "rgba(0, 189, 189, 0.35)", ball: "#00bdbd" },
+  MUSTARD: { bg: "rgba(77, 124, 15, 0.35)", ball: "#4D7C0F" }, // Dark-Lime (mapped to legacy MUSTARD to preserve database compatibility)
+  SLATE: { bg: "rgba(51, 65, 85, 0.35)", ball: "#334155" },
 };
 
 // Status column color palettes (used by multi-select popup + badge rendering)
@@ -2899,10 +2898,10 @@ function clearStatusDropdown() {
 function applyStatusFilters(resetPage = true) {
   if (resetPage) statusPage = 1;
 
-  const searchInput = document.getElementById("statusSearchInput");
+  const searchInput = document.getElementById("headerSearchInput") || document.getElementById("statusSearchInput");
   const searchQuery = searchInput ? searchInput.value.toLowerCase() : "";
 
-  const searchTypeDropdown = document.getElementById("statusSearchType");
+  const searchTypeDropdown = document.getElementById("headerSearchType") || document.getElementById("statusSearchType");
   const searchType = searchTypeDropdown ? searchTypeDropdown.value : "all";
 
   const tariffDropdown = document.getElementById("statusFilterTariff");
@@ -6589,12 +6588,6 @@ window.showFlagsPopover = showFlagsPopover;
 window.startHideFlagsPopover = startHideFlagsPopover;
 window.cancelHideFlagsPopover = cancelHideFlagsPopover;
 window.hideFlagsPopover = hideFlagsPopover;
-window.setTempRowColor = setTempRowColor;
-window.toggleTaskTag = toggleTaskTag;
-window.addCustomTaskTag = addCustomTaskTag;
-window.removeTaskTag = removeTaskTag;
-window.clearAllFlags = clearAllFlags;
-window.saveFlags = saveFlags;
 window.renderStatus = renderStatus;
 window.applyStatusFilters = applyStatusFilters;
 window.changeStatusPage = changeStatusPage;
@@ -7860,6 +7853,39 @@ window.initializeVisaStatusTab = initializeVisaStatusTab;
 
 
 
+function syncSearchInputs(source) {
+  const headerInput = document.getElementById("headerSearchInput");
+  const headerType = document.getElementById("headerSearchType");
+  const mobileInput = document.getElementById("mobileSearchInput");
+  const mobileType = document.getElementById("mobileSearchType");
+  const statusInput = document.getElementById("statusSearchInput");
+  const statusType = document.getElementById("statusSearchType");
+
+  let activeValue = "";
+  let activeType = "all";
+
+  if (source === 'desktop') {
+    activeValue = headerInput ? headerInput.value : "";
+    activeType = headerType ? headerType.value : "all";
+  } else if (source === 'mobile') {
+    activeValue = mobileInput ? mobileInput.value : "";
+    activeType = mobileType ? mobileType.value : "all";
+  } else if (source === 'status') {
+    activeValue = statusInput ? statusInput.value : "";
+    activeType = statusType ? statusType.value : "all";
+  }
+
+  // Sync to all inputs
+  if (headerInput && source !== 'desktop') headerInput.value = activeValue;
+  if (headerType && source !== 'desktop') headerType.value = activeType;
+  if (mobileInput && source !== 'mobile') mobileInput.value = activeValue;
+  if (mobileType && source !== 'mobile') mobileType.value = activeType;
+  if (statusInput && source !== 'status') statusInput.value = activeValue;
+  if (statusType && source !== 'status') statusType.value = activeType;
+  
+  handleGlobalSearch();
+}
+
 function handleGlobalSearch() {
   const tab = window.currentTab || 'students';
   if (tab === 'students') {
@@ -7872,3 +7898,4 @@ function handleGlobalSearch() {
 }
 
 window.handleGlobalSearch = handleGlobalSearch;
+window.syncSearchInputs = syncSearchInputs;

@@ -63,9 +63,9 @@
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-glass sticky-top">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="#" onclick="showTab('students'); return false;">
                 <img src="Logo.png" alt="UNIAPP Logo" style="width: 32px; height: 32px; object-fit: contain;"
-                    class="me-2">
+                     class="me-2">
                 UNIAPP
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
@@ -76,7 +76,7 @@
                 <!-- Navbar Global Search -->
                 <div class="navbar-search-wrapper d-none d-lg-flex">
                     <div class="navbar-search-group">
-                        <select class="form-select search-type-select" id="headerSearchType" onchange="handleGlobalSearch()">
+                        <select class="form-select search-type-select" id="headerSearchType" onchange="syncSearchInputs('desktop')">
                             <option value="all">All Fields</option>
                             <option value="id">ID</option>
                             <option value="name">Name</option>
@@ -85,7 +85,7 @@
                         </select>
                         <div class="navbar-search-input-container">
                             <i class="bi bi-search search-icon"></i>
-                            <input type="text" id="headerSearchInput" class="form-control" placeholder="Search..." oninput="handleGlobalSearch()">
+                            <input type="text" id="headerSearchInput" class="form-control" placeholder="Search..." oninput="syncSearchInputs('desktop')">
                         </div>
                     </div>
                 </div>
@@ -130,6 +130,23 @@
             </div>
         </div>
     </nav>
+
+    <!-- Mobile Search Bar (Only visible on mobile/tablet) -->
+    <div class="mobile-search-container d-block d-lg-none">
+        <div class="navbar-search-group">
+            <select class="form-select search-type-select" id="mobileSearchType" onchange="syncSearchInputs('mobile')">
+                <option value="all">All Fields</option>
+                <option value="id">ID</option>
+                <option value="name">Name</option>
+                <option value="phone">Phone</option>
+                <option value="university">University</option>
+            </select>
+            <div class="navbar-search-input-container">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" id="mobileSearchInput" class="form-control" placeholder="Search..." oninput="syncSearchInputs('mobile')">
+            </div>
+        </div>
+    </div>
 
     <!-- Main Container -->
     <div class="container-fluid main-content-container py-4" id="app">
@@ -418,7 +435,7 @@
                     <!-- Search Type -->
                     <div class="filter-item">
                         <i class="bi bi-funnel filter-icon"></i>
-                        <select class="form-select filter-input" id="statusSearchType" onchange="applyStatusFilters()" aria-label="Search Type">
+                        <select class="form-select filter-input" id="statusSearchType" onchange="syncSearchInputs('status')" aria-label="Search Type">
                             <option value="all">All Fields</option>
                             <option value="id">ID</option>
                             <option value="name">Name</option>
@@ -430,7 +447,7 @@
                     <div class="filter-item filter-search">
                         <i class="bi bi-search filter-icon"></i>
                         <input type="text" id="statusSearchInput" class="form-control filter-input"
-                            placeholder="Search...">
+                            placeholder="Search..." oninput="syncSearchInputs('status')">
                     </div>
 
                     <!-- Tariff Filter -->
