@@ -1307,3 +1307,66 @@ h1, h2, h3, h4, h5, h6,
   font-family: "Plus Jakarta Sans", sans-serif !important;
 }
 
+/* ==========================================
+   MICROSOFT LUMIA SIGNATURE MOTION DESIGN
+   ========================================== */
+
+/* 1. Turnstile Animation Keyframes */
+@keyframes lumiaTurnstileIn {
+  0% {
+    opacity: 0;
+    transform: perspective(1200px) rotateY(-35deg) scale(0.92) translateZ(-80px);
+    transform-origin: left center;
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(1200px) rotateY(0deg) scale(1) translateZ(0);
+    transform-origin: left center;
+  }
+}
+
+@keyframes lumiaTurnstileOut {
+  0% {
+    opacity: 1;
+    transform: perspective(1200px) rotateY(0deg) scale(1) translateZ(0);
+    transform-origin: right center;
+  }
+  100% {
+    opacity: 0;
+    transform: perspective(1200px) rotateY(35deg) scale(0.92) translateZ(-80px);
+    transform-origin: right center;
+  }
+}
+
+.lumia-turnstile-in {
+  animation: lumiaTurnstileIn 0.38s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+  backface-visibility: hidden;
+}
+
+.lumia-turnstile-out {
+  animation: lumiaTurnstileOut 0.30s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+  backface-visibility: hidden;
+}
+
+/* 2. Signature Lumia 3D Swing Turnstile for Bootstrap Modals */
+.modal.fade .modal-dialog {
+  transition: transform 0.45s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.45s ease !important;
+  transform: perspective(1200px) rotateY(-30deg) scale(0.85) translateZ(-100px) !important;
+  transform-origin: left center !important;
+  opacity: 0 !important;
+}
+
+.modal.show .modal-dialog {
+  transform: perspective(1200px) rotateY(0deg) scale(1) translateZ(0) !important;
+  transform-origin: left center !important;
+  opacity: 1 !important;
+}
+
+/* Smooth custom overlay backdrops */
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  transition: opacity 0.3s cubic-bezier(0.1, 0.9, 0.2, 1) !important;
+}
+

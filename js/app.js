@@ -548,14 +548,23 @@ function showTab(tabName) {
   
   tabs.forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.style.display = "none";
+    if (el) {
+      el.style.display = "none";
+      el.classList.remove("lumia-turnstile-in", "lumia-turnstile-out");
+    }
   });
 
   const navLinks = document.querySelectorAll(".nav-link-apple");
   navLinks.forEach((link) => link.classList.remove("active"));
 
   const targetTab = document.getElementById(`${tabName}-tab`);
-  if (targetTab) targetTab.style.display = "block";
+  if (targetTab) {
+    targetTab.style.display = "block";
+    // Trigger reflow to restart animation on fresh render
+    void targetTab.offsetWidth;
+    targetTab.classList.add("lumia-turnstile-in");
+  }
+  
   window.currentTab = tabName;
   
   const targetNav = document.getElementById(`nav-${tabName}`);
