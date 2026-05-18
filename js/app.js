@@ -1600,7 +1600,7 @@ function viewStudentDetails(uniqueId) {
                   <div class="detail-value-wrap">
                     <span class="detail-value text-uppercase" style="font-weight: 500; font-size: 0.85rem;">${familyName}</span>
                     <div class="action-btns">
-                      <button class="copy-btn" onclick="copyToClipboard('${escapFamily}',this);event.stopPropagation();" title="Copy Family Name"><i class="bi bi-clipboard"></i></button>
+                      <button class="copy-btn" onclick="copyToClipboard('${escapedFamily}',this);event.stopPropagation();" title="Copy Family Name"><i class="bi bi-clipboard"></i></button>
                     </div>
                   </div>
                 </div>
@@ -1611,7 +1611,7 @@ function viewStudentDetails(uniqueId) {
                   <div class="detail-value-wrap">
                     <span class="detail-value text-uppercase" style="font-weight: 500; font-size: 0.85rem;">${givenName}</span>
                     <div class="action-btns">
-                      <button class="copy-btn" onclick="copyToClipboard('${escapGiven}',this);event.stopPropagation();" title="Copy Given Name"><i class="bi bi-clipboard"></i></button>
+                      <button class="copy-btn" onclick="copyToClipboard('${escapedGiven}',this);event.stopPropagation();" title="Copy Given Name"><i class="bi bi-clipboard"></i></button>
                     </div>
                   </div>
                 </div>
