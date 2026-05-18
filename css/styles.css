@@ -504,12 +504,12 @@
 }
 
 #viewStudentModal .modal-content {
- border: 1px solid rgba(148, 163, 184, 0.28);
- border-radius: 18px;
+ border: 1px solid rgba(148, 163, 184, 0.35);
+ border-radius: 12px;
  overflow: hidden;
  background: #eef3f7;
  color: #111827;
- box-shadow: 0 24px 70px rgba(15, 23, 42, 0.34);
+ box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
 }
 
 #viewStudentModal .modal-header,
@@ -526,9 +526,7 @@
 }
 
 #viewStudentModal .modal-body {
- background:
-  radial-gradient(circle at 0 0, rgba(96, 165, 250, 0.16), transparent 28rem),
-  #eef3f7;
+ background: #eef3f7;
  padding: 0.75rem !important;
 }
 
@@ -653,11 +651,11 @@
  height: 100%;
  min-height: 58px;
  padding: 0.55rem 0.58rem;
- border: 1px solid rgba(15, 23, 42, 0.08);
+ border: 1px solid rgba(15, 23, 42, 0.12);
  border-radius: 8px;
- background: rgba(255, 255, 255, 0.92);
+ background: #ffffff;
  color: #111827;
- box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+ box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 #viewStudentModal .detail-label {
@@ -768,28 +766,136 @@
 #viewStudentModal .sd3-wrap > .col-md-3.sd3-col .detail-group {
  min-height: 70px;
  padding: 0.65rem;
- border-left: 0 !important;
 }
 
-#viewStudentModal .sd3-wrap > .col-md-3.sd3-col .d-flex > .detail-group:nth-child(2) {
- background: #991b1b;
- color: #ffffff;
+/* ============================================================
+  PREMIUM FINANCE FIELDS STATE STYLING SYSTEM
+  ============================================================ */
+#viewStudentModal .pmt-box {
+ border-radius: 12px !important;
+ border: 1px solid var(--border-subtle) !important;
+ min-height: 58px !important;
+ transition: all 0.25s ease !important;
+ display: flex !important;
+ flex-direction: column !important;
+ justify-content: center !important;
 }
 
-#viewStudentModal .sd3-wrap > .col-md-3.sd3-col .d-flex > .detail-group:nth-child(3) {
- background: #15803d;
- color: #ffffff;
+#viewStudentModal .pmt-box .detail-label {
+ font-weight: 700 !important;
+ font-size: 0.65rem !important;
+ text-transform: uppercase !important;
+ letter-spacing: 0.05em !important;
+ margin-bottom: 4px !important;
+ display: flex !important;
+ align-items: center !important;
+ gap: 4px !important;
 }
 
-#viewStudentModal .sd3-wrap > .col-md-3.sd3-col .d-flex > .detail-group:nth-child(2) .detail-label,
-#viewStudentModal .sd3-wrap > .col-md-3.sd3-col .d-flex > .detail-group:nth-child(2) .detail-value,
-#viewStudentModal .sd3-wrap > .col-md-3.sd3-col .d-flex > .detail-group:nth-child(3) .detail-label,
-#viewStudentModal .sd3-wrap > .col-md-3.sd3-col .d-flex > .detail-group:nth-child(3) .detail-value {
- color: #ffffff !important;
+#viewStudentModal .pmt-box .detail-value {
+ font-size: 0.92rem !important;
+ font-weight: 700 !important;
+ display: flex !important;
+ align-items: baseline !important;
+ gap: 4px !important;
 }
 
-#viewStudentModal .sd3-wrap > .col-md-3.sd3-col .d-flex > .detail-group:nth-child(4) {
- background: #e2e8f0;
+#viewStudentModal .pmt-box .currency-label {
+ font-size: 0.68rem !important;
+ font-weight: 500 !important;
+ opacity: 0.75 !important;
+}
+
+/* Default Theme (Dark Theme States) */
+#viewStudentModal .bal-positive-box {
+ background: rgba(22, 163, 74, 0.15) !important;
+ border-left: 3px solid #4ade80 !important;
+}
+#viewStudentModal .bal-positive-box .detail-label,
+#viewStudentModal .bal-positive-box .detail-value {
+ color: #a7f3d0 !important;
+}
+
+#viewStudentModal .bal-negative-box {
+ background: rgba(220, 38, 38, 0.15) !important;
+ border-left: 3px solid #ef4444 !important;
+}
+#viewStudentModal .bal-negative-box .detail-label,
+#viewStudentModal .bal-negative-box .detail-value {
+ color: #fca5a5 !important;
+}
+
+#viewStudentModal .bal-zero-box {
+ background: rgba(107, 114, 128, 0.15) !important;
+ border-left: 3px solid #9ca3af !important;
+}
+#viewStudentModal .bal-zero-box .detail-label,
+#viewStudentModal .bal-zero-box .detail-value {
+ color: #d1d5db !important;
+}
+
+#viewStudentModal .pmt-done-box {
+ background: rgba(22, 163, 74, 0.15) !important;
+ border-left: 3px solid #4ade80 !important;
+}
+#viewStudentModal .pmt-done-box .detail-label,
+#viewStudentModal .pmt-done-box .detail-value {
+ color: #a7f3d0 !important;
+}
+
+#viewStudentModal .discount-box {
+ background: rgba(217, 119, 6, 0.15) !important;
+ border-left: 3px solid #fb923c !important;
+}
+#viewStudentModal .discount-box .detail-label,
+#viewStudentModal .discount-box .detail-value {
+ color: #fed7aa !important;
+}
+
+/* Day Mode Theme (Light Theme States) */
+[data-bs-theme="light"] #viewStudentModal .bal-positive-box {
+ background: rgba(22, 163, 74, 0.08) !important;
+ border-left: 3px solid #16a34a !important;
+}
+[data-bs-theme="light"] #viewStudentModal .bal-positive-box .detail-label,
+[data-bs-theme="light"] #viewStudentModal .bal-positive-box .detail-value {
+ color: #15803d !important;
+}
+
+[data-bs-theme="light"] #viewStudentModal .bal-negative-box {
+ background: rgba(220, 38, 38, 0.08) !important;
+ border-left: 3px solid #dc2626 !important;
+}
+[data-bs-theme="light"] #viewStudentModal .bal-negative-box .detail-label,
+[data-bs-theme="light"] #viewStudentModal .bal-negative-box .detail-value {
+ color: #b91c1c !important;
+}
+
+[data-bs-theme="light"] #viewStudentModal .bal-zero-box {
+ background: rgba(107, 114, 128, 0.08) !important;
+ border-left: 3px solid #6b7280 !important;
+}
+[data-bs-theme="light"] #viewStudentModal .bal-zero-box .detail-label,
+[data-bs-theme="light"] #viewStudentModal .bal-zero-box .detail-value {
+ color: #4b5563 !important;
+}
+
+[data-bs-theme="light"] #viewStudentModal .pmt-done-box {
+ background: rgba(22, 163, 74, 0.08) !important;
+ border-left: 3px solid #16a34a !important;
+}
+[data-bs-theme="light"] #viewStudentModal .pmt-done-box .detail-label,
+[data-bs-theme="light"] #viewStudentModal .pmt-done-box .detail-value {
+ color: #15803d !important;
+}
+
+[data-bs-theme="light"] #viewStudentModal .discount-box {
+ background: rgba(217, 119, 6, 0.08) !important;
+ border-left: 3px solid #d97706 !important;
+}
+[data-bs-theme="light"] #viewStudentModal .discount-box .detail-label,
+[data-bs-theme="light"] #viewStudentModal .discount-box .detail-value {
+ color: #b45309 !important;
 }
 
 @media (max-width: 992px) {
@@ -821,7 +927,7 @@
 
 [data-bs-theme="dark"] #viewStudentModal .modal-content {
  border-color: var(--border-default);
- box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+ box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 [data-bs-theme="dark"] #viewStudentModal .modal-header,
@@ -830,9 +936,7 @@
 }
 
 [data-bs-theme="dark"] #viewStudentModal .modal-body {
- background:
-  radial-gradient(circle at 0 0, rgba(96, 165, 250, 0.1), transparent 28rem),
-  var(--bg-primary);
+ background: var(--bg-primary);
 }
 
 [data-bs-theme="dark"] #viewStudentModal .btn-close {
@@ -857,10 +961,10 @@
 }
 
 [data-bs-theme="dark"] #viewStudentModal .detail-group {
- background: rgba(50, 50, 50, 0.92);
+ background: var(--bg-elevated);
  border-color: var(--border-default);
  color: var(--text-primary);
- box-shadow: 0 8px 20px rgba(0, 0, 0, 0.24);
+ box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 [data-bs-theme="dark"] #viewStudentModal .copy-btn,
@@ -884,9 +988,7 @@
  border-color: var(--border-default);
 }
 
-[data-bs-theme="dark"] #viewStudentModal .sd3-wrap > .col-md-3.sd3-col .d-flex > .detail-group:nth-child(4) {
- background: var(--bg-card);
-}
+/* Custom Discount styling is now handled dynamically by the .discount-box class state */
 
 /* ============================================================
   STICKY TABLE HEADERS - PREMIUM FIXED SCROLL SYSTEM
@@ -1311,80 +1413,74 @@ h1, h2, h3, h4, h5, h6,
    MICROSOFT LUMIA SIGNATURE MOTION DESIGN
    ========================================== */
 
-/* 1. Turnstile Animation Keyframes */
+/* 1. Flat Slide and Fade Animation Keyframes */
 @keyframes lumiaTurnstileIn {
   0% {
     opacity: 0;
-    transform: perspective(1200px) rotateY(-35deg) scale(0.92) translateZ(-80px);
-    transform-origin: left center;
+    transform: translateY(10px) scale(0.99);
   }
   100% {
     opacity: 1;
-    transform: perspective(1200px) rotateY(0deg) scale(1) translateZ(0);
-    transform-origin: left center;
+    transform: translateY(0) scale(1);
   }
 }
 
 @keyframes lumiaTurnstileOut {
   0% {
     opacity: 1;
-    transform: perspective(1200px) rotateY(0deg) scale(1) translateZ(0);
-    transform-origin: right center;
+    transform: translateY(0) scale(1);
   }
   100% {
     opacity: 0;
-    transform: perspective(1200px) rotateY(35deg) scale(0.92) translateZ(-80px);
-    transform-origin: right center;
+    transform: translateY(-10px) scale(0.99);
   }
 }
 
 .lumia-turnstile-in {
-  animation: lumiaTurnstileIn 0.38s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
-  backface-visibility: hidden;
+  animation: lumiaTurnstileIn 0.25s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
 }
 
 .lumia-turnstile-out {
-  animation: lumiaTurnstileOut 0.30s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
-  backface-visibility: hidden;
+  animation: lumiaTurnstileOut 0.20s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
 }
 
-/* 2. Signature Lumia 3D Swing Turnstile for Bootstrap Modals */
+/* 2. Flat Modern Transition for Bootstrap Modals */
 .modal.fade .modal-dialog {
-  transition: transform 0.45s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.45s ease !important;
-  transform: perspective(1200px) rotateY(-30deg) scale(0.85) translateZ(-100px) !important;
-  transform-origin: left center !important;
+  transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.25s ease-out !important;
+  transform: translateY(20px) scale(0.98) !important;
   opacity: 0 !important;
 }
 
-.modal.show .modal-dialog {
-  transform: perspective(1200px) rotateY(0deg) scale(1) translateZ(0) !important;
-  transform-origin: left center !important;
+.modal.fade.show .modal-dialog {
+  transform: translateY(0) scale(1) !important;
   opacity: 1 !important;
 }
 
-/* Smooth custom overlay backdrops */
+/* Smooth solid custom overlay backdrops (No glassmorphic blur) */
 .modal-backdrop {
-  background-color: rgba(0, 0, 0, 0.4) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  transition: opacity 0.3s cubic-bezier(0.1, 0.9, 0.2, 1) !important;
+  background-color: rgba(0, 0, 0, 0.55) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: opacity 0.2s ease !important;
 }
 
-/* Custom Detail Group & Label Modernization */
+/* Custom Detail Group - Modern FLAT & Solid Theme */
 .detail-group {
-  background: rgba(255, 255, 255, 0.02) !important;
-  border-left: 3px solid #0078d4; /* No !important here to let inline status colors override */
-  border-radius: 12px !important;
+  background: var(--bg-card) !important; /* Theme-based solid background */
+  border: 1px solid var(--border-default) !important; /* Clean flat border */
+  border-left: 3px solid #0078d4 !important; /* Highlight left accent */
+  border-radius: 8px !important;
   padding: 8px 12px !important;
   min-height: 58px !important;
-  transition: all 0.25s ease !important;
+  transition: all 0.2s ease !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: center !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important; /* Extremely flat subtle shadow */
 }
 
 .detail-group:hover {
-  background: rgba(255, 255, 255, 0.04) !important;
+  background: var(--bg-elevated) !important; /* Solid theme-based hover */
 }
 
 .detail-label {
@@ -1395,5 +1491,19 @@ h1, h2, h3, h4, h5, h6,
   letter-spacing: 0.05em !important;
   margin-bottom: 4px !important;
   display: block !important;
+}
+
+/* Ensure missing-field-highlight override takes absolute precedence over general detail-group styling */
+.detail-group.missing-field-highlight {
+  background: rgba(220, 38, 38, 0.06) !important;
+  border: 1px solid rgba(220, 38, 38, 0.4) !important;
+  border-left: 3px solid #dc2626 !important; /* Flat strong red left border */
+  animation: blink-red 2.5s infinite ease-in-out !important;
+}
+
+[data-bs-theme="dark"] .detail-group.missing-field-highlight {
+  background: rgba(220, 38, 38, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  border-left: 3px solid #ef4444 !important;
 }
 

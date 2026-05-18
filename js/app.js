@@ -1566,9 +1566,9 @@ function viewStudentDetails(uniqueId) {
       <div class="col-md-4 sd3-col">
         <div class="row g-2">
           <div class="col-12"><div class="detail-group editable ${(!s.id || s.id === "-") ? "missing-field-highlight" : ""}" data-field="id"><label class="detail-label">Student ID</label><div class="detail-value-wrap"><span class="detail-value">${s.id}</span><button class="edit-btn" onclick="startEdit('id','text');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div><div class="edit-field" style="display:none;"><input type="text" class="form-control ios-input form-control-sm" value="${s.id}" id="edit-id"><div class="edit-actions"><button class="save-btn" onclick="saveEdit('id')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('id')"><i class="bi bi-x"></i></button></div></div></div></div>
-          <div class="col-12"><div class="detail-group editable ${(!s.tariff || s.tariff === "") ? "missing-field-highlight" : ""}" data-field="tariff"><label class="detail-label">Tariff</label><div class="detail-value-wrap"><span class="detail-value"><span class="badge badge-tariff">${s.tariff}</span></span><button class="edit-btn" onclick="startEdit('tariff','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div><div class="edit-field" style="display:none;"><select class="form-select ios-input form-control-sm" id="edit-tariff">${tariffOptions}</select><div class="edit-actions"><button class="save-btn" onclick="saveEdit('tariff')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('tariff')"><i class="bi bi-x"></i></button></div></div></div></div>
-          <div class="col-12"><div class="detail-group editable ${(!s.group || s.group === "") ? "missing-field-highlight" : ""}" data-field="group"><label class="detail-label">Group</label><div class="detail-value-wrap"><span class="detail-value"><span class="badge badge-group">${s.group||'No Group'}</span></span><button class="edit-btn" onclick="startEdit('group','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div><div class="edit-field" style="display:none;"><select class="form-select ios-input form-control-sm" id="edit-group"><option value="">No Group</option>${groupOptions}</select><div class="edit-actions"><button class="save-btn" onclick="saveEdit('group')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('group')"><i class="bi bi-x"></i></button></div></div></div></div>
-          <div class="col-12"><div class="detail-group editable ${(!s.level || s.level === "") ? "missing-field-highlight" : ""}" data-field="level"><label class="detail-label">Education Level</label><div class="detail-value-wrap"><span class="detail-value"><span class="badge badge-level">${s.level}</span></span><button class="edit-btn" onclick="startEdit('level','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div><div class="edit-field" style="display:none;"><select class="form-select ios-input form-control-sm" id="edit-level">${levelOptions}</select><div class="edit-actions"><button class="save-btn" onclick="saveEdit('level')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('level')"><i class="bi bi-x"></i></button></div></div></div></div>
+          <div class="col-12"><div class="detail-group editable ${(!s.tariff || s.tariff === "" || s.tariff === "-") ? "missing-field-highlight" : ""}" data-field="tariff"><label class="detail-label">Tariff</label><div class="detail-value-wrap"><span class="detail-value"><span class="badge badge-tariff">${s.tariff}</span></span><button class="edit-btn" onclick="startEdit('tariff','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div><div class="edit-field" style="display:none;"><select class="form-select ios-input form-control-sm" id="edit-tariff">${tariffOptions}</select><div class="edit-actions"><button class="save-btn" onclick="saveEdit('tariff')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('tariff')"><i class="bi bi-x"></i></button></div></div></div></div>
+          <div class="col-12"><div class="detail-group editable ${(!s.group || s.group === "" || s.group === "-" || s.group === "No Group") ? "missing-field-highlight" : ""}" data-field="group"><label class="detail-label">Group</label><div class="detail-value-wrap"><span class="detail-value"><span class="badge badge-group">${s.group||'No Group'}</span></span><button class="edit-btn" onclick="startEdit('group','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div><div class="edit-field" style="display:none;"><select class="form-select ios-input form-control-sm" id="edit-group"><option value="">No Group</option>${groupOptions}</select><div class="edit-actions"><button class="save-btn" onclick="saveEdit('group')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('group')"><i class="bi bi-x"></i></button></div></div></div></div>
+          <div class="col-12"><div class="detail-group editable ${(!s.level || s.level === "" || s.level === "-") ? "missing-field-highlight" : ""}" data-field="level"><label class="detail-label">Education Level</label><div class="detail-value-wrap"><span class="detail-value"><span class="badge badge-level">${s.level}</span></span><button class="edit-btn" onclick="startEdit('level','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div><div class="edit-field" style="display:none;"><select class="form-select ios-input form-control-sm" id="edit-level">${levelOptions}</select><div class="edit-actions"><button class="save-btn" onclick="saveEdit('level')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('level')"><i class="bi bi-x"></i></button></div></div></div></div>
           <div class="col-12">
             <div class="detail-group" style="padding-top: 2px;">
               <label class="detail-label text-danger" style="font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">Missing documents</label>
@@ -1630,8 +1630,9 @@ function viewStudentDetails(uniqueId) {
             [1, 2, 3].map(function(n) {
               var uniVal = s['university' + n] || '';
               var uniSt  = s['university' + n + 'Status'] || 'Chosen';
+              var isMissing = (!uniVal || uniVal === '-' || uniVal === '');
               return '<div class="col-4">' +
-                '<div class="detail-group editable" data-field="university' + n + '">' +
+                '<div class="detail-group editable ' + (isMissing ? 'missing-field-highlight' : '') + '" data-field="university' + n + '">' +
                   '<label class="detail-label">University ' + n + '</label>' +
                   '<div class="detail-value-wrap">' +
                     '<div style="display:flex;flex-direction:column;gap:0;flex:1;min-width:0;">' +
@@ -1673,24 +1674,24 @@ function viewStudentDetails(uniqueId) {
           const office=s.office||"—";
           const fmt=(n)=>new Intl.NumberFormat("en-US").format(Math.abs(n));
           const balSign=balance>0?"+":balance<0?"-":"";
-          const balColor=balance>0?"#16a34a":balance<0?"#dc2626":"#6b7280";
+          const balClass=balance>0?"bal-positive-box":balance<0?"bal-negative-box":"bal-zero-box";
           return `<div class="d-flex flex-column gap-2">
             <div class="detail-group editable" data-field="office" style="border-left:3px solid #5b8def;">
               <label class="detail-label"><i class="bi bi-geo-alt-fill me-1" style="color:#5b8def;"></i>Office</label>
               <div class="detail-value-wrap"><span class="detail-value" style="font-size:0.85rem;">${office}</span><button class="edit-btn" onclick="startEdit('office','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div>
               <div class="edit-field" style="display:none;"><select class="form-select ios-input form-control-sm" id="edit-office"><option value="" ${!s.office?"selected":""}>Select office...</option><option value="ANDIJON OFFIS" ${s.office==="ANDIJON OFFIS"?"selected":""}>ANDIJON OFFIS</option><option value="TOSHKENT OFFIS" ${s.office==="TOSHKENT OFFIS"?"selected":""}>TOSHKENT OFFIS</option></select><div class="edit-actions"><button class="save-btn" onclick="saveEdit('office')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('office')"><i class="bi bi-x"></i></button></div></div>
             </div>
-            <div class="detail-group" style="border-left:3px solid ${balColor};">
+            <div class="detail-group pmt-box ${balClass}">
               <label class="detail-label"><i class="bi bi-wallet2 me-1"></i>Student Balance</label>
-              <span class="detail-value" style="font-size:0.9rem;font-weight:700;color:${balColor};">${balSign}${fmt(balance)} <span style="font-size:0.7rem;font-weight:400;opacity:0.7;">UZS</span></span>
+              <span class="detail-value">${balSign}${fmt(balance)} <span class="currency-label">UZS</span></span>
             </div>
-            <div class="detail-group" style="border-left:3px solid #16a34a;">
-              <label class="detail-label"><i class="bi bi-check-circle me-1" style="color:#16a34a;"></i>Payments Done</label>
-              <span class="detail-value" style="font-size:0.9rem;font-weight:700;color:#16a34a;">+${fmt(paymentsDone)} <span style="font-size:0.7rem;font-weight:400;opacity:0.7;">UZS</span></span>
+            <div class="detail-group pmt-box pmt-done-box">
+              <label class="detail-label"><i class="bi bi-check-circle me-1"></i>Payments Done</label>
+              <span class="detail-value">+${fmt(paymentsDone)} <span class="currency-label">UZS</span></span>
             </div>
-            <div class="detail-group" style="border-left:3px solid #d97706;">
-              <label class="detail-label"><i class="bi bi-tag me-1" style="color:#d97706;"></i>Discount</label>
-              <span class="detail-value" style="font-size:0.9rem;font-weight:700;color:#d97706;">${fmt(discount)} <span style="font-size:0.7rem;font-weight:400;opacity:0.7;">UZS</span></span>
+            <div class="detail-group pmt-box discount-box">
+              <label class="detail-label"><i class="bi bi-tag me-1"></i>Discount</label>
+              <span class="detail-value">${fmt(discount)} <span class="currency-label">UZS</span></span>
             </div>
           </div>`;
         })()}
