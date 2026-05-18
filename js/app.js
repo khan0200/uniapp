@@ -1586,6 +1586,38 @@ function viewStudentDetails(uniqueId) {
       <div class="col-md-5 sd3-col">
         <div class="row g-2">
           <div class="col-12"><div class="detail-group editable ${(!s.fullName || s.fullName === "") ? "missing-field-highlight" : ""}" data-field="fullName"><label class="detail-label">Full Name</label><div class="detail-value-wrap"><span class="detail-value">${s.fullName}</span><div class="action-btns"><button class="copy-btn" onclick="copyToClipboard('${s.fullName.replace(/'/g,"\\'")}',this);event.stopPropagation();"><i class="bi bi-clipboard"></i></button><button class="edit-btn" onclick="startEdit('fullName','text');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><input type="text" class="form-control ios-input form-control-sm" value="${s.fullName}" id="edit-fullName" style="text-transform:uppercase;"><div class="edit-actions"><button class="save-btn" onclick="saveEdit('fullName')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('fullName')"><i class="bi bi-x"></i></button></div></div></div></div>
+          ${(() => {
+            const cleanName = (s.fullName || "").trim();
+            const parts = cleanName.split(/\s+/).filter(Boolean);
+            const familyName = parts[0] || "-";
+            const givenName = parts.slice(1).join(" ") || "-";
+            const escapedFamily = familyName.replace(/'/g, "\\'");
+            const escapedGiven = givenName.replace(/'/g, "\\'");
+            return `
+              <div class="col-6 mt-1">
+                <div class="detail-group" style="background: rgba(255, 255, 255, 0.02); border-left: 3px solid var(--accent-primary); border-radius: 12px; padding: 8px 12px; min-height: 58px;">
+                  <label class="detail-label text-primary" style="font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em;">Family Name <span class="badge bg-secondary-subtle text-secondary ms-1" style="font-size: 0.58rem; font-weight: normal; vertical-align: middle;">Auto</span></label>
+                  <div class="detail-value-wrap">
+                    <span class="detail-value text-uppercase" style="font-weight: 500; font-size: 0.85rem;">${familyName}</span>
+                    <div class="action-btns">
+                      <button class="copy-btn" onclick="copyToClipboard('${escapFamily}',this);event.stopPropagation();" title="Copy Family Name"><i class="bi bi-clipboard"></i></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6 mt-1">
+                <div class="detail-group" style="background: rgba(255, 255, 255, 0.02); border-left: 3px solid var(--accent-primary); border-radius: 12px; padding: 8px 12px; min-height: 58px;">
+                  <label class="detail-label text-primary" style="font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em;">Given Name <span class="badge bg-secondary-subtle text-secondary ms-1" style="font-size: 0.58rem; font-weight: normal; vertical-align: middle;">Auto</span></label>
+                  <div class="detail-value-wrap">
+                    <span class="detail-value text-uppercase" style="font-weight: 500; font-size: 0.85rem;">${givenName}</span>
+                    <div class="action-btns">
+                      <button class="copy-btn" onclick="copyToClipboard('${escapGiven}',this);event.stopPropagation();" title="Copy Given Name"><i class="bi bi-clipboard"></i></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          })()}
           <div class="col-3"><div class="detail-group editable ${(!s.phone1 || s.phone1 === "-" || s.phone1 === "") ? "missing-field-highlight" : ""}" data-field="phone1"><label class="detail-label">Phone 1</label><div class="detail-value-wrap"><span class="detail-value">${s.phone1}</span><div class="action-btns"><button class="copy-btn" onclick="copyToClipboard('${s.phone1}',this);event.stopPropagation();"><i class="bi bi-clipboard"></i></button><button class="edit-btn" onclick="startEdit('phone1','text');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><input type="text" class="form-control ios-input form-control-sm" value="${s.phone1}" id="edit-phone1" placeholder="00-000-00-00" oninput="formatPhoneInline(this)"><div class="edit-actions"><button class="save-btn" onclick="saveEdit('phone1')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('phone1')"><i class="bi bi-x"></i></button></div></div></div></div>
           <div class="col-3"><div class="detail-group editable ${(!s.phone2 || s.phone2 === "-" || s.phone2 === "") ? "missing-field-highlight" : ""}" data-field="phone2"><label class="detail-label">Phone 2</label><div class="detail-value-wrap"><span class="detail-value">${s.phone2||"-"}</span><div class="action-btns">${s.phone2?`<button class="copy-btn" onclick="copyToClipboard('${s.phone2}',this);event.stopPropagation();"><i class="bi bi-clipboard"></i></button>`:""}<button class="edit-btn" onclick="startEdit('phone2','text');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><input type="text" class="form-control ios-input form-control-sm" value="${s.phone2||""}" id="edit-phone2" placeholder="00-000-00-00" oninput="formatPhoneInline(this)"><div class="edit-actions"><button class="save-btn" onclick="saveEdit('phone2')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('phone2')"><i class="bi bi-x"></i></button></div></div></div></div>
           <div class="col-6"><div class="detail-group editable ${(!s.email || s.email === "-" || s.email === "") ? "missing-field-highlight" : ""}" data-field="email"><label class="detail-label">Email</label><div class="detail-value-wrap"><span class="detail-value">${s.email||"-"}</span><div class="action-btns">${s.email?`<button class="copy-btn" onclick="copyToClipboard('${s.email}',this);event.stopPropagation();"><i class="bi bi-clipboard"></i></button>`:""}<button class="edit-btn" onclick="startEdit('email','text');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><input type="email" class="form-control ios-input form-control-sm" value="${s.email||""}" id="edit-email" placeholder="student@email.com"><div class="edit-actions"><button class="save-btn" onclick="saveEdit('email')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('email')"><i class="bi bi-x"></i></button></div></div></div></div>
