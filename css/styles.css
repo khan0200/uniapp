@@ -1370,3 +1370,30 @@ h1, h2, h3, h4, h5, h6,
   transition: opacity 0.3s cubic-bezier(0.1, 0.9, 0.2, 1) !important;
 }
 
+/* Custom Detail Group & Label Modernization */
+.detail-group {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-left: 3px solid #0078d4; /* No !important here to let inline status colors override */
+  border-radius: 12px !important;
+  padding: 8px 12px !important;
+  min-height: 58px !important;
+  transition: all 0.25s ease !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+.detail-group:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.detail-label {
+  color: #0078d4 !important; /* Premium Fluent/Lumia Blue */
+  font-weight: 600 !important;
+  font-size: 0.72rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  margin-bottom: 4px !important;
+  display: block !important;
+}
+

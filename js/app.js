@@ -1595,8 +1595,8 @@ function viewStudentDetails(uniqueId) {
             const escapedGiven = givenName.replace(/'/g, "\\'");
             return `
               <div class="col-6 mt-1">
-                <div class="detail-group" style="background: rgba(255, 255, 255, 0.02); border-left: 3px solid var(--accent-primary); border-radius: 12px; padding: 8px 12px; min-height: 58px;">
-                  <label class="detail-label text-primary" style="font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em;">Family Name <span class="badge bg-secondary-subtle text-secondary ms-1" style="font-size: 0.58rem; font-weight: normal; vertical-align: middle;">Auto</span></label>
+                <div class="detail-group">
+                  <label class="detail-label">Family Name <span class="badge bg-secondary-subtle text-secondary ms-1" style="font-size: 0.58rem; font-weight: normal; vertical-align: middle;">Auto</span></label>
                   <div class="detail-value-wrap">
                     <span class="detail-value text-uppercase" style="font-weight: 500; font-size: 0.85rem;">${familyName}</span>
                     <div class="action-btns">
@@ -1606,8 +1606,8 @@ function viewStudentDetails(uniqueId) {
                 </div>
               </div>
               <div class="col-6 mt-1">
-                <div class="detail-group" style="background: rgba(255, 255, 255, 0.02); border-left: 3px solid var(--accent-primary); border-radius: 12px; padding: 8px 12px; min-height: 58px;">
-                  <label class="detail-label text-primary" style="font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em;">Given Name <span class="badge bg-secondary-subtle text-secondary ms-1" style="font-size: 0.58rem; font-weight: normal; vertical-align: middle;">Auto</span></label>
+                <div class="detail-group">
+                  <label class="detail-label">Given Name <span class="badge bg-secondary-subtle text-secondary ms-1" style="font-size: 0.58rem; font-weight: normal; vertical-align: middle;">Auto</span></label>
                   <div class="detail-value-wrap">
                     <span class="detail-value text-uppercase" style="font-weight: 500; font-size: 0.85rem;">${givenName}</span>
                     <div class="action-btns">
