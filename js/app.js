@@ -7984,6 +7984,13 @@ function initMultiSelect(selectId, placeholder) {
     wrapper.id = wrapperId;
     wrapper.className = 'custom-multiselect';
     
+    // Copy classes from the native select to the wrapper (excluding styling classes like form-select)
+    Array.from(select.classList).forEach(cls => {
+      if (cls !== 'form-select' && cls !== 'form-control' && cls !== 'ios-input' && cls !== 'filter-input') {
+        wrapper.classList.add(cls);
+      }
+    });
+
     // Add specific tag class for styling if tags filter
     if (selectId === 'filterTags') {
       wrapper.classList.add('tag-filter-item');
