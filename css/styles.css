@@ -1645,12 +1645,14 @@ h1, h2, h3, h4, h5, h6,
   padding-left: 2.25rem !important;
 }
 
-/* Ensure compact multiselect filters in payments tab align in the same row with searchbar */
+/* Ensure compact multiselect filters in payments tab align in the same row and grow proportionally to fill space */
+.filter-select-compact,
 .custom-multiselect.filter-select-compact {
-  width: 180px !important;
-  max-width: 180px !important;
-  flex: 0 0 180px !important;
+  flex: 1 1 180px !important;
+  max-width: 240px !important;
+  width: auto !important;
 }
+
 
 
 
