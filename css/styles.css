@@ -1507,3 +1507,143 @@ h1, h2, h3, h4, h5, h6,
   border-left: 3px solid #ef4444 !important;
 }
 
+/* ============================================================
+  PREMIUM CUSTOM MULTI-SELECT DROPDOWNS
+  ============================================================ */
+.custom-multiselect {
+  position: relative;
+  width: 100%;
+}
+
+.custom-multiselect-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  height: 38px !important;
+  padding: 0.375rem 2.25rem 0.375rem 0.75rem !important;
+  font-size: 0.85rem !important;
+  font-weight: 500 !important;
+  line-height: 1.5 !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-elevated) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: 12px !important;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  user-select: none !important;
+}
+
+.custom-multiselect-btn::after {
+  content: "";
+  display: inline-block;
+  width: 0.4em;
+  height: 0.4em;
+  margin-left: 0.255em;
+  vertical-align: 0.255em;
+  border-top: 0.3em solid;
+  border-right: 0.3em solid transparent;
+  border-bottom: 0;
+  border-left: 0.3em solid transparent;
+  color: var(--text-tertiary);
+  transition: transform 0.15s ease;
+}
+
+.custom-multiselect.open .custom-multiselect-btn::after {
+  transform: rotate(180deg);
+}
+
+.custom-multiselect-btn:focus {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+  outline: 0 !important;
+}
+
+.custom-multiselect-dropdown {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  z-index: 1050 !important;
+  display: none;
+  width: 100% !important;
+  min-width: 210px !important;
+  max-height: 280px !important;
+  overflow-y: auto !important;
+  margin-top: 6px !important;
+  padding: 6px !important;
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+
+.custom-multiselect.open .custom-multiselect-dropdown {
+  display: block !important;
+}
+
+.custom-multiselect-option {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 6px 10px !important;
+  font-size: 0.82rem !important;
+  color: var(--text-secondary) !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: background 0.15s ease !important;
+  user-select: none !important;
+}
+
+.custom-multiselect-option:hover {
+  background-color: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+}
+
+.custom-multiselect-option.selected {
+  background-color: rgba(37, 99, 235, 0.08) !important;
+  color: var(--accent-primary) !important;
+  font-weight: 600 !important;
+}
+
+.custom-multiselect-option input[type="checkbox"] {
+  width: 15px !important;
+  height: 15px !important;
+  margin: 0 !important;
+  border-radius: 4px !important;
+  border: 1px solid var(--border-default) !important;
+  background-color: transparent !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+}
+
+.custom-multiselect-option input[type="checkbox"]:checked {
+  background-color: var(--accent-primary) !important;
+  border-color: var(--accent-primary) !important;
+}
+
+.custom-multiselect-divider {
+  height: 1px;
+  background-color: var(--border-subtle);
+  margin: 6px 2px;
+}
+
+.custom-multiselect-option.all-option {
+  font-weight: 600 !important;
+  color: var(--text-primary) !important;
+}
+
+/* Specific styling adjust for tag filters item */
+.tag-filter-item .custom-multiselect-btn {
+  min-width: 160px;
+}
+
+/* Fix overlapping text with absolute positioned filter icons */
+.filter-item .custom-multiselect-btn {
+  padding-left: 2.25rem !important;
+}
+
+
+

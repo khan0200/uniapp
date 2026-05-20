@@ -790,7 +790,7 @@ function getDocStatusHtml(s, docName) {
 }
 
 function filterDocuments(resetPage = true) {
-  if (resetPage) {
+  if (resetPage === true || (resetPage && typeof resetPage === 'object')) {
     documentsPage = 1;
   }
 
@@ -800,28 +800,18 @@ function filterDocuments(resetPage = true) {
   const searchTypeDropdown = document.getElementById("headerSearchType") || document.getElementById("documentsSearchType");
   const searchType = searchTypeDropdown ? searchTypeDropdown.value : "all";
 
-  const tariffDropdown = document.getElementById("documentsFilterTariff");
-  const tariffFilter = tariffDropdown ? tariffDropdown.value : "";
-
-  const levelDropdown = document.getElementById("documentsFilterLevel");
-  const levelFilter = levelDropdown ? levelDropdown.value : "";
-
-  const groupDropdown = document.getElementById("documentsFilterGroup");
-  const groupFilter = groupDropdown ? groupDropdown.value : "";
-
-  const languageCertificateDropdown = document.getElementById("documentsFilterLanguageCertificate");
-  const languageCertificateFilter = languageCertificateDropdown ? languageCertificateDropdown.value : "";
-
-  const missingDocsDropdown = document.getElementById("filterMissingDocs");
-  const missingDocsFilter = missingDocsDropdown ? missingDocsDropdown.value : "";
+  const tariffFilter = getSelectValues("documentsFilterTariff");
+  const levelFilter = getSelectValues("documentsFilterLevel");
+  const groupFilter = getSelectValues("documentsFilterGroup");
+  const languageCertificateFilter = getSelectValues("documentsFilterLanguageCertificate");
+  const missingDocsFilter = getSelectValues("filterMissingDocs");
 
   const filtered = (window.studentsData || []).filter((s) => {
     // Handle deleted students filter
-    if (levelFilter === "DELETED") {
-      // Only show deleted students
+    const showDeleted = levelFilter.includes("DELETED");
+    if (showDeleted) {
       if (s.deleted !== true) return false;
     } else {
-      // Hide deleted students from normal filters
       if (s.deleted) return false;
     }
 
@@ -859,51 +849,65 @@ function filterDocuments(resetPage = true) {
     }
 
     // Tariff filter - handle "No Tariff" special case
-    let matchesTariff;
-    if (!tariffFilter) {
+    let matchesTariff = false;
+    if (tariffFilter.length === 0) {
       matchesTariff = true;
-    } else if (tariffFilter === "NO_TARIFF") {
-      matchesTariff = !s.tariff || s.tariff === "";
     } else {
-      matchesTariff = s.tariff === tariffFilter;
+      if (tariffFilter.includes("NO_TARIFF") && (!s.tariff || s.tariff === "")) {
+        matchesTariff = true;
+      }
+      if (s.tariff && tariffFilter.includes(s.tariff)) {
+        matchesTariff = true;
+      }
     }
 
     // Level filter - handle "No Level" special case
-    let matchesLevel;
-    if (!levelFilter || levelFilter === "DELETED") {
+    let matchesLevel = false;
+    const activeLevels = levelFilter.filter(l => l !== "DELETED");
+    if (activeLevels.length === 0) {
       matchesLevel = true;
-    } else if (levelFilter === "NO_LEVEL") {
-      matchesLevel = !s.level || s.level === "";
     } else {
-      matchesLevel = s.level === levelFilter;
+      if (activeLevels.includes("NO_LEVEL") && (!s.level || s.level === "")) {
+        matchesLevel = true;
+      }
+      if (s.level && activeLevels.includes(s.level)) {
+        matchesLevel = true;
+      }
     }
 
     // Group filter - handle "No Group" special case
-    let matchesGroup;
-    if (!groupFilter) {
+    let matchesGroup = false;
+    if (groupFilter.length === 0) {
       matchesGroup = true;
-    } else if (groupFilter === "NO_GROUP") {
-      matchesGroup = !s.group || s.group === "";
     } else {
-      matchesGroup = s.group === groupFilter;
+      if (groupFilter.includes("NO_GROUP") && (!s.group || s.group === "")) {
+        matchesGroup = true;
+      }
+      if (s.group && groupFilter.includes(s.group)) {
+        matchesGroup = true;
+      }
     }
 
-    let matchesLanguageCertificate;
-    if (!languageCertificateFilter) {
+    let matchesLanguageCertificate = false;
+    if (languageCertificateFilter.length === 0) {
       matchesLanguageCertificate = true;
     } else {
-      matchesLanguageCertificate = [
-        s.languageCertificate,
-        s.languageCertificate2,
-        s.languageCertificate3,
-      ].some((certificate) => certificate === languageCertificateFilter);
+      if (languageCertificateFilter.includes("NO CERTIFICATE")) {
+        const hasNoCert = !s.languageCertificate || s.languageCertificate === "NO CERTIFICATE";
+        if (hasNoCert) matchesLanguageCertificate = true;
+      }
+      const hasAnySelected = [s.languageCertificate, s.languageCertificate2, s.languageCertificate3]
+        .some(cert => cert && cert !== "NO CERTIFICATE" && languageCertificateFilter.includes(cert));
+      if (hasAnySelected) matchesLanguageCertificate = true;
     }
 
-    // Missing Documents filter
-    let matchesMissingDocs = true;
-    if (missingDocsFilter) {
+    // Missing Documents filter (OR logic: student has any of selected missing documents)
+    let matchesMissingDocs = false;
+    if (missingDocsFilter.length === 0) {
+      matchesMissingDocs = true;
+    } else {
       const pickNeeded = getEffectiveMissingDocs(s);
-      matchesMissingDocs = pickNeeded.includes(missingDocsFilter);
+      matchesMissingDocs = missingDocsFilter.some(doc => pickNeeded.includes(doc));
     }
 
     return matchesSearch && matchesTariff && matchesLevel && matchesGroup && matchesLanguageCertificate && matchesMissingDocs;
@@ -912,7 +916,7 @@ function filterDocuments(resetPage = true) {
   // Update Counter
   const counterEl = document.getElementById("documentsCounter");
   if (counterEl) {
-    if (searchQuery || tariffFilter || levelFilter || groupFilter || languageCertificateFilter || missingDocsFilter) {
+    if (searchQuery || tariffFilter.length > 0 || levelFilter.length > 0 || groupFilter.length > 0 || languageCertificateFilter.length > 0 || missingDocsFilter.length > 0) {
       counterEl.textContent = `Found ${filtered.length} student${filtered.length !== 1 ? "s" : ""}`;
     } else {
       counterEl.textContent = `Total ${filtered.length} student${filtered.length !== 1 ? "s" : ""}`;
@@ -2319,7 +2323,7 @@ function copyToClipboard(text, btnElement) {
 // Filter and search functionality
 function applyFilters(resetPage = true) {
   // If called from an event listener, resetPage is the event object (truthy), so we reset page
-  if (resetPage) {
+  if (resetPage === true || (resetPage && typeof resetPage === 'object')) {
     studentsPage = 1;
   }
 
@@ -2329,28 +2333,18 @@ function applyFilters(resetPage = true) {
   const searchTypeDropdown = document.getElementById("headerSearchType") || document.getElementById("searchType");
   const searchType = searchTypeDropdown ? searchTypeDropdown.value : "all";
 
-  const tariffDropdown = document.getElementById("filterTariff");
-  const tariffFilter = tariffDropdown ? tariffDropdown.value : "";
-
-  const levelDropdown = document.getElementById("filterLevel");
-  const levelFilter = levelDropdown ? levelDropdown.value : "";
-
-  const groupDropdown = document.getElementById("filterGroup");
-  const groupFilter = groupDropdown ? groupDropdown.value : "";
-
-  const languageCertificateDropdown = document.getElementById("filterLanguageCertificate");
-  const languageCertificateFilter = languageCertificateDropdown ? languageCertificateDropdown.value : "";
-
-  const tagsDropdown = document.getElementById("filterTags");
-  const tagsFilter = tagsDropdown ? tagsDropdown.value : "";
+  const tariffFilter = getSelectValues("filterTariff");
+  const levelFilter = getSelectValues("filterLevel");
+  const groupFilter = getSelectValues("filterGroup");
+  const languageCertificateFilter = getSelectValues("filterLanguageCertificate");
+  const tagsFilter = getSelectValues("filterTags");
 
   const filtered = window.studentsData.filter((s) => {
     // Handle deleted students filter
-    if (levelFilter === "DELETED") {
-      // Only show deleted students
+    const showDeleted = levelFilter.includes("DELETED");
+    if (showDeleted) {
       if (s.deleted !== true) return false;
     } else {
-      // Hide deleted students from normal filters
       if (s.deleted) return false;
     }
 
@@ -2388,58 +2382,70 @@ function applyFilters(resetPage = true) {
     }
 
     // Tariff filter - handle "No Tariff" special case
-    let matchesTariff;
-    if (!tariffFilter) {
+    let matchesTariff = false;
+    if (tariffFilter.length === 0) {
       matchesTariff = true;
-    } else if (tariffFilter === "NO_TARIFF") {
-      matchesTariff = !s.tariff || s.tariff === "";
     } else {
-      matchesTariff = s.tariff === tariffFilter;
+      if (tariffFilter.includes("NO_TARIFF") && (!s.tariff || s.tariff === "")) {
+        matchesTariff = true;
+      }
+      if (s.tariff && tariffFilter.includes(s.tariff)) {
+        matchesTariff = true;
+      }
     }
 
     // Level filter - handle "No Level" special case
-    let matchesLevel;
-    if (!levelFilter || levelFilter === "DELETED") {
+    let matchesLevel = false;
+    const activeLevels = levelFilter.filter(l => l !== "DELETED");
+    if (activeLevels.length === 0) {
       matchesLevel = true;
-    } else if (levelFilter === "NO_LEVEL") {
-      matchesLevel = !s.level || s.level === "";
     } else {
-      matchesLevel = s.level === levelFilter;
+      if (activeLevels.includes("NO_LEVEL") && (!s.level || s.level === "")) {
+        matchesLevel = true;
+      }
+      if (s.level && activeLevels.includes(s.level)) {
+        matchesLevel = true;
+      }
     }
 
     // Group filter - handle "No Group" special case
-    let matchesGroup;
-    if (!groupFilter) {
-      // No filter selected - show all
+    let matchesGroup = false;
+    if (groupFilter.length === 0) {
       matchesGroup = true;
-    } else if (groupFilter === "NO_GROUP") {
-      // Show students with no group (undefined, null, or empty string)
-      matchesGroup = !s.group || s.group === "";
     } else {
-      // Show students matching the selected group
-      matchesGroup = s.group === groupFilter;
+      if (groupFilter.includes("NO_GROUP") && (!s.group || s.group === "")) {
+        matchesGroup = true;
+      }
+      if (s.group && groupFilter.includes(s.group)) {
+        matchesGroup = true;
+      }
     }
 
-    let matchesLanguageCertificate;
-    if (!languageCertificateFilter) {
+    let matchesLanguageCertificate = false;
+    if (languageCertificateFilter.length === 0) {
       matchesLanguageCertificate = true;
     } else {
-      matchesLanguageCertificate = [
-        s.languageCertificate,
-        s.languageCertificate2,
-        s.languageCertificate3,
-      ].some((certificate) => certificate === languageCertificateFilter);
+      if (languageCertificateFilter.includes("NO CERTIFICATE")) {
+        const hasNoCert = !s.languageCertificate || s.languageCertificate === "NO CERTIFICATE";
+        if (hasNoCert) matchesLanguageCertificate = true;
+      }
+      const hasAnySelected = [s.languageCertificate, s.languageCertificate2, s.languageCertificate3]
+        .some(cert => cert && cert !== "NO CERTIFICATE" && languageCertificateFilter.includes(cert));
+      if (hasAnySelected) matchesLanguageCertificate = true;
     }
 
-    let matchesTags = true;
-    if (tagsFilter) {
-      if (tagsFilter === "Custom") {
-        // Match if has any tag NOT in the predefined list
-        const predefined = ["Call", "Apply", "Documents", "Payment"];
-        matchesTags = s.taskTags && s.taskTags.some(t => !predefined.includes(t));
-      } else {
-        matchesTags = s.taskTags && s.taskTags.includes(tagsFilter);
-      }
+    let matchesTags = false;
+    if (tagsFilter.length === 0) {
+      matchesTags = true;
+    } else {
+      matchesTags = tagsFilter.some(tag => {
+        if (tag === "Custom") {
+          const predefined = ["Call", "Apply", "Documents", "Payment"];
+          return s.taskTags && s.taskTags.some(t => !predefined.includes(t));
+        } else {
+          return s.taskTags && s.taskTags.includes(tag);
+        }
+      });
     }
 
     return matchesSearch && matchesTariff && matchesLevel && matchesGroup && matchesLanguageCertificate && matchesTags;
@@ -2448,7 +2454,7 @@ function applyFilters(resetPage = true) {
   // Update Counter
   const counterEl = document.getElementById("studentsCounter");
   if (counterEl) {
-    if (searchQuery || tariffFilter || levelFilter || groupFilter || languageCertificateFilter || tagsFilter) {
+    if (searchQuery || tariffFilter.length > 0 || levelFilter.length > 0 || groupFilter.length > 0 || languageCertificateFilter.length > 0 || tagsFilter.length > 0) {
       counterEl.textContent = `Found ${filtered.length} student${filtered.length !== 1 ? "s" : ""}`;
     } else {
       counterEl.textContent = `Total ${filtered.length} student${filtered.length !== 1 ? "s" : ""}`;
@@ -2938,7 +2944,7 @@ function clearStatusDropdown() {
 }
 
 function applyStatusFilters(resetPage = true) {
-  if (resetPage) statusPage = 1;
+  if (resetPage === true || (resetPage && typeof resetPage === 'object')) statusPage = 1;
 
   const searchInput = document.getElementById("headerSearchInput") || document.getElementById("statusSearchInput");
   const searchQuery = searchInput ? searchInput.value.toLowerCase() : "";
@@ -2946,24 +2952,16 @@ function applyStatusFilters(resetPage = true) {
   const searchTypeDropdown = document.getElementById("headerSearchType") || document.getElementById("statusSearchType");
   const searchType = searchTypeDropdown ? searchTypeDropdown.value : "all";
 
-  const tariffDropdown = document.getElementById("statusFilterTariff");
-  const tariffFilter = tariffDropdown ? tariffDropdown.value : "";
-
-  const levelDropdown = document.getElementById("statusFilterLevel");
-  const levelFilter = levelDropdown ? levelDropdown.value : "";
-
-  const groupDropdown = document.getElementById("statusFilterGroup");
-  const groupFilter = groupDropdown ? groupDropdown.value : "";
-
-  const invoiceDropdown = document.getElementById("statusFilterInvoice");
-  const invoiceFilter = invoiceDropdown ? invoiceDropdown.value : "";
-
-  const admissionDropdown = document.getElementById("statusFilterAdmission");
-  const admissionFilter = admissionDropdown ? admissionDropdown.value : "";
+  const tariffFilter = getSelectValues("statusFilterTariff");
+  const levelFilter = getSelectValues("statusFilterLevel");
+  const groupFilter = getSelectValues("statusFilterGroup");
+  const invoiceFilter = getSelectValues("statusFilterInvoice");
+  const admissionFilter = getSelectValues("statusFilterAdmission");
 
   const filtered = window.studentsData.filter((s) => {
-    if (levelFilter === "DELETED") {
-      return s.deleted === true;
+    const showDeleted = levelFilter.includes("DELETED");
+    if (showDeleted) {
+      if (s.deleted !== true) return false;
     } else {
       if (s.deleted) return false;
     }
@@ -2998,43 +2996,61 @@ function applyStatusFilters(resetPage = true) {
     }
 
     // Tariff filter - handle "No Tariff" special case
-    let matchesTariff;
-    if (!tariffFilter) {
+    let matchesTariff = false;
+    if (tariffFilter.length === 0) {
       matchesTariff = true;
-    } else if (tariffFilter === "NO_TARIFF") {
-      matchesTariff = !s.tariff || s.tariff === "";
     } else {
-      matchesTariff = s.tariff === tariffFilter;
+      if (tariffFilter.includes("NO_TARIFF") && (!s.tariff || s.tariff === "")) {
+        matchesTariff = true;
+      }
+      if (s.tariff && tariffFilter.includes(s.tariff)) {
+        matchesTariff = true;
+      }
     }
+    
     // Level filter - handle "No Level" special case
-    let matchesLevel;
-    if (!levelFilter) {
+    let matchesLevel = false;
+    const activeLevels = levelFilter.filter(l => l !== "DELETED");
+    if (activeLevels.length === 0) {
       matchesLevel = true;
-    } else if (levelFilter === "NO_LEVEL") {
-      matchesLevel = !s.level || s.level === "";
     } else {
-      matchesLevel = s.level === levelFilter;
+      if (activeLevels.includes("NO_LEVEL") && (!s.level || s.level === "")) {
+        matchesLevel = true;
+      }
+      if (s.level && activeLevels.includes(s.level)) {
+        matchesLevel = true;
+      }
     }
 
-    let matchesGroup;
-    if (!groupFilter) {
+    let matchesGroup = false;
+    if (groupFilter.length === 0) {
       matchesGroup = true;
-    } else if (groupFilter === "NO_GROUP") {
-      matchesGroup = !s.group || s.group === "";
     } else {
-      matchesGroup = s.group === groupFilter;
+      if (groupFilter.includes("NO_GROUP") && (!s.group || s.group === "")) {
+        matchesGroup = true;
+      }
+      if (s.group && groupFilter.includes(s.group)) {
+        matchesGroup = true;
+      }
     }
 
-    // Invoice filter: student must have the selected value in their invoiceStatuses array
+    // Invoice filter: student must have at least one of the selected values in their invoiceStatuses array
     const invArr = Array.isArray(s.invoiceStatuses) ? s.invoiceStatuses : [];
-    const matchesInvoice = !invoiceFilter || invArr.includes(invoiceFilter);
+    let matchesInvoice = false;
+    if (invoiceFilter.length === 0) {
+      matchesInvoice = true;
+    } else {
+      matchesInvoice = invoiceFilter.some(inv => invArr.includes(inv));
+    }
 
-    // Admission filter: student must have the selected value in their admissionStatuses array
-    const admArr = Array.isArray(s.admissionStatuses)
-      ? s.admissionStatuses
-      : [];
-    const matchesAdmission =
-      !admissionFilter || admArr.includes(admissionFilter);
+    // Admission filter: student must have at least one of the selected values in their admissionStatuses array
+    const admArr = Array.isArray(s.admissionStatuses) ? s.admissionStatuses : [];
+    let matchesAdmission = false;
+    if (admissionFilter.length === 0) {
+      matchesAdmission = true;
+    } else {
+      matchesAdmission = admissionFilter.some(adm => admArr.includes(adm));
+    }
 
     return (
       matchesSearch &&
@@ -3049,7 +3065,7 @@ function applyStatusFilters(resetPage = true) {
   // Counter
   const counterEl = document.getElementById("statusCounter");
   if (counterEl) {
-    if (searchQuery || tariffFilter || levelFilter || groupFilter) {
+    if (searchQuery || tariffFilter.length > 0 || levelFilter.length > 0 || groupFilter.length > 0 || invoiceFilter.length > 0 || admissionFilter.length > 0) {
       counterEl.textContent = `Found ${filtered.length} student${filtered.length !== 1 ? "s" : ""}`;
     } else {
       counterEl.textContent = `Total ${filtered.length} student${filtered.length !== 1 ? "s" : ""}`;
@@ -3808,7 +3824,7 @@ function renderPaymentHistory(filteredData = null) {
 
 // Filter payment students
 function filterPaymentStudents(resetPage = true) {
-  if (resetPage) paymentStudentsPage = 1;
+  if (resetPage === true || (resetPage && typeof resetPage === 'object')) paymentStudentsPage = 1;
 
   const searchType = document.getElementById("paymentSearchType")
     ? document.getElementById("paymentSearchType").value
@@ -3816,13 +3832,10 @@ function filterPaymentStudents(resetPage = true) {
   const searchTerm = document
     .getElementById("paymentSearchInput")
     .value.toLowerCase();
-  const tariffFilter = document.getElementById("paymentTariffFilter").value;
-  const balanceFilter = document.getElementById("paymentBalanceFilter")
-    ? document.getElementById("paymentBalanceFilter").value
-    : "";
-  const groupFilter = document.getElementById("paymentGroupFilter")
-    ? document.getElementById("paymentGroupFilter").value
-    : "";
+  
+  const tariffFilter = getSelectValues("paymentTariffFilter");
+  const balanceFilter = getSelectValues("paymentBalanceFilter");
+  const groupFilter = getSelectValues("paymentGroupFilter");
 
   let filtered = window.studentsData.filter((s) => !s.deleted);
 
@@ -3839,47 +3852,50 @@ function filterPaymentStudents(resetPage = true) {
   }
 
   // Apply tariff filter
-  if (tariffFilter) {
-    if (tariffFilter === "NO_TARIFF") {
-      filtered = filtered.filter((s) => !s.tariff || s.tariff === "");
-    } else {
-      filtered = filtered.filter((s) => s.tariff === tariffFilter);
-    }
+  if (tariffFilter.length > 0) {
+    filtered = filtered.filter((s) => {
+      if (tariffFilter.includes("NO_TARIFF") && (!s.tariff || s.tariff === "")) {
+        return true;
+      }
+      return s.tariff && tariffFilter.includes(s.tariff);
+    });
   }
 
   // Apply balance filter
-  if (balanceFilter) {
+  if (balanceFilter.length > 0) {
     filtered = filtered.filter((s) => {
       const balance = parseFloat(s.balance) || 0;
-
-      switch (balanceFilter) {
-        case "NEGATIVE":
-          return balance < 0;
-        case "ZERO":
-          return balance === 0;
-        case "GT_500K":
-          return balance > 500000;
-        case "GT_1M":
-          return balance > 1000000;
-        case "GT_2M":
-          return balance > 2000000;
-        case "GT_5M":
-          return balance > 5000000;
-        case "GT_10M":
-          return balance > 10000000;
-        default:
-          return true;
-      }
+      return balanceFilter.some(bf => {
+        switch (bf) {
+          case "NEGATIVE":
+            return balance < 0;
+          case "ZERO":
+            return balance === 0;
+          case "GT_500K":
+            return balance > 500000;
+          case "GT_1M":
+            return balance > 1000000;
+          case "GT_2M":
+            return balance > 2000000;
+          case "GT_5M":
+            return balance > 5000000;
+          case "GT_10M":
+            return balance > 10000000;
+          default:
+            return true;
+        }
+      });
     });
   }
 
   // Apply group filter
-  if (groupFilter) {
-    if (groupFilter === "NO_GROUP") {
-      filtered = filtered.filter((s) => !s.group || s.group === "");
-    } else {
-      filtered = filtered.filter((s) => s.group === groupFilter);
-    }
+  if (groupFilter.length > 0) {
+    filtered = filtered.filter((s) => {
+      if (groupFilter.includes("NO_GROUP") && (!s.group || s.group === "")) {
+        return true;
+      }
+      return s.group && groupFilter.includes(s.group);
+    });
   }
 
   renderPaymentStudents(filtered);
@@ -3887,7 +3903,7 @@ function filterPaymentStudents(resetPage = true) {
 
 // Filter payment history
 function filterPaymentHistory(resetPage = true) {
-  if (resetPage) paymentHistoryPage = 1;
+  if (resetPage === true || (resetPage && typeof resetPage === 'object')) paymentHistoryPage = 1;
 
   const searchType = document.getElementById("paymentHistorySearchType")
     ? document.getElementById("paymentHistorySearchType").value
@@ -3895,8 +3911,8 @@ function filterPaymentHistory(resetPage = true) {
   const searchTerm = document
     .getElementById("paymentHistorySearch")
     .value.toLowerCase();
-  const methodFilter = document.getElementById("paymentMethodFilter").value;
-  const receiverFilter = document.getElementById("receivedByFilter").value;
+  const methodFilter = getSelectValues("paymentMethodFilter");
+  const receiverFilter = getSelectValues("receivedByFilter");
 
   let filtered = [...window.paymentsData];
 
@@ -3915,13 +3931,13 @@ function filterPaymentHistory(resetPage = true) {
   }
 
   // Apply method filter
-  if (methodFilter) {
-    filtered = filtered.filter((p) => p.method === methodFilter);
+  if (methodFilter.length > 0) {
+    filtered = filtered.filter((p) => p.method && methodFilter.includes(p.method));
   }
 
   // Apply receiver filter
-  if (receiverFilter) {
-    filtered = filtered.filter((p) => p.receivedBy === receiverFilter);
+  if (receiverFilter.length > 0) {
+    filtered = filtered.filter((p) => p.receivedBy && receiverFilter.includes(p.receivedBy));
   }
 
   renderPaymentHistory(filtered);
@@ -5931,9 +5947,8 @@ function populateAdmissionsLevelFilter() {
 
 function filterAdmissions() {
   var searchInput = document.getElementById("admissionsSearchInput");
-  var levelFilter = document.getElementById("admissionsLevelFilter");
   var searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : "";
-  var selectedLevel = levelFilter ? levelFilter.value : "";
+  var levelFilter = getSelectValues("admissionsLevelFilter");
   var admissionsList = document.getElementById("admissionsList");
   var admissionsCounter = document.getElementById("admissionsCounter");
   var admissions = window.admissionsData || [];
@@ -5961,8 +5976,8 @@ function filterAdmissions() {
 
     // Level filter
     var matchesLevel = true;
-    if (selectedLevel) {
-      matchesLevel = admission.educationLevel === selectedLevel;
+    if (levelFilter.length > 0) {
+      matchesLevel = levelFilter.includes(admission.educationLevel);
     }
 
     return matchesSearch && matchesLevel;
@@ -7941,3 +7956,208 @@ function handleGlobalSearch() {
 
 window.handleGlobalSearch = handleGlobalSearch;
 window.syncSearchInputs = syncSearchInputs;
+
+// ============================================================
+// PREMIUM CUSTOM MULTI-SELECT DROPDOWNS SYSTEM
+// ============================================================
+function getSelectValues(selectId) {
+  const select = document.getElementById(selectId);
+  if (!select) return [];
+  return Array.from(select.selectedOptions)
+    .map(opt => opt.value)
+    .filter(val => val !== "");
+}
+
+function initMultiSelect(selectId, placeholder) {
+  const select = document.getElementById(selectId);
+  if (!select) return;
+
+  // Make the select multiple
+  select.multiple = true;
+  select.style.display = 'none';
+
+  // Check if custom multiselect wrapper already exists
+  const wrapperId = `multiselect-wrapper-${selectId}`;
+  let wrapper = document.getElementById(wrapperId);
+  if (!wrapper) {
+    wrapper = document.createElement('div');
+    wrapper.id = wrapperId;
+    wrapper.className = 'custom-multiselect';
+    
+    // Add specific tag class for styling if tags filter
+    if (selectId === 'filterTags') {
+      wrapper.classList.add('tag-filter-item');
+    }
+    
+    // Insert wrapper after select
+    select.parentNode.insertBefore(wrapper, select.nextSibling);
+  }
+
+  // Render the button and dropdown
+  rebuildMultiSelectUI(select, wrapper, placeholder);
+
+  // Use MutationObserver to rebuild when options change programmatically
+  if (!select.dataset.observed) {
+    select.dataset.observed = 'true';
+    const observer = new MutationObserver(() => {
+      rebuildMultiSelectUI(select, wrapper, placeholder);
+    });
+    observer.observe(select, { childList: true });
+  }
+}
+
+function rebuildMultiSelectUI(select, wrapper, placeholder) {
+  const options = Array.from(select.options);
+  const selectedValues = Array.from(select.selectedOptions).map(opt => opt.value);
+
+  // Generate label for the button
+  let btnLabel = placeholder;
+  const activeSelected = selectedValues.filter(val => val !== "");
+  const valOptions = options.filter(o => o.value !== "");
+
+  if (activeSelected.length > 0) {
+    if (activeSelected.length === 1) {
+      const opt = options.find(o => o.value === activeSelected[0]);
+      btnLabel = opt ? opt.textContent.trim() : activeSelected[0];
+    } else if (activeSelected.length === valOptions.length) {
+      btnLabel = `All ${placeholder}`;
+    } else {
+      btnLabel = `${activeSelected.length} Selected`;
+    }
+  } else {
+    btnLabel = `All ${placeholder}`;
+  }
+
+  // Create or update button
+  let btn = wrapper.querySelector('.custom-multiselect-btn');
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'custom-multiselect-btn';
+    wrapper.appendChild(btn);
+
+    // Toggle dropdown on click
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.custom-multiselect').forEach(m => {
+        if (m !== wrapper) m.classList.remove('open');
+      });
+      wrapper.classList.toggle('open');
+    });
+  }
+  btn.innerHTML = `<span class="selected-text text-truncate">${btnLabel}</span>`;
+
+  // Create or update dropdown menu
+  let dropdown = wrapper.querySelector('.custom-multiselect-dropdown');
+  if (dropdown) {
+    dropdown.remove();
+  }
+  dropdown = document.createElement('div');
+  dropdown.className = 'custom-multiselect-dropdown';
+  dropdown.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+  wrapper.appendChild(dropdown);
+
+  // "Select All" option
+  if (valOptions.length > 0) {
+    const allOptionDiv = document.createElement('div');
+    allOptionDiv.className = `custom-multiselect-option all-option ${activeSelected.length === valOptions.length ? 'selected' : ''}`;
+    const allCheckbox = document.createElement('input');
+    allCheckbox.type = 'checkbox';
+    allCheckbox.checked = activeSelected.length === valOptions.length;
+    allOptionDiv.appendChild(allCheckbox);
+    
+    const allLabel = document.createElement('span');
+    allLabel.textContent = 'Select All';
+    allOptionDiv.appendChild(allLabel);
+
+    allOptionDiv.addEventListener('click', () => {
+      const checkState = !allCheckbox.checked;
+      allCheckbox.checked = checkState;
+      valOptions.forEach(opt => {
+        opt.selected = checkState;
+      });
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    dropdown.appendChild(allOptionDiv);
+
+    const divider = document.createElement('div');
+    divider.className = 'custom-multiselect-divider';
+    dropdown.appendChild(divider);
+  }
+
+  // Add individual option elements
+  valOptions.forEach(opt => {
+    const isSelected = activeSelected.includes(opt.value);
+    const optionDiv = document.createElement('div');
+    optionDiv.className = `custom-multiselect-option ${isSelected ? 'selected' : ''}`;
+    
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = isSelected;
+    optionDiv.appendChild(checkbox);
+
+    const labelSpan = document.createElement('span');
+    if (opt.value === "DELETED") {
+      labelSpan.style.color = '#e53e3e';
+      labelSpan.style.fontStyle = 'italic';
+    }
+    labelSpan.textContent = opt.textContent;
+    optionDiv.appendChild(labelSpan);
+
+    optionDiv.addEventListener('click', () => {
+      checkbox.checked = !checkbox.checked;
+      opt.selected = checkbox.checked;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    dropdown.appendChild(optionDiv);
+  });
+}
+
+function initAllMultiSelectFilters() {
+  const filtersToInit = [
+    { id: 'filterTariff', label: 'Tariffs' },
+    { id: 'filterLevel', label: 'Levels' },
+    { id: 'filterGroup', label: 'Groups' },
+    { id: 'filterLanguageCertificate', label: 'Certificates' },
+    { id: 'filterTags', label: 'Tasks/Tags' },
+    { id: 'documentsFilterTariff', label: 'Tariffs' },
+    { id: 'documentsFilterLevel', label: 'Levels' },
+    { id: 'documentsFilterGroup', label: 'Groups' },
+    { id: 'documentsFilterLanguageCertificate', label: 'Certificates' },
+    { id: 'filterMissingDocs', label: 'Missing Docs' },
+    { id: 'statusFilterTariff', label: 'Tariffs' },
+    { id: 'statusFilterLevel', label: 'Levels' },
+    { id: 'statusFilterGroup', label: 'Groups' },
+    { id: 'statusFilterInvoice', label: 'Invoices' },
+    { id: 'statusFilterAdmission', label: 'Admissions' },
+    { id: 'paymentTariffFilter', label: 'Tariffs' },
+    { id: 'paymentBalanceFilter', label: 'Balances' },
+    { id: 'paymentGroupFilter', label: 'Groups' },
+    { id: 'paymentMethodFilter', label: 'Methods' },
+    { id: 'receivedByFilter', label: 'Received By' },
+    { id: 'admissionsLevelFilter', label: 'Levels' }
+  ];
+
+  filtersToInit.forEach(f => {
+    initMultiSelect(f.id, f.label);
+  });
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', () => {
+  document.querySelectorAll('.custom-multiselect').forEach(m => {
+    m.classList.remove('open');
+  });
+});
+
+// Run initialization on DOM Content Loaded
+document.addEventListener('DOMContentLoaded', () => {
+  initAllMultiSelectFilters();
+});
+
+window.initAllMultiSelectFilters = initAllMultiSelectFilters;
+window.getSelectValues = getSelectValues;
+
