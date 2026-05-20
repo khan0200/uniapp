@@ -8003,6 +8003,14 @@ function initMultiSelect(selectId, placeholder) {
   // Render the button and dropdown
   rebuildMultiSelectUI(select, wrapper, placeholder);
 
+  // Sync custom UI with native select on change events
+  if (!select.dataset.changeListened) {
+    select.dataset.changeListened = 'true';
+    select.addEventListener('change', () => {
+      syncMultiSelectUI(select, wrapper, placeholder);
+    });
+  }
+
   // Use MutationObserver to rebuild when options change programmatically
   if (!select.dataset.observed) {
     select.dataset.observed = 'true';
@@ -8011,6 +8019,66 @@ function initMultiSelect(selectId, placeholder) {
     });
     observer.observe(select, { childList: true });
   }
+}
+
+function syncMultiSelectUI(select, wrapper, placeholder) {
+  const options = Array.from(select.options);
+  const selectedValues = Array.from(select.selectedOptions).map(opt => opt.value);
+  const activeSelected = selectedValues.filter(val => val !== "");
+  const valOptions = options.filter(o => o.value !== "");
+
+  // Update button label
+  let btnLabel = placeholder;
+  if (activeSelected.length > 0) {
+    if (activeSelected.length === 1) {
+      const opt = options.find(o => o.value === activeSelected[0]);
+      btnLabel = opt ? opt.textContent.trim() : activeSelected[0];
+    } else if (activeSelected.length === valOptions.length) {
+      btnLabel = `All ${placeholder}`;
+    } else {
+      btnLabel = `${activeSelected.length} Selected`;
+    }
+  } else {
+    btnLabel = `All ${placeholder}`;
+  }
+
+  const btnText = wrapper.querySelector('.custom-multiselect-btn .selected-text');
+  if (btnText) {
+    btnText.textContent = btnLabel;
+  }
+
+  // Update "Select All" option state
+  const allOptionDiv = wrapper.querySelector('.all-option');
+  if (allOptionDiv) {
+    const isAllSelected = valOptions.length > 0 && activeSelected.length === valOptions.length;
+    const allCheckbox = allOptionDiv.querySelector('input[type="checkbox"]');
+    if (allCheckbox) {
+      allCheckbox.checked = isAllSelected;
+    }
+    if (isAllSelected) {
+      allOptionDiv.classList.add('selected');
+    } else {
+      allOptionDiv.classList.remove('selected');
+    }
+  }
+
+  // Update individual option states
+  const optionDivs = wrapper.querySelectorAll('.custom-multiselect-option:not(.all-option)');
+  optionDivs.forEach(div => {
+    const val = div.dataset.value;
+    const opt = valOptions.find(o => o.value === val);
+    if (opt) {
+      const checkbox = div.querySelector('input[type="checkbox"]');
+      if (checkbox) {
+        checkbox.checked = opt.selected;
+      }
+      if (opt.selected) {
+        div.classList.add('selected');
+      } else {
+        div.classList.remove('selected');
+      }
+    }
+  });
 }
 
 function rebuildMultiSelectUI(select, wrapper, placeholder) {
@@ -8069,10 +8137,12 @@ function rebuildMultiSelectUI(select, wrapper, placeholder) {
   // "Select All" option
   if (valOptions.length > 0) {
     const allOptionDiv = document.createElement('div');
-    allOptionDiv.className = `custom-multiselect-option all-option ${activeSelected.length === valOptions.length ? 'selected' : ''}`;
+    const isAllSelected = valOptions.length > 0 && activeSelected.length === valOptions.length;
+    allOptionDiv.className = `custom-multiselect-option all-option ${isAllSelected ? 'selected' : ''}`;
+    
     const allCheckbox = document.createElement('input');
     allCheckbox.type = 'checkbox';
-    allCheckbox.checked = activeSelected.length === valOptions.length;
+    allCheckbox.checked = isAllSelected;
     allOptionDiv.appendChild(allCheckbox);
     
     const allLabel = document.createElement('span');
@@ -8080,10 +8150,10 @@ function rebuildMultiSelectUI(select, wrapper, placeholder) {
     allOptionDiv.appendChild(allLabel);
 
     allOptionDiv.addEventListener('click', () => {
-      const checkState = !allCheckbox.checked;
-      allCheckbox.checked = checkState;
+      const isCurrentlyAllSelected = valOptions.length > 0 && Array.from(select.selectedOptions).filter(opt => opt.value !== "").length === valOptions.length;
+      const shouldSelectAll = !isCurrentlyAllSelected;
       valOptions.forEach(opt => {
-        opt.selected = checkState;
+        opt.selected = shouldSelectAll;
       });
       select.dispatchEvent(new Event('change', { bubbles: true }));
     });
@@ -8099,6 +8169,7 @@ function rebuildMultiSelectUI(select, wrapper, placeholder) {
     const isSelected = activeSelected.includes(opt.value);
     const optionDiv = document.createElement('div');
     optionDiv.className = `custom-multiselect-option ${isSelected ? 'selected' : ''}`;
+    optionDiv.dataset.value = opt.value; // Store value to match in sync function
     
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
@@ -8114,8 +8185,7 @@ function rebuildMultiSelectUI(select, wrapper, placeholder) {
     optionDiv.appendChild(labelSpan);
 
     optionDiv.addEventListener('click', () => {
-      checkbox.checked = !checkbox.checked;
-      opt.selected = checkbox.checked;
+      opt.selected = !opt.selected;
       select.dispatchEvent(new Event('change', { bubbles: true }));
     });
 

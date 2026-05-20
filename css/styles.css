@@ -1617,6 +1617,7 @@ h1, h2, h3, h4, h5, h6,
   background-color: transparent !important;
   cursor: pointer !important;
   flex-shrink: 0 !important;
+  pointer-events: none !important;
 }
 
 .custom-multiselect-option input[type="checkbox"]:checked {
