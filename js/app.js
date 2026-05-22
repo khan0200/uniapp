@@ -2632,13 +2632,7 @@ function applyFilters(resetPage = true) {
                         <div class="cp-ball" style="${ballStyle}"></div>
                         <div class="table-tags-container">
                             ${(s.taskTags || []).map(tag => {
-                                const tagIcons = {
-                                    'Call': '📞',
-                                    'Apply': '🎓',
-                                    'Documents': '📄',
-                                    'Payment': '💰'
-                                };
-                                const icon = tagIcons[tag] || '🚩';
+                                const icon = getCustomTagIcon(tag);
                                 return `<span class="table-tag-chip icon-only" title="${tag}">${icon}</span>`;
                             }).join('')}
                         </div>
@@ -3258,13 +3252,7 @@ function applyStatusFilters(resetPage = true) {
                     <div class="cp-ball" style="${ballStyle}"></div>
                     <div class="table-tags-container">
                         ${(s.taskTags || []).map(tag => {
-                            const tagIcons = {
-                                'Call': '📞',
-                                'Apply': '🎓',
-                                'Documents': '📄',
-                                'Payment': '💰'
-                            };
-                            const icon = tagIcons[tag] || '🚩';
+                            const icon = getCustomTagIcon(tag);
                             return `<span class="table-tag-chip icon-only" title="${tag}">${icon}</span>`;
                         }).join('')}
                     </div>
@@ -3515,13 +3503,7 @@ function populateExcelModal() {
                     <div class="cp-ball" style="${ballStyle}"></div>
                     <div class="table-tags-container">
                         ${(s.taskTags || []).map(tag => {
-                            const tagIcons = {
-                                'Call': '📞',
-                                'Apply': '🎓',
-                                'Documents': '📄',
-                                'Payment': '💰'
-                            };
-                            const icon = tagIcons[tag] || '🚩';
+                            const icon = getCustomTagIcon(tag);
                             return `<span class="table-tag-chip icon-only" title="${tag}">${icon}</span>`;
                         }).join('')}
                     </div>
