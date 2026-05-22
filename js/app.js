@@ -349,6 +349,9 @@ let _flagsWrapperEl = null; // Store trigger element
 let _tempTaskTags = [];
 let _tempRowColor = "";
 
+// Global registry for custom tag metadata (name + icon), synced with Firestore
+window.customTagsRegistry = window.customTagsRegistry || [];
+
 window.showFlagsPopover = function (wrapperEl, uniqueId, context) {
   _flagsCurrentId = uniqueId;
   _flagsContext = context || "students";
@@ -392,17 +395,21 @@ function renderFlagsPopover() {
     chip.classList.toggle('active', _tempTaskTags.includes(tagName));
   });
 
-  // 3. Render Custom Tags - show ALL known custom tags across all students
+  // 3. Render Custom Tags — show ALL known tags from registry + students + current session
   const customTagsContainer = document.getElementById("customTagsContainer");
 
-  // Collect all unique custom tags from every student's taskTags
   const allCustomTagsSet = new Set();
+  // From global registry (includes tags that may have been removed from all students)
+  (window.customTagsRegistry || []).forEach(entry => {
+    if (!predefined.includes(entry.name)) allCustomTagsSet.add(entry.name);
+  });
+  // From every student's saved taskTags
   (window.studentsData || []).forEach(st => {
     (st.taskTags || []).forEach(t => {
       if (!predefined.includes(t)) allCustomTagsSet.add(t);
     });
   });
-  // Also include any custom tags in the current temp state (newly added, not yet saved)
+  // From current unsaved temp state
   _tempTaskTags.forEach(t => {
     if (!predefined.includes(t)) allCustomTagsSet.add(t);
   });
@@ -410,14 +417,23 @@ function renderFlagsPopover() {
   const allCustomTags = Array.from(allCustomTagsSet).sort();
 
   if (allCustomTags.length === 0) {
-    customTagsContainer.innerHTML = '<span style="color:var(--text-secondary);font-size:0.72rem;opacity:0.65;padding:2px 4px">No custom tags yet</span>';
+    customTagsContainer.innerHTML = '<span style="color:var(--text-secondary);font-size:0.72rem;opacity:0.6;padding:2px 4px">No custom tags yet — type one below</span>';
   } else {
     customTagsContainer.innerHTML = allCustomTags.map(tag => {
       const isActive = _tempTaskTags.includes(tag);
+      const icon = getCustomTagIcon(tag);
       return `
-        <div class="tag-chip custom-tag ${isActive ? 'active' : ''}" onclick="toggleTaskTag('${tag}')" title="${isActive ? 'Remove tag' : 'Add tag'}">
-          ${tag}
-          ${isActive ? `<i class="bi bi-x-circle-fill tag-remove" onclick="event.stopPropagation();removeTaskTag('${tag}')"></i>` : ''}
+        <div class="tag-chip custom-tag ${isActive ? 'active' : ''}" style="display:inline-flex;align-items:center;gap:3px;padding-right:4px">
+          <span onclick="toggleTaskTag('${tag}')" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;flex:1" title="${isActive ? 'Remove tag' : 'Add tag'}">
+            <span>${icon}</span><span>${tag}</span>
+          </span>
+          <span style="display:inline-flex;align-items:center;gap:1px;margin-left:2px;flex-shrink:0">
+            ${isActive ? `<i class="bi bi-x-circle-fill" onclick="event.stopPropagation();removeTaskTag('${tag}')" style="font-size:0.78rem;cursor:pointer;opacity:0.85" title="Remove from this student"></i>` : ''}
+            <i class="bi bi-pencil-fill" onclick="event.stopPropagation();openEditCustomTagModal('${tag}')"
+               style="font-size:0.6rem;cursor:pointer;opacity:${isActive ? '0.65' : '0.35'};padding:2px 3px;border-radius:3px;transition:opacity 0.15s;color:${isActive ? 'rgba(255,255,255,0.9)' : 'var(--text-secondary)'}"
+               onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='${isActive ? '0.65' : '0.35'}'"
+               title="Edit / delete tag"></i>
+          </span>
         </div>
       `;
     }).join('');
@@ -470,6 +486,15 @@ window.addCustomTaskTag = function () {
   if (tag && !_tempTaskTags.includes(tag)) {
     _tempTaskTags.push(tag);
     input.value = "";
+    // Register in global registry if not already present
+    window.customTagsRegistry = window.customTagsRegistry || [];
+    if (!window.customTagsRegistry.some(t => t.name === tag)) {
+      const newEntry = { name: tag, icon: '🏷️' };
+      window.customTagsRegistry.push(newEntry);
+      if (typeof saveCustomTagToFirestore === 'function') {
+        saveCustomTagToFirestore(newEntry).then(id => { if (id) newEntry.firestoreId = id; });
+      }
+    }
     renderFlagsPopover();
     saveFlags(false);
   }
@@ -5739,8 +5764,11 @@ window.updateGroupDropdowns = updateGroupDropdowns;
 function updateTagsDropdown() {
   const predefined = ["Call", "Apply", "Documents", "Payment"];
 
-  // Collect all unique custom tags across all students
+  // Collect all unique custom tags from registry + all students
   const allCustomTagsSet = new Set();
+  (window.customTagsRegistry || []).forEach(entry => {
+    if (!predefined.includes(entry.name)) allCustomTagsSet.add(entry.name);
+  });
   (window.studentsData || []).forEach(st => {
     (st.taskTags || []).forEach(t => {
       if (!predefined.includes(t)) allCustomTagsSet.add(t);
@@ -5748,31 +5776,212 @@ function updateTagsDropdown() {
   });
   const allCustomTags = Array.from(allCustomTagsSet).sort();
 
-  // All tag filter selects across the app
   const tagSelects = document.querySelectorAll('#filterTags, #excelTagsFilter');
-
   tagSelects.forEach(select => {
     if (!select) return;
     const currentValues = Array.from(select.selectedOptions).map(o => o.value);
-
-    // Rebuild options: keep fixed predefined options, inject custom tags before "Custom Tags"
     select.innerHTML = `
       <option value="">All Tasks/Tags</option>
       <option value="Call">📞 Call</option>
       <option value="Apply">🎓 Apply</option>
       <option value="Documents">📄 Documents</option>
       <option value="Payment">💰 Payment</option>
-      ${allCustomTags.map(t => `<option value="${t}">🏷️ ${t}</option>`).join('')}
+      ${allCustomTags.map(t => { const ic = getCustomTagIcon(t); return `<option value="${t}">${ic} ${t}</option>`; }).join('')}
       <option value="Custom">Custom Tags</option>
     `;
-
-    // Restore previously selected values
     currentValues.forEach(val => {
       const opt = select.querySelector(`option[value="${val}"]`);
       if (opt) opt.selected = true;
     });
   });
 }
+window.updateTagsDropdown = updateTagsDropdown;
+
+// ============================================================
+// CUSTOM TAGS — GLOBAL REGISTRY & MANAGEMENT
+// ============================================================
+
+/** Returns the icon emoji for a custom tag name, or the default 🏷️ */
+function getCustomTagIcon(tagName) {
+  const entry = (window.customTagsRegistry || []).find(t => t.name === tagName);
+  return entry ? (entry.icon || '🏷️') : '🏷️';
+}
+window.getCustomTagIcon = getCustomTagIcon;
+
+const CUSTOM_TAG_EMOJIS = [
+  '🏷️','📌','⭐','🎯','🔥','✅','❌','⏳','🔄','💡',
+  '📞','📧','💬','📱','🤝','📲','📣','📢','🔔','🚨',
+  '📄','📋','🗂️','📁','📝','🧾','📃','🗃️','📎','🗒️',
+  '💰','💳','🏦','💵','💸','🤑','💹','📈','📉','🏧',
+  '🎓','📚','📖','🏫','✏️','🖊️','📐','🔬','🖥️','💻',
+  '✈️','🛂','🌐','🏠','🗓️','📅','🕐','🗺️','🌍','🏙️',
+  '🔴','🟡','🟢','🔵','🟣','🟠','⚪','⚫','🟤','🔶',
+  '🔑','🔒','📊','🚀','🏆','👤','👥','🤖','⚙️','🛠️',
+];
+
+window.initCustomTagEmojiPicker = function () {
+  const grid = document.getElementById('customTagEmojiGrid');
+  if (!grid) return;
+  grid.innerHTML = CUSTOM_TAG_EMOJIS.map(emoji => `
+    <div class="custom-tag-emoji-option" data-emoji="${emoji}" onclick="selectCustomTagEmoji(this)" title="${emoji}"
+      style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+             font-size:1.15rem;cursor:pointer;border-radius:8px;transition:all 0.15s;
+             border:2px solid transparent;background:var(--bg-elevated);user-select:none">
+      ${emoji}
+    </div>
+  `).join('');
+};
+
+window.selectCustomTagEmoji = function (el) {
+  document.querySelectorAll('.custom-tag-emoji-option').forEach(e => {
+    e.style.borderColor = 'transparent';
+    e.style.background = 'var(--bg-elevated)';
+    e.style.transform = 'scale(1)';
+  });
+  el.style.borderColor = 'var(--accent-primary)';
+  el.style.background = 'rgba(0,120,212,0.15)';
+  el.style.transform = 'scale(1.18)';
+  const iconEl = document.getElementById('customTagEditSelectedIcon');
+  if (iconEl) iconEl.textContent = el.dataset.emoji;
+};
+
+window.openEditCustomTagModal = function (tagName) {
+  const entry = (window.customTagsRegistry || []).find(t => t.name === tagName);
+  const icon = entry ? (entry.icon || '🏷️') : '🏷️';
+  const firestoreId = entry ? (entry.firestoreId || '') : '';
+
+  const nameEl = document.getElementById('customTagEditName');
+  const origEl = document.getElementById('customTagEditOriginalName');
+  const fidEl  = document.getElementById('customTagEditFirestoreId');
+  const iconEl = document.getElementById('customTagEditSelectedIcon');
+  if (!nameEl || !origEl || !fidEl || !iconEl) return;
+
+  nameEl.value = tagName;
+  origEl.value = tagName;
+  fidEl.value  = firestoreId;
+  iconEl.textContent = icon;
+
+  // Reset delete button to safe state
+  const deleteBtn = document.getElementById('deleteCustomTagBtn');
+  if (deleteBtn) {
+    deleteBtn._confirmMode = false;
+    deleteBtn.innerHTML = '<i class="bi bi-trash me-1"></i> Delete Tag';
+    deleteBtn.classList.remove('btn-danger');
+    deleteBtn.classList.add('btn-outline-danger');
+  }
+
+  // Build emoji grid and highlight the current icon
+  initCustomTagEmojiPicker();
+  setTimeout(() => {
+    const match = document.querySelector(`.custom-tag-emoji-option[data-emoji="${icon}"]`);
+    if (match) selectCustomTagEmoji(match);
+  }, 40);
+
+  new bootstrap.Modal(document.getElementById('customTagEditModal')).show();
+};
+
+window.saveCustomTagEdit = function () {
+  const oldName = (document.getElementById('customTagEditOriginalName') || {}).value.trim();
+  const newName = (document.getElementById('customTagEditName')         || {}).value.trim();
+  const newIcon = ((document.getElementById('customTagEditSelectedIcon') || {}).textContent || '').trim() || '🏷️';
+  const fsId    = (document.getElementById('customTagEditFirestoreId')  || {}).value.trim();
+
+  if (!newName) {
+    if (typeof showNotification === 'function') showNotification('Tag name cannot be empty.', 'error');
+    return;
+  }
+  if (newName !== oldName) {
+    const dup = (window.customTagsRegistry || []).some(t => t.name === newName);
+    if (dup) {
+      if (typeof showNotification === 'function') showNotification(`Tag "${newName}" already exists.`, 'error');
+      return;
+    }
+  }
+
+  // Rename on ALL students that have this tag
+  if (newName !== oldName) {
+    (window.studentsData || []).forEach(st => {
+      if (st.taskTags && st.taskTags.includes(oldName)) {
+        st.taskTags = st.taskTags.map(t => t === oldName ? newName : t);
+        if (typeof updateStudentInFirestore === 'function')
+          updateStudentInFirestore(st.firestoreId || st.id, { taskTags: st.taskTags }, true);
+      }
+    });
+    // Update the open popover's temp state too
+    const idx = _tempTaskTags.indexOf(oldName);
+    if (idx > -1) _tempTaskTags[idx] = newName;
+  }
+
+  // Update or create registry entry
+  let entry = (window.customTagsRegistry || []).find(t => t.name === oldName);
+  if (entry) {
+    entry.name = newName;
+    entry.icon = newIcon;
+    if (typeof updateCustomTagInFirestore === 'function' && fsId)
+      updateCustomTagInFirestore(fsId, { name: newName, icon: newIcon });
+  } else {
+    const ne = { name: newName, icon: newIcon };
+    (window.customTagsRegistry = window.customTagsRegistry || []).push(ne);
+    if (typeof saveCustomTagToFirestore === 'function')
+      saveCustomTagToFirestore(ne).then(id => { if (id) ne.firestoreId = id; });
+  }
+
+  const modalEl = document.getElementById('customTagEditModal');
+  if (modalEl) { const m = bootstrap.Modal.getInstance(modalEl); if (m) m.hide(); }
+
+  renderFlagsPopover();
+  updateTagsDropdown();
+  applyFilters(false);
+  if (typeof showNotification === 'function') showNotification('Custom tag updated!', 'success');
+};
+
+window.deleteCustomTagGlobal = function () {
+  const deleteBtn = document.getElementById('deleteCustomTagBtn');
+  if (!deleteBtn) return;
+
+  // Two-step confirmation: first click arms, second click fires
+  if (!deleteBtn._confirmMode) {
+    deleteBtn._confirmMode = true;
+    deleteBtn.innerHTML = '⚠️ Confirm Delete?';
+    deleteBtn.classList.remove('btn-outline-danger');
+    deleteBtn.classList.add('btn-danger');
+    setTimeout(() => {
+      if (deleteBtn._confirmMode) {
+        deleteBtn._confirmMode = false;
+        deleteBtn.innerHTML = '<i class="bi bi-trash me-1"></i> Delete Tag';
+        deleteBtn.classList.remove('btn-danger');
+        deleteBtn.classList.add('btn-outline-danger');
+      }
+    }, 3500);
+    return;
+  }
+
+  const tagName = (document.getElementById('customTagEditOriginalName') || {}).value.trim();
+  const fsId    = (document.getElementById('customTagEditFirestoreId')  || {}).value.trim();
+  if (!tagName) return;
+
+  // Remove from every student's taskTags
+  (window.studentsData || []).forEach(st => {
+    if (st.taskTags && st.taskTags.includes(tagName)) {
+      st.taskTags = st.taskTags.filter(t => t !== tagName);
+      if (typeof updateStudentInFirestore === 'function')
+        updateStudentInFirestore(st.firestoreId || st.id, { taskTags: st.taskTags }, true);
+    }
+  });
+  // Remove from open popover temp state
+  _tempTaskTags = _tempTaskTags.filter(t => t !== tagName);
+  // Remove from registry
+  window.customTagsRegistry = (window.customTagsRegistry || []).filter(t => t.name !== tagName);
+  if (fsId && typeof deleteCustomTagFromFirestore === 'function') deleteCustomTagFromFirestore(fsId);
+
+  const modalEl = document.getElementById('customTagEditModal');
+  if (modalEl) { const m = bootstrap.Modal.getInstance(modalEl); if (m) m.hide(); }
+
+  renderFlagsPopover();
+  updateTagsDropdown();
+  applyFilters(false);
+  if (typeof showNotification === 'function') showNotification(`Tag "${tagName}" deleted from all students.`, 'success');
+};
 window.updateTagsDropdown = updateTagsDropdown;
 
 // ==========================================

@@ -1516,6 +1516,7 @@ document.addEventListener('DOMContentLoaded', function () {
             loadUniversitiesFromFirestore();
             loadGroupsFromFirestore();
             loadVideosFromFirestore();
+            loadCustomTagsFromFirestore(); // load custom tag registry (name + icon)
         }
     } else {
         console.log('📦 Using localStorage mode');
@@ -2093,11 +2094,75 @@ async function deleteVideoFromFirestore(firestoreId) {
     }
 }
 
+// ==========================================
+// CUSTOM TAGS REGISTRY - FIRESTORE FUNCTIONS
+// ==========================================
+
+function loadCustomTagsFromFirestore() {
+    window.customTagsRegistry = window.customTagsRegistry || [];
+    if (!firebaseInitialized) return;
+
+    db.collection('customTags').orderBy('name').get().then(snapshot => {
+        const loaded = [];
+        snapshot.forEach(doc => {
+            loaded.push({ firestoreId: doc.id, ...doc.data() });
+        });
+        // Merge: Firestore is authoritative; keep local-only entries that haven't synced yet
+        const localOnly = (window.customTagsRegistry || []).filter(
+            local => !loaded.some(l => l.name === local.name)
+        );
+        window.customTagsRegistry = [...loaded, ...localOnly];
+        console.log(`✅ Loaded ${loaded.length} custom tags from Firestore`);
+        if (typeof updateTagsDropdown === 'function') updateTagsDropdown();
+    }).catch(err => {
+        // Collection may not exist yet — that's fine, it will be created on first save
+        console.info('Custom tags collection not yet created:', err.message);
+    });
+}
+
+async function saveCustomTagToFirestore(tagData) {
+    if (!firebaseInitialized) return null;
+    try {
+        // Prevent duplicate
+        const existing = await db.collection('customTags').where('name', '==', tagData.name).get();
+        if (!existing.empty) return existing.docs[0].id;
+        tagData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        const docRef = await db.collection('customTags').add(tagData);
+        return docRef.id;
+    } catch (error) {
+        console.error('Error saving custom tag to Firestore:', error);
+        return null;
+    }
+}
+
+async function updateCustomTagInFirestore(firestoreId, updates) {
+    if (!firebaseInitialized || !firestoreId) return;
+    try {
+        updates.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+        await db.collection('customTags').doc(firestoreId).update(updates);
+    } catch (error) {
+        console.error('Error updating custom tag in Firestore:', error);
+    }
+}
+
+async function deleteCustomTagFromFirestore(firestoreId) {
+    if (!firebaseInitialized || !firestoreId) return;
+    try {
+        await db.collection('customTags').doc(firestoreId).delete();
+    } catch (error) {
+        console.error('Error deleting custom tag from Firestore:', error);
+    }
+}
+
+// Export custom tags functions
+window.loadCustomTagsFromFirestore  = loadCustomTagsFromFirestore;
+window.saveCustomTagToFirestore     = saveCustomTagToFirestore;
+window.updateCustomTagInFirestore   = updateCustomTagInFirestore;
+window.deleteCustomTagFromFirestore = deleteCustomTagFromFirestore;
+
 // Export videos functions
 window.saveVideoToFirestore = saveVideoToFirestore;
 window.loadVideosFromFirestore = loadVideosFromFirestore;
 window.updateVideoInFirestore = updateVideoInFirestore;
-window.deleteVideoFromFirestore = deleteVideoFromFirestore;
-
 
 
