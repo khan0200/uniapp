@@ -927,6 +927,17 @@ function dedupeLevelsByName(items) {
     return Array.from(unique.values());
 }
 
+function dedupeUniversitiesByNameAndLevel(items) {
+    const unique = new Map();
+    (items || []).forEach((item) => {
+        const key = `${normalizeSettingName(item.name)}|${(item.levelId || 'GENERAL').trim().toUpperCase()}`;
+        if (!unique.has(key)) {
+            unique.set(key, item);
+        }
+    });
+    return Array.from(unique.values());
+}
+
 function buildDeterministicDocId(prefix, rawValue) {
     const normalized = String(rawValue || '').trim().toLowerCase();
     const encoded = encodeURIComponent(normalized)
@@ -1267,6 +1278,22 @@ async function deleteLevelFromFirestore(firestoreId) {
 async function saveUniversityToFirestore(universityData) {
     if (!firebaseInitialized) return;
     try {
+        const normalizedName = normalizeSettingName(universityData.name);
+        const levelId = (universityData.levelId || 'GENERAL').trim().toUpperCase();
+
+        const existingUnis = await db.collection('listofuniversities').get();
+        const hasDuplicate = existingUnis.docs.some((doc) => {
+            const data = doc.data() || {};
+            return normalizeSettingName(data.name) === normalizedName &&
+                   (data.levelId || 'GENERAL').trim().toUpperCase() === levelId;
+        });
+
+        if (hasDuplicate) {
+            console.warn('University with this name and education level already exists');
+            showNotification(`University "${universityData.name}" already exists for this education level!`, 'error');
+            return;
+        }
+
         universityData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
         await db.collection('listofuniversities').add(universityData);
         showNotification('University saved successfully!', 'success');
@@ -1320,7 +1347,7 @@ function loadUniversitiesFromFirestore() {
         });
 
         unis.sort((a, b) => a.name.localeCompare(b.name));
-        window.universitiesData = unis;
+        window.universitiesData = dedupeUniversitiesByNameAndLevel(unis);
 
         if (typeof renderUniversitiesList === 'function') renderUniversitiesList();
         if (typeof updateUniversityDropdowns === 'function') updateUniversityDropdowns();
@@ -1330,6 +1357,22 @@ function loadUniversitiesFromFirestore() {
 async function updateUniversityInFirestore(firestoreId, updatedData) {
     if (!firebaseInitialized) return;
     try {
+        const normalizedName = normalizeSettingName(updatedData.name);
+        const levelId = (updatedData.levelId || 'GENERAL').trim().toUpperCase();
+
+        const existingUnis = await db.collection('listofuniversities').get();
+        const hasDuplicate = existingUnis.docs.some((doc) => {
+            if (doc.id === firestoreId) return false;
+            const data = doc.data() || {};
+            return normalizeSettingName(data.name) === normalizedName &&
+                   (data.levelId || 'GENERAL').trim().toUpperCase() === levelId;
+        });
+
+        if (hasDuplicate) {
+            showNotification(`University "${updatedData.name}" already exists for this education level!`, 'error');
+            return;
+        }
+
         updatedData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
         await db.collection('listofuniversities').doc(firestoreId).update(updatedData);
         showNotification('University updated successfully!', 'success');

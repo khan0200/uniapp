@@ -115,11 +115,48 @@ async function cleanupDuplicateSettings() {
         console.log('✅ No duplicate groups found!');
     }
     
+    // ===== CLEANUP UNIVERSITIES =====
+    console.log('\n📦 Cleaning up Universities...');
+    const unisSnapshot = await db.collection('listofuniversities').get();
+    const unisMap = new Map();
+    const unisDuplicates = [];
+    
+    unisSnapshot.forEach((doc) => {
+        const data = doc.data();
+        const name = (data.name || '').trim().toUpperCase();
+        const levelId = (data.levelId || 'GENERAL').trim().toUpperCase();
+        const key = `${name}|${levelId}`;
+        
+        if (unisMap.has(key)) {
+            // This is a duplicate
+            unisDuplicates.push(doc.id);
+            console.log(`🗑️  Found duplicate university: ${data.name} (Level: ${data.levelName || 'General'}) - ID: ${doc.id}`);
+        } else {
+            // First occurrence, keep it
+            unisMap.set(key, doc.id);
+            console.log(`✅ Keeping university: ${data.name} (Level: ${data.levelName || 'General'}) - ID: ${doc.id}`);
+        }
+    });
+    
+    // Delete duplicate universities
+    if (unisDuplicates.length > 0) {
+        console.log(`\n🗑️  Deleting ${unisDuplicates.length} duplicate university/universities...`);
+        const batch = db.batch();
+        unisDuplicates.forEach(id => {
+            batch.delete(db.collection('listofuniversities').doc(id));
+        });
+        await batch.commit();
+        console.log('✅ Duplicate universities deleted successfully!');
+    } else {
+        console.log('✅ No duplicate universities found!');
+    }
+    
     console.log('\n🎉 Cleanup complete!');
     console.log(`\n📊 Summary:`);
     console.log(`   - Tariffs: ${tariffsMap.size} unique (deleted ${tariffsDuplicates.length} duplicates)`);
     console.log(`   - Levels: ${levelsMap.size} unique (deleted ${levelsDuplicates.length} duplicates)`);
     console.log(`   - Groups: ${groupsMap.size} unique (deleted ${groupsDuplicates.length} duplicates)`);
+    console.log(`   - Universities: ${unisMap.size} unique (deleted ${unisDuplicates.length} duplicates)`);
 }
 
 // Helper function to format amounts
