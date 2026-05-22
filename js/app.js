@@ -392,15 +392,36 @@ function renderFlagsPopover() {
     chip.classList.toggle('active', _tempTaskTags.includes(tagName));
   });
 
-  // 3. Render Custom Tags
+  // 3. Render Custom Tags - show ALL known custom tags across all students
   const customTagsContainer = document.getElementById("customTagsContainer");
-  const customTags = _tempTaskTags.filter(t => !predefined.includes(t));
-  customTagsContainer.innerHTML = customTags.map(tag => `
-    <div class="tag-chip custom-tag">
-      ${tag}
-      <i class="bi bi-x-circle-fill tag-remove" onclick="removeTaskTag('${tag}')"></i>
-    </div>
-  `).join('');
+
+  // Collect all unique custom tags from every student's taskTags
+  const allCustomTagsSet = new Set();
+  (window.studentsData || []).forEach(st => {
+    (st.taskTags || []).forEach(t => {
+      if (!predefined.includes(t)) allCustomTagsSet.add(t);
+    });
+  });
+  // Also include any custom tags in the current temp state (newly added, not yet saved)
+  _tempTaskTags.forEach(t => {
+    if (!predefined.includes(t)) allCustomTagsSet.add(t);
+  });
+
+  const allCustomTags = Array.from(allCustomTagsSet).sort();
+
+  if (allCustomTags.length === 0) {
+    customTagsContainer.innerHTML = '<span style="color:var(--text-secondary);font-size:0.72rem;opacity:0.65;padding:2px 4px">No custom tags yet</span>';
+  } else {
+    customTagsContainer.innerHTML = allCustomTags.map(tag => {
+      const isActive = _tempTaskTags.includes(tag);
+      return `
+        <div class="tag-chip custom-tag ${isActive ? 'active' : ''}" onclick="toggleTaskTag('${tag}')" title="${isActive ? 'Remove tag' : 'Add tag'}">
+          ${tag}
+          ${isActive ? `<i class="bi bi-x-circle-fill tag-remove" onclick="event.stopPropagation();removeTaskTag('${tag}')"></i>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
 
   // Position the popover
   const rect = wrapperEl.getBoundingClientRect();
@@ -499,8 +520,9 @@ window.saveFlags = function (shouldHide = true) {
   } else {
     applyFilters(false);
   }
-  
 
+  // Refresh tags filter dropdowns so newly added custom tags are immediately available
+  if (typeof updateTagsDropdown === "function") updateTagsDropdown();
 }
 
 window.startHideFlagsPopover = function (delay = 500) {
@@ -675,6 +697,8 @@ function renderStudents() {
   applyFilters(false);
   // Keep status tab in sync whenever students data changes
   if (typeof applyStatusFilters === "function") applyStatusFilters(false);
+  // Refresh tags filter dropdowns with all known custom tags
+  if (typeof updateTagsDropdown === "function") updateTagsDropdown();
 }
 
 // ==========================================
@@ -5702,6 +5726,54 @@ window.saveGroup = saveGroup;
 window.confirmDeleteGroup = confirmDeleteGroup;
 window.renderGroupsList = renderGroupsList;
 window.updateGroupDropdowns = updateGroupDropdowns;
+
+// ==========================================
+// TAGS FILTER DROPDOWN - DYNAMIC CUSTOM TAGS
+// ==========================================
+
+/**
+ * Dynamically injects all known custom tags (from all students) into the
+ * filterTags and excelTagsFilter <select> elements, making custom tags
+ * added on any student row available to filter and select everywhere.
+ */
+function updateTagsDropdown() {
+  const predefined = ["Call", "Apply", "Documents", "Payment"];
+
+  // Collect all unique custom tags across all students
+  const allCustomTagsSet = new Set();
+  (window.studentsData || []).forEach(st => {
+    (st.taskTags || []).forEach(t => {
+      if (!predefined.includes(t)) allCustomTagsSet.add(t);
+    });
+  });
+  const allCustomTags = Array.from(allCustomTagsSet).sort();
+
+  // All tag filter selects across the app
+  const tagSelects = document.querySelectorAll('#filterTags, #excelTagsFilter');
+
+  tagSelects.forEach(select => {
+    if (!select) return;
+    const currentValues = Array.from(select.selectedOptions).map(o => o.value);
+
+    // Rebuild options: keep fixed predefined options, inject custom tags before "Custom Tags"
+    select.innerHTML = `
+      <option value="">All Tasks/Tags</option>
+      <option value="Call">📞 Call</option>
+      <option value="Apply">🎓 Apply</option>
+      <option value="Documents">📄 Documents</option>
+      <option value="Payment">💰 Payment</option>
+      ${allCustomTags.map(t => `<option value="${t}">🏷️ ${t}</option>`).join('')}
+      <option value="Custom">Custom Tags</option>
+    `;
+
+    // Restore previously selected values
+    currentValues.forEach(val => {
+      const opt = select.querySelector(`option[value="${val}"]`);
+      if (opt) opt.selected = true;
+    });
+  });
+}
+window.updateTagsDropdown = updateTagsDropdown;
 
 // ==========================================
 // VIDEO TUTORIALS MANAGEMENT
