@@ -1613,16 +1613,36 @@ h1, h2, h3, h4, h5, h6,
   height: 15px !important;
   margin: 0 !important;
   border-radius: 4px !important;
-  border: 1px solid var(--border-default) !important;
-  background-color: transparent !important;
+  border: 1.5px solid rgba(0, 120, 212, 0.5) !important;
+  background-color: var(--bg-elevated, #ffffff) !important;
+  box-shadow: 0 1px 3px rgba(0, 120, 212, 0.15) !important;
   cursor: pointer !important;
   flex-shrink: 0 !important;
   pointer-events: none !important;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  transition: all 0.15s ease-in-out;
 }
 
 .custom-multiselect-option input[type="checkbox"]:checked {
   background-color: var(--accent-primary) !important;
   border-color: var(--accent-primary) !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+[data-bs-theme="light"] .custom-multiselect-option input[type="checkbox"] {
+  border-color: #0078d4 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 120, 212, 0.25) !important;
+}
+
+[data-bs-theme="light"] .custom-multiselect-option input[type="checkbox"]:checked {
+  background-color: #0078d4 !important;
+  border-color: #0078d4 !important;
 }
 
 .custom-multiselect-divider {
@@ -1703,4 +1723,51 @@ h1, h2, h3, h4, h5, h6,
     flex: 1 0 0% !important;
     width: auto !important;
   }
+}
+
+/* ============================================================
+  CHECKBOX ACCENT STYLING - PREMIUM FLUENT VISIBILITY
+  ============================================================ */
+/* Global styling for checkboxes to ensure high visibility across themes */
+.form-check-input {
+  border: 1.5px solid rgba(0, 120, 212, 0.5) !important;
+  background-color: var(--bg-elevated, #ffffff) !important;
+  box-shadow: 0 1px 3px rgba(0, 120, 212, 0.1) !important;
+  cursor: pointer;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+.form-check-input:hover {
+  border-color: var(--accent-primary-hover, #1a86d9) !important;
+  box-shadow: 0 1px 5px rgba(0, 120, 212, 0.25) !important;
+}
+
+.form-check-input:checked {
+  background-color: var(--accent-primary, #0078d4) !important;
+  border-color: var(--accent-primary, #0078d4) !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
+  box-shadow: 0 1px 4px rgba(0, 120, 212, 0.2) !important;
+}
+
+.form-check-input:focus {
+  border-color: var(--accent-primary, #0078d4) !important;
+  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.25) !important;
+  outline: 0;
+}
+
+/* Light/Day Mode overrides for form checkboxes */
+[data-bs-theme="light"] .form-check-input {
+  border-color: #0078d4 !important; /* Rich Fluent Blue */
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 120, 212, 0.2) !important;
+}
+
+[data-bs-theme="light"] .form-check-input:hover {
+  border-color: #1a86d9 !important;
+  box-shadow: 0 1px 6px rgba(0, 120, 212, 0.35) !important;
+}
+
+[data-bs-theme="light"] .form-check-input:checked {
+  background-color: #0078d4 !important;
+  border-color: #0078d4 !important;
 }
