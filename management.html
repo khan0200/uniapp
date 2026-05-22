@@ -1201,60 +1201,140 @@
     <!-- Download Excel Modal -->
     <div class="modal fade" id="downloadExcelModal" tabindex="-1" aria-labelledby="downloadExcelModalLabel"
         aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
             <div class="modal-content ios-modal">
                 <div class="modal-header border-bottom border-secondary">
                     <h5 class="modal-title" id="downloadExcelModalLabel">
                         <i class="bi bi-file-earmark-excel text-success me-2"></i>Download as Excel
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <!-- Filters -->
-                    <div class="row mb-4">
-                        <!-- Level Filter -->
-                        <div class="col-md-6 mb-3 mb-md-0">
-                            <label class="form-label text-secondary">Filter by Education Level</label>
-                            <select class="form-select ios-input" id="excelLevelFilter"
-                                onchange="filterExcelStudents()">
-                                <option value="">All Levels</option>
-                                <option value="COLLEGE">COLLEGE</option>
-                                <option value="BACHELOR">BACHELOR</option>
-                                <option value="MASTERS">MASTERS</option>
-                                <option value="MASTER NO CERTIFICATE">MASTER NO CERTIFICATE</option>
-                                <option value="LANGUAGE COURSE">LANGUAGE COURSE</option>
-                            </select>
+                    <!-- Search and Filters -->
+                    <div class="excel-filters-container mb-4">
+                        <!-- Search Bar Row -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label text-secondary small fw-bold mb-1">Search Type</label>
+                                <select class="form-select ios-input" id="excelSearchType" onchange="filterExcelStudents()">
+                                    <option value="all">All Fields</option>
+                                    <option value="id">ID</option>
+                                    <option value="name">Name</option>
+                                    <option value="phone">Phone</option>
+                                    <option value="university">University</option>
+                                </select>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label text-secondary small fw-bold mb-1">Search Query</label>
+                                <div class="search-wrapper w-100 position-relative">
+                                    <i class="bi bi-search search-icon" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); pointer-events: none;"></i>
+                                    <input type="text" id="excelSearchInput" class="form-control ios-input ps-5" 
+                                           placeholder="Search students..." oninput="filterExcelStudents()">
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Group Filter -->
-                        <div class="col-md-6">
-                            <label class="form-label text-secondary">Filter by Group</label>
-                            <select class="form-select ios-input" id="excelGroupFilter"
-                                onchange="filterExcelStudents()">
-                                <option value="">All Groups</option>
-                                <option value="NO_GROUP">No Group</option>
-                                <!-- Groups will be populated dynamically -->
-                            </select>
+                        <!-- Filters Row -->
+                        <div class="row g-3">
+                            <!-- Tariff Filter -->
+                            <div class="col-lg col-md-4 col-sm-6 excel-filter-col">
+                                <label class="form-label text-secondary small fw-bold mb-1">Tariff</label>
+                                <select class="form-select ios-input" id="excelTariffFilter" onchange="filterExcelStudents()">
+                                    <option value="">All Tariffs</option>
+                                    <option value="STANDART">STANDART</option>
+                                    <option value="PREMIUM">PREMIUM</option>
+                                    <option value="VISA PLUS">VISA PLUS</option>
+                                    <option value="E-VISA">E-VISA</option>
+                                    <option value="REGIONAL VISA">REGIONAL VISA</option>
+                                </select>
+                            </div>
+
+                            <!-- Level Filter -->
+                            <div class="col-lg col-md-4 col-sm-6 excel-filter-col">
+                                <label class="form-label text-secondary small fw-bold mb-1">Education Level</label>
+                                <select class="form-select ios-input" id="excelLevelFilter" onchange="filterExcelStudents()">
+                                    <option value="">All Levels</option>
+                                    <option value="COLLEGE">COLLEGE</option>
+                                    <option value="BACHELOR">BACHELOR</option>
+                                    <option value="MASTERS">MASTERS</option>
+                                    <option value="MASTER NO CERTIFICATE">MASTER NO CERTIFICATE</option>
+                                    <option value="LANGUAGE COURSE">LANGUAGE COURSE</option>
+                                </select>
+                            </div>
+
+                            <!-- Group Filter -->
+                            <div class="col-lg col-md-4 col-sm-6 excel-filter-col">
+                                <label class="form-label text-secondary small fw-bold mb-1">Group</label>
+                                <select class="form-select ios-input" id="excelGroupFilter" onchange="filterExcelStudents()">
+                                    <option value="">All Groups</option>
+                                    <option value="NO_GROUP">No Group</option>
+                                </select>
+                            </div>
+
+                            <!-- Language Certificate Filter -->
+                            <div class="col-lg col-md-6 col-sm-6 excel-filter-col">
+                                <label class="form-label text-secondary small fw-bold mb-1">Language Certificate</label>
+                                <select class="form-select ios-input" id="excelLanguageCertificateFilter" onchange="filterExcelStudents()">
+                                    <option value="">All Certificates</option>
+                                    <option value="NO CERTIFICATE">NO CERTIFICATE</option>
+                                    <option value="TOPIK">TOPIK</option>
+                                    <option value="SKA">SKA</option>
+                                    <option value="IELTS">IELTS</option>
+                                    <option value="TOEFL">TOEFL</option>
+                                    <option value="SAT">SAT</option>
+                                    <option value="CEFR">CEFR</option>
+                                </select>
+                            </div>
+
+                            <!-- Task Tags Filter -->
+                            <div class="col-lg col-md-6 col-sm-12 excel-filter-col">
+                                <label class="form-label text-secondary small fw-bold mb-1">Tasks/Tags</label>
+                                <select class="form-select ios-input" id="excelTagsFilter" onchange="filterExcelStudents()">
+                                    <option value="">All Tasks/Tags</option>
+                                    <option value="Call">📞 Call</option>
+                                    <option value="Apply">🎓 Apply</option>
+                                    <option value="Documents">📄 Documents</option>
+                                    <option value="Payment">💰 Payment</option>
+                                    <option value="Custom">Custom Tags</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Select All -->
-                    <div
-                        class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="selectAllStudents"
-                                onchange="toggleSelectAll()">
-                            <label class="form-check-label fw-bold" for="selectAllStudents">
-                                Select All
-                            </label>
-                        </div>
+                    <!-- Selected Count Badge -->
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
+                        <span class="fw-bold text-secondary">Select Students to Export</span>
                         <span id="selectedCount" class="badge bg-success">0 selected</span>
                     </div>
 
-                    <!-- Student List -->
-                    <div id="excelStudentList" class="student-checkbox-list scroll-container-md">
-                        <!-- Students will be populated here -->
+                    <!-- Student Table Container -->
+                    <div class="students-table-wrapper scroll-container-md" style="max-height: 400px; overflow-y: auto;">
+                        <table class="students-table" id="excelStudentsTable">
+                            <colgroup>
+                                <col style="width: 4%;">
+                                <col style="width: 8%;">
+                                <col style="width: 38%;">
+                                <col style="width: 20%;">
+                                <col style="width: 30%;">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th style="text-align: center;">
+                                        <input class="form-check-input" type="checkbox" id="selectAllStudents" onchange="toggleSelectAll()">
+                                    </th>
+                                    <th onclick="toggleSortOrder('students')" style="cursor: pointer; user-select: none;" title="Sort by ID">
+                                        ID <i id="excelSortIcon" class="bi bi-chevron-down ms-1"></i>
+                                    </th>
+                                    <th>Full Name</th>
+                                    <th>Level</th>
+                                    <th class="th-action">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="excelStudentList">
+                                <!-- Students will be populated here -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
                 <div class="modal-footer border-top border-secondary">

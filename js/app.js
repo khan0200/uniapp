@@ -138,7 +138,12 @@ window.toggleSortOrder = function(tab) {
     studentsSortOrder = studentsSortOrder === 'asc' ? 'desc' : 'asc';
     const icon = document.getElementById("studentsSortIcon");
     if (icon) icon.className = studentsSortOrder === 'asc' ? "bi bi-chevron-down ms-1" : "bi bi-chevron-up ms-1";
+    const excelIcon = document.getElementById("excelSortIcon");
+    if (excelIcon) excelIcon.className = studentsSortOrder === 'asc' ? "bi bi-chevron-down ms-1" : "bi bi-chevron-up ms-1";
     applyFilters(true);
+    if (document.getElementById("excelStudentList")) {
+      populateExcelModal();
+    }
   } else if (tab === 'status') {
     statusSortOrder = statusSortOrder === 'asc' ? 'desc' : 'asc';
     const icon = document.getElementById("statusSortIcon");
@@ -488,6 +493,9 @@ window.saveFlags = function (shouldHide = true) {
   
   if (_flagsContext === "status") {
     applyStatusFilters(false);
+  } else if (_flagsContext === "excel") {
+    applyFilters(false);
+    populateExcelModal();
   } else {
     applyFilters(false);
   }
@@ -3254,53 +3262,224 @@ function saveAdmissionStatus(uniqueId, value) {
 
 // Populate the Excel modal with students
 function populateExcelModal() {
-  const filter = document.getElementById("excelLevelFilter").value;
-  const groupFilter = document.getElementById("excelGroupFilter").value;
+  const searchQuery = document.getElementById("excelSearchInput") ? document.getElementById("excelSearchInput").value.toLowerCase().trim() : "";
+  const searchType = document.getElementById("excelSearchType") ? document.getElementById("excelSearchType").value : "all";
+
+  const tariffFilter = getSelectValues("excelTariffFilter");
+  const levelFilter = getSelectValues("excelLevelFilter");
+  const groupFilter = getSelectValues("excelGroupFilter");
+  const languageCertificateFilter = getSelectValues("excelLanguageCertificateFilter");
+  const tagsFilter = getSelectValues("excelTagsFilter");
+
   const container = document.getElementById("excelStudentList");
 
   // Filter students (exclude deleted)
-  let students = window.studentsData.filter((s) => !s.deleted);
+  let students = (window.studentsData || []).filter((s) => {
+    if (s.deleted) return false;
 
-  // Apply level filter if selected
-  if (filter) {
-    students = students.filter((s) => s.level === filter);
-  }
-
-  // Apply group filter if selected
-  if (groupFilter) {
-    if (groupFilter === "NO_GROUP") {
-      students = students.filter((s) => !s.group || s.group === "");
+    // Search filter
+    let matchesSearch = false;
+    if (!searchQuery) {
+      matchesSearch = true;
     } else {
-      students = students.filter((s) => s.group === groupFilter);
-    }
-  }
+      const nameMatch = s.fullName && s.fullName.toLowerCase().includes(searchQuery);
+      const idMatch = s.id && s.id.toLowerCase().includes(searchQuery);
+      const phoneMatch = (s.phone1 && s.phone1.toLowerCase().includes(searchQuery)) ||
+          (s.phone2 && s.phone2.toLowerCase().includes(searchQuery));
+      const emailMatch = s.email && s.email.toLowerCase().includes(searchQuery);
+      const uniMatch = (s.university1 && s.university1.toLowerCase().includes(searchQuery)) ||
+          (s.university2 && s.university2.toLowerCase().includes(searchQuery)) ||
+          (s.university3 && s.university3.toLowerCase().includes(searchQuery));
+      const langMatch = (s.languageCertificate && s.languageCertificate.toLowerCase().includes(searchQuery)) ||
+          (s.certificateScore && s.certificateScore.toLowerCase().includes(searchQuery)) ||
+          (s.languageCertificate2 && s.languageCertificate2.toLowerCase().includes(searchQuery)) ||
+          (s.certificateScore2 && s.certificateScore2.toLowerCase().includes(searchQuery)) ||
+          (s.languageCertificate3 && s.languageCertificate3.toLowerCase().includes(searchQuery)) ||
+          (s.certificateScore3 && s.certificateScore3.toLowerCase().includes(searchQuery));
 
-  // Sort by ID
-  students.sort((a, b) => a.id.localeCompare(b.id));
+      if (searchType === "all") {
+        matchesSearch = nameMatch || idMatch || phoneMatch || emailMatch || uniMatch || langMatch;
+      } else if (searchType === "id") {
+        matchesSearch = idMatch;
+      } else if (searchType === "name") {
+        matchesSearch = nameMatch;
+      } else if (searchType === "phone") {
+        matchesSearch = phoneMatch;
+      } else if (searchType === "university") {
+        matchesSearch = uniMatch;
+      }
+    }
+
+    if (!matchesSearch) return false;
+
+    // Tariff filter - handle "No Tariff" special case
+    let matchesTariff = false;
+    if (tariffFilter.length === 0) {
+      matchesTariff = true;
+    } else {
+      if (tariffFilter.includes("NO_TARIFF") && (!s.tariff || s.tariff === "")) {
+        matchesTariff = true;
+      }
+      if (s.tariff && tariffFilter.includes(s.tariff)) {
+        matchesTariff = true;
+      }
+    }
+
+    if (!matchesTariff) return false;
+
+    // Level filter - handle "No Level" special case
+    let matchesLevel = false;
+    if (levelFilter.length === 0) {
+      matchesLevel = true;
+    } else {
+      if (levelFilter.includes("NO_LEVEL") && (!s.level || s.level === "")) {
+        matchesLevel = true;
+      }
+      if (s.level && levelFilter.includes(s.level)) {
+        matchesLevel = true;
+      }
+    }
+
+    if (!matchesLevel) return false;
+
+    // Group filter - handle "No Group" special case
+    let matchesGroup = false;
+    if (groupFilter.length === 0) {
+      matchesGroup = true;
+    } else {
+      if (groupFilter.includes("NO_GROUP") && (!s.group || s.group === "")) {
+        matchesGroup = true;
+      }
+      if (s.group && groupFilter.includes(s.group)) {
+        matchesGroup = true;
+      }
+    }
+
+    if (!matchesGroup) return false;
+
+    let matchesLanguageCertificate = false;
+    if (languageCertificateFilter.length === 0) {
+      matchesLanguageCertificate = true;
+    } else {
+      if (languageCertificateFilter.includes("NO CERTIFICATE")) {
+        const hasNoCert = !s.languageCertificate || s.languageCertificate === "NO CERTIFICATE";
+        if (hasNoCert) matchesLanguageCertificate = true;
+      }
+      const hasAnySelected = [s.languageCertificate, s.languageCertificate2, s.languageCertificate3]
+        .some(cert => cert && cert !== "NO CERTIFICATE" && languageCertificateFilter.includes(cert));
+      if (hasAnySelected) matchesLanguageCertificate = true;
+    }
+
+    if (!matchesLanguageCertificate) return false;
+
+    let matchesTags = false;
+    if (tagsFilter.length === 0) {
+      matchesTags = true;
+    } else {
+      matchesTags = tagsFilter.some(tag => {
+        if (tag === "Custom") {
+          const predefined = ["Call", "Apply", "Documents", "Payment"];
+          return s.taskTags && s.taskTags.some(t => !predefined.includes(t));
+        } else {
+          return s.taskTags && s.taskTags.includes(tag);
+        }
+      });
+    }
+
+    return matchesTags;
+  });
+
+  // Sort by numeric ID (F1 < F2 < F3 ... F-last) using the same logic as students menu
+  students.sort((a, b) => {
+    const numA = parseInt((a.id || "").replace(/\D+/, ""), 10);
+    const numB = parseInt((b.id || "").replace(/\D+/, ""), 10);
+    if (!isNaN(numA) && !isNaN(numB)) {
+      return studentsSortOrder === 'asc' ? numA - numB : numB - numA;
+    }
+    return studentsSortOrder === 'asc' ? 
+      (a.id || "").localeCompare(b.id || "") : 
+      (b.id || "").localeCompare(a.id || "");
+  });
 
   if (students.length === 0) {
     container.innerHTML =
-      '<div class="text-center py-4 text-secondary"><i class="bi bi-inbox" style="font-size: 2rem;"></i><p class="mt-2">No students found</p></div>';
+      '<tr><td colspan="5" class="text-center py-4 text-secondary"><i class="bi bi-inbox" style="font-size: 2rem;"></i><p class="mt-2">No students found</p></td></tr>';
     document.getElementById("selectAllStudents").checked = false;
     updateSelectedCount();
     return;
   }
 
-  // Render student checkboxes
+  // Render student table rows
   container.innerHTML = students
     .map((s, index) => {
       const uniqueId = s.firestoreId || s.id;
+      
+      const importanceColors = {
+        GREEN: "#28a745",
+        YELLOW: "#ffc107",
+        RED: "#dc3545",
+      };
+      const borderColor = s.noteImportance
+        ? importanceColors[s.noteImportance]
+        : null;
+      const bgEntry = s.rowColor ? ROW_COLOR_MAP[s.rowColor] : null;
+      const bgColor = bgEntry ? bgEntry.bg : null;
+      let inlineStyle = "";
+      if (borderColor && bgColor) {
+        inlineStyle = `style="border-left:3px solid ${borderColor}; background-color:${bgColor};"`;
+      } else if (borderColor) {
+        inlineStyle = `style="border-left:3px solid ${borderColor};"`;
+      } else if (bgColor) {
+        inlineStyle = `style="background-color:${bgColor};"`;
+      }
+
+      const ballColor = bgEntry ? bgEntry.ball : null;
+      const ballStyle = ballColor
+        ? `background:${ballColor}; border-color:${ballColor}; box-shadow:0 0 0 2px ${ballColor}33;`
+        : "";
+
+      const certText =
+        s.languageCertificate && s.languageCertificate !== "NO CERTIFICATE"
+          ? `${s.languageCertificate}${s.certificateScore ? ": " + s.certificateScore : ""}`
+          : "";
+
       return `
-        <label class="student-checkbox-item" for="student-${uniqueId}">
-            <input class="form-check-input" type="checkbox" id="student-${uniqueId}" 
-                   data-student-id="${uniqueId}" onchange="updateSelectedCount()">
-            <div class="student-info">
-                <span class="student-id">${s.id}</span>
-                <span class="student-name">${s.fullName}</span>
-                <span class="student-level">${s.level}</span>
-            </div>
-        </label>
-    `;
+        <tr class="student-table-row ${s.deleted ? "deleted-row" : ""}" ${inlineStyle}
+            onclick="toggleExcelRowClick(event, 'student-${uniqueId}')" style="cursor: pointer;">
+            <td style="text-align: center; vertical-align: middle;" onclick="event.stopPropagation();">
+                <input class="form-check-input" type="checkbox" id="student-${uniqueId}" 
+                       data-student-id="${uniqueId}" onchange="updateSelectedCount()">
+            </td>
+            <td><span class="table-id-badge">${s.id}</span></td>
+            <td class="student-name-cell">
+                <span class="table-full-name">${s.fullName}</span>
+                ${s.tariff ? `<span class="table-tariff-ghost">${s.tariff}</span>` : ""}
+            </td>
+            <td class="table-level-cell">
+                ${s.level ? `<span class="table-pill pill-level">${s.level}</span>` : '<span class="text-muted">\u2014</span>'}
+                ${certText ? `<span class="table-ghost-sub">${certText}</span>` : ""}
+            </td>
+            <td class="table-action-cell" onclick="event.stopPropagation()">
+                <div class="cp-ball-wrapper"
+                     onmouseenter="showFlagsPopover(this, '${uniqueId}', 'excel')"
+                     onmouseleave="startHideFlagsPopover()">
+                    <div class="cp-ball" style="${ballStyle}"></div>
+                    <div class="table-tags-container">
+                        ${(s.taskTags || []).map(tag => {
+                            const tagIcons = {
+                                'Call': '📞',
+                                'Apply': '🎓',
+                                'Documents': '📄',
+                                'Payment': '💰'
+                            };
+                            const icon = tagIcons[tag] || '🚩';
+                            return `<span class="table-tag-chip icon-only" title="${tag}">${icon}</span>`;
+                        }).join('')}
+                    </div>
+                </div>
+            </td>
+        </tr>
+      `;
     })
     .join("");
 
@@ -3308,6 +3487,18 @@ function populateExcelModal() {
   document.getElementById("selectAllStudents").checked = false;
   updateSelectedCount();
 }
+
+// Toggle row selection on clicking row
+window.toggleExcelRowClick = function(event, checkboxId) {
+  if (event.target.tagName === 'INPUT' || event.target.tagName === 'A' || event.target.tagName === 'BUTTON') {
+    return;
+  }
+  const checkbox = document.getElementById(checkboxId);
+  if (checkbox) {
+    checkbox.checked = !checkbox.checked;
+    updateSelectedCount();
+  }
+};
 
 // Filter students in Excel modal by level
 function filterExcelStudents() {
@@ -3324,7 +3515,7 @@ function toggleSelectAll() {
   checkboxes.forEach((cb) => {
     cb.checked = selectAll;
     // Toggle selected class on parent
-    const parent = cb.closest(".student-checkbox-item");
+    const parent = cb.closest(".student-checkbox-item, .student-table-row");
     if (parent) {
       parent.classList.toggle("selected", selectAll);
     }
@@ -3345,7 +3536,7 @@ function updateSelectedCount() {
   document
     .querySelectorAll("#excelStudentList .form-check-input")
     .forEach((cb) => {
-      const parent = cb.closest(".student-checkbox-item");
+      const parent = cb.closest(".student-checkbox-item, .student-table-row");
       if (parent) {
         parent.classList.toggle("selected", cb.checked);
       }
@@ -3463,10 +3654,10 @@ function downloadSelectedAsExcel() {
   ];
 
   // Generate filename with date and filter info
-  const levelFilter = document.getElementById("excelLevelFilter").value;
+  const levelFilters = getSelectValues("excelLevelFilter");
   const dateStr = new Date().toISOString().split("T")[0];
-  const levelStr = levelFilter
-    ? `_${levelFilter.replace(/\s+/g, "_")}`
+  const levelStr = levelFilters.length > 0
+    ? `_${levelFilters.join("_").replace(/\s+/g, "_")}`
     : "_All";
   const filename = `Students${levelStr}_${dateStr}.xlsx`;
 
@@ -5377,7 +5568,7 @@ function executeSettingsDelete() {
 
 function updateTariffDropdowns() {
   const tariffSelects = document.querySelectorAll(
-    "#tariff, #filterTariff, #statusFilterTariff, #paymentTariffFilter, #documentsFilterTariff",
+    "#tariff, #filterTariff, #statusFilterTariff, #paymentTariffFilter, #documentsFilterTariff, #excelTariffFilter",
   );
 
   tariffSelects.forEach((select) => {
@@ -8215,7 +8406,12 @@ function initAllMultiSelectFilters() {
     { id: 'paymentGroupFilter', label: 'Groups' },
     { id: 'paymentMethodFilter', label: 'Methods' },
     { id: 'receivedByFilter', label: 'Received By' },
-    { id: 'admissionsLevelFilter', label: 'Levels' }
+    { id: 'admissionsLevelFilter', label: 'Levels' },
+    { id: 'excelTariffFilter', label: 'Tariffs' },
+    { id: 'excelLevelFilter', label: 'Levels' },
+    { id: 'excelGroupFilter', label: 'Groups' },
+    { id: 'excelLanguageCertificateFilter', label: 'Certificates' },
+    { id: 'excelTagsFilter', label: 'Tasks/Tags' }
   ];
 
   filtersToInit.forEach(f => {
