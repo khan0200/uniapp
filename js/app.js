@@ -5785,6 +5785,10 @@ window.updateTagsDropdown = updateTagsDropdown;
 
 /** Returns the icon emoji for a custom tag name, or the default 🏷️ */
 function getCustomTagIcon(tagName) {
+  if (tagName === 'Call') return '📞';
+  if (tagName === 'Apply') return '🎓';
+  if (tagName === 'Documents') return '📄';
+  if (tagName === 'Payment') return '💰';
   const entry = (window.customTagsRegistry || []).find(t => t.name === tagName);
   return entry ? (entry.icon || '🏷️') : '🏷️';
 }
