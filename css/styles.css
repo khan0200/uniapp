@@ -710,16 +710,16 @@
 
 #viewStudentModal .badge-language,
 .badge-language {
- background: #fee2e2 !important;
- color: #b91c1c !important;
- border: 1px solid rgba(239, 68, 68, 0.25) !important;
+ background: #ef4444 !important;
+ color: #ffffff !important;
+ border: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
 
 #viewStudentModal .badge-score,
 .badge-score {
- background: #e0f2fe !important;
- color: #0369a1 !important;
- border: 1px solid rgba(14, 165, 233, 0.25) !important;
+ background: #0078d4 !important;
+ color: #ffffff !important;
+ border: 1px solid rgba(255, 255, 255, 0.15) !important;
  margin-left: 0.35rem;
 }
 
@@ -971,16 +971,16 @@
 
 [data-bs-theme="dark"] #viewStudentModal .badge-language,
 [data-bs-theme="dark"] .badge-language {
- background: rgba(239, 68, 68, 0.15) !important;
- color: #f87171 !important;
- border-color: rgba(239, 68, 68, 0.3) !important;
+ background: #dc2626 !important;
+ color: #ffffff !important;
+ border: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
 
 [data-bs-theme="dark"] #viewStudentModal .badge-score,
 [data-bs-theme="dark"] .badge-score {
- background: rgba(14, 165, 233, 0.15) !important;
- color: #38bdf8 !important;
- border-color: rgba(14, 165, 233, 0.3) !important;
+ background: #0284c7 !important;
+ color: #ffffff !important;
+ border: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
 
 [data-bs-theme="dark"] #viewStudentModal .cert-edit-row .cert-name-input {
