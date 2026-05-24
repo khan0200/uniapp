@@ -1773,7 +1773,7 @@ function viewStudentDetails(uniqueId) {
             return `
               <div class="col-6 mt-1">
                 <div class="detail-group">
-                  <label class="detail-label">Family Name <span class="badge bg-secondary-subtle text-secondary ms-1" style="font-size: 0.58rem; font-weight: normal; vertical-align: middle;">Auto</span></label>
+                  <label class="detail-label">Family Name <span class="badge badge-auto ms-1" style="vertical-align: middle;">Auto</span></label>
                   <div class="detail-value-wrap">
                     <span class="detail-value text-uppercase" style="font-weight: 500; font-size: 0.85rem;">${familyName}</span>
                     <div class="action-btns">
@@ -1784,7 +1784,7 @@ function viewStudentDetails(uniqueId) {
               </div>
               <div class="col-6 mt-1">
                 <div class="detail-group">
-                  <label class="detail-label">Given Name <span class="badge bg-secondary-subtle text-secondary ms-1" style="font-size: 0.58rem; font-weight: normal; vertical-align: middle;">Auto</span></label>
+                  <label class="detail-label">Given Name <span class="badge badge-auto ms-1" style="vertical-align: middle;">Auto</span></label>
                   <div class="detail-value-wrap">
                     <span class="detail-value text-uppercase" style="font-weight: 500; font-size: 0.85rem;">${givenName}</span>
                     <div class="action-btns">

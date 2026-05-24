@@ -726,6 +726,18 @@
  margin-left: 0.35rem;
 }
 
+#viewStudentModal .badge-auto,
+.badge-auto {
+ background-color: #6b7280 !important;
+ color: #ffffff !important;
+ border: 1px solid rgba(255, 255, 255, 0.15) !important;
+ font-weight: 700 !important;
+ font-size: 0.58rem !important;
+ padding: 0.1rem 0.35rem !important;
+ text-transform: uppercase;
+ letter-spacing: 0.03em;
+}
+
 
 #viewStudentModal .score-text {
  margin-left: 0.35rem;
@@ -999,6 +1011,13 @@
 [data-bs-theme="dark"] #viewStudentModal .badge-score,
 [data-bs-theme="dark"] .badge-score {
  background: #0284c7 !important;
+ color: #ffffff !important;
+ border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+[data-bs-theme="dark"] #viewStudentModal .badge-auto,
+[data-bs-theme="dark"] .badge-auto {
+ background-color: #4b5563 !important;
  color: #ffffff !important;
  border: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
