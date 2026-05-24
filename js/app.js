@@ -1554,6 +1554,61 @@ function updateAutoDocuments(s) {
   return changed;
 }
 
+// Helper functions for Language Certificate field options and alerts
+function renderScoreInputField(certField, certName, scoreValue) {
+  const scoreFieldMap = {
+    languageCertificate: "certificateScore",
+    languageCertificate2: "certificateScore2",
+    languageCertificate3: "certificateScore3"
+  };
+  const scoreField = scoreFieldMap[certField];
+  if (certName === "NO CERTIFICATE") {
+    return "";
+  }
+  if (certName === "TOPIK") {
+    const options = ["Select", "EXPECTED", "1", "2", "3", "4", "5", "6"];
+    let optionsHtml = options.map(opt => `<option value="${opt === "Select" ? "" : opt}" ${scoreValue === opt || (opt === "Select" && !scoreValue) ? "selected" : ""}>${opt}</option>`).join("");
+    return `<select class="form-select ios-input form-control-sm cert-score-input" id="edit-${scoreField}" onchange="handleExpectedScoreAlert(this.value)">${optionsHtml}</select>`;
+  }
+  if (certName === "IELTS") {
+    const options = ["Select", "EXPECTED"];
+    for (let i = 5.0; i <= 9.0; i += 0.5) {
+      options.push(i.toFixed(1));
+    }
+    let optionsHtml = options.map(opt => `<option value="${opt === "Select" ? "" : opt}" ${scoreValue === opt || (opt === "Select" && !scoreValue) ? "selected" : ""}>${opt}</option>`).join("");
+    return `<select class="form-select ios-input form-control-sm cert-score-input" id="edit-${scoreField}" onchange="handleExpectedScoreAlert(this.value)">${optionsHtml}</select>`;
+  }
+  if (certName === "CEFR") {
+    const options = ["Select", "EXPECTED", "B1", "B2", "C1", "C2"];
+    let optionsHtml = options.map(opt => `<option value="${opt === "Select" ? "" : opt}" ${scoreValue === opt || (opt === "Select" && !scoreValue) ? "selected" : ""}>${opt}</option>`).join("");
+    return `<select class="form-select ios-input form-control-sm cert-score-input" id="edit-${scoreField}" onchange="handleExpectedScoreAlert(this.value)">${optionsHtml}</select>`;
+  }
+  // Default (SAT, TOEFL, SKA, and others): text input
+  return `<input type="text" class="form-control ios-input form-control-sm cert-score-input" value="${scoreValue || ''}" id="edit-${scoreField}" placeholder="Score">`;
+}
+
+function handleCertNameChange(certField, certName, scoreValue) {
+  const container = document.getElementById("container-score-" + certField);
+  if (container) {
+    container.innerHTML = renderScoreInputField(certField, certName, scoreValue);
+    const scoreSelect = container.querySelector("select.cert-score-input");
+    if (scoreSelect && scoreSelect.value === "EXPECTED") {
+      handleExpectedScoreAlert("EXPECTED");
+    }
+  }
+}
+
+function handleExpectedScoreAlert(val) {
+  if (val === "EXPECTED") {
+    alert("Imtihon sanasi va raqamini Notes ga yozish esdan chiqmasin!");
+  }
+}
+
+// Bind helper functions to window to ensure global availability
+window.renderScoreInputField = renderScoreInputField;
+window.handleCertNameChange = handleCertNameChange;
+window.handleExpectedScoreAlert = handleExpectedScoreAlert;
+
 function viewStudentDetails(uniqueId) {
   // Find student by firestoreId FIRST (more reliable), then fall back to student id
   // This prevents matching the wrong student when multiple students might have overlapping IDs
@@ -1716,8 +1771,8 @@ function viewStudentDetails(uniqueId) {
           <div class="col-6"><div class="detail-group editable ${(!s.email || s.email === "-" || s.email === "") ? "missing-field-highlight" : ""}" data-field="email"><label class="detail-label">Email</label><div class="detail-value-wrap"><span class="detail-value">${s.email||"-"}</span><div class="action-btns">${s.email?`<button class="copy-btn" onclick="copyToClipboard('${s.email}',this);event.stopPropagation();"><i class="bi bi-clipboard"></i></button>`:""}<button class="edit-btn" onclick="startEdit('email','text');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><input type="email" class="form-control ios-input form-control-sm" value="${s.email||""}" id="edit-email" placeholder="student@email.com"><div class="edit-actions"><button class="save-btn" onclick="saveEdit('email')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('email')"><i class="bi bi-x"></i></button></div></div></div></div>
           <div class="col-6"><div class="detail-group editable ${(!s.birthday || s.birthday === "-" || s.birthday === "") ? "missing-field-highlight" : ""}" data-field="birthday"><label class="detail-label">Birthday</label><div class="detail-value-wrap"><span class="detail-value">${s.birthday||"-"}</span><div class="action-btns">${s.birthday?`<button class="copy-btn" onclick="copyToClipboard('${s.birthday}',this);event.stopPropagation();"><i class="bi bi-clipboard"></i></button>`:""}<button class="edit-btn" onclick="startEdit('birthday','date');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><input type="date" class="form-control ios-input form-control-sm" value="${s.birthday||""}" id="edit-birthday" min="1980-01-01" max="2010-12-31"><div class="edit-actions"><button class="save-btn" onclick="saveEdit('birthday')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('birthday')"><i class="bi bi-x"></i></button></div></div></div></div>
           <div class="col-6"><div class="detail-group editable ${(!s.passport || s.passport === "-" || s.passport === "") ? "missing-field-highlight" : ""}" data-field="passport"><label class="detail-label">Passport</label><div class="detail-value-wrap"><span class="detail-value">${s.passport||"-"}</span><div class="action-btns">${s.passport?`<button class="copy-btn" onclick="copyToClipboard('${s.passport}',this);event.stopPropagation();"><i class="bi bi-clipboard"></i></button>`:""}<button class="edit-btn" onclick="startEdit('passport','text');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><input type="text" class="form-control ios-input form-control-sm" value="${s.passport||""}" id="edit-passport" placeholder="AA0000000" style="text-transform:uppercase;" oninput="formatPassportInline(this)"><div class="edit-actions"><button class="save-btn" onclick="saveEdit('passport')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('passport')"><i class="bi bi-x"></i></button></div></div></div></div>
-          <div class="${window.extraLanguageCertificatesVisible?'col-4':'col-12'}"><div class="detail-group editable ${(s.languageCertificate === "NO CERTIFICATE") ? "missing-field-highlight" : ""}" data-field="languageCertificate"><label class="detail-label">Language Certificate</label><div class="detail-value-wrap"><span class="detail-value"><span class="badge badge-language">${s.languageCertificate}</span>${s.certificateScore?` <span class="score-text">Score: ${s.certificateScore}</span>`:""}</span><div class="action-btns"><button class="edit-btn" onclick="showExtraLanguageCertificates();event.stopPropagation();" title="Add more"><i class="bi bi-plus-lg"></i></button>${window.extraLanguageCertificatesVisible?`<button class="edit-btn" onclick="hideExtraLanguageCertificates();event.stopPropagation();" title="Hide extra"><i class="bi bi-dash-lg"></i></button>`:""}<button class="edit-btn" onclick="startEdit('languageCertificate','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><div class="d-flex gap-2 cert-edit-row"><select class="form-select ios-input form-control-sm cert-name-input" id="edit-languageCertificate"><option value="NO CERTIFICATE" ${s.languageCertificate==="NO CERTIFICATE"?"selected":""}>NO CERTIFICATE</option><option value="TOPIK" ${s.languageCertificate==="TOPIK"?"selected":""}>TOPIK</option><option value="SKA" ${s.languageCertificate==="SKA"?"selected":""}>SKA</option><option value="IELTS" ${s.languageCertificate==="IELTS"?"selected":""}>IELTS</option><option value="TOEFL" ${s.languageCertificate==="TOEFL"?"selected":""}>TOEFL</option><option value="SAT" ${s.languageCertificate==="SAT"?"selected":""}>SAT</option><option value="CEFR" ${s.languageCertificate==="CEFR"?"selected":""}>CEFR</option></select><input type="text" class="form-control ios-input form-control-sm cert-score-input" value="${s.certificateScore||""}" id="edit-certificateScore" placeholder="Score"></div><div class="edit-actions"><button class="save-btn" onclick="saveEdit('languageCertificate')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('languageCertificate')"><i class="bi bi-x"></i></button></div></div></div></div>
-          ${window.extraLanguageCertificatesVisible?`<div class="col-4"><div class="detail-group editable" data-field="languageCertificate2"><label class="detail-label">Language Certificate 2</label><div class="detail-value-wrap"><span class="detail-value"><span class="badge badge-language">${s.languageCertificate2}</span>${s.certificateScore2?` <span class="score-text">Score: ${s.certificateScore2}</span>`:""}</span><button class="edit-btn" onclick="startEdit('languageCertificate2','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div><div class="edit-field" style="display:none;"><div class="d-flex gap-2 cert-edit-row"><select class="form-select ios-input form-control-sm cert-name-input" id="edit-languageCertificate2"><option value="NO CERTIFICATE" ${s.languageCertificate2==="NO CERTIFICATE"?"selected":""}>NO CERTIFICATE</option><option value="TOPIK" ${s.languageCertificate2==="TOPIK"?"selected":""}>TOPIK</option><option value="SKA" ${s.languageCertificate2==="SKA"?"selected":""}>SKA</option><option value="IELTS" ${s.languageCertificate2==="IELTS"?"selected":""}>IELTS</option><option value="TOEFL" ${s.languageCertificate2==="TOEFL"?"selected":""}>TOEFL</option><option value="SAT" ${s.languageCertificate2==="SAT"?"selected":""}>SAT</option><option value="CEFR" ${s.languageCertificate2==="CEFR"?"selected":""}>CEFR</option></select><input type="text" class="form-control ios-input form-control-sm cert-score-input" value="${s.certificateScore2||""}" id="edit-certificateScore2" placeholder="Score"></div><div class="edit-actions"><button class="save-btn" onclick="saveEdit('languageCertificate2')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('languageCertificate2')"><i class="bi bi-x"></i></button></div></div></div></div><div class="col-4"><div class="detail-group editable" data-field="languageCertificate3"><label class="detail-label">Language Certificate 3</label><div class="detail-value-wrap"><span class="detail-value"><span class="badge badge-language">${s.languageCertificate3}</span>${s.certificateScore3?` <span class="score-text">Score: ${s.certificateScore3}</span>`:""}</span><button class="edit-btn" onclick="startEdit('languageCertificate3','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div><div class="edit-field" style="display:none;"><div class="d-flex gap-2 cert-edit-row"><select class="form-select ios-input form-control-sm cert-name-input" id="edit-languageCertificate3"><option value="NO CERTIFICATE" ${s.languageCertificate3==="NO CERTIFICATE"?"selected":""}>NO CERTIFICATE</option><option value="TOPIK" ${s.languageCertificate3==="TOPIK"?"selected":""}>TOPIK</option><option value="SKA" ${s.languageCertificate3==="SKA"?"selected":""}>SKA</option><option value="IELTS" ${s.languageCertificate3==="IELTS"?"selected":""}>IELTS</option><option value="TOEFL" ${s.languageCertificate3==="TOEFL"?"selected":""}>TOEFL</option><option value="SAT" ${s.languageCertificate3==="SAT"?"selected":""}>SAT</option><option value="CEFR" ${s.languageCertificate3==="CEFR"?"selected":""}>CEFR</option></select><input type="text" class="form-control ios-input form-control-sm cert-score-input" value="${s.certificateScore3||""}" id="edit-certificateScore3" placeholder="Score"></div><div class="edit-actions"><button class="save-btn" onclick="saveEdit('languageCertificate3')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('languageCertificate3')"><i class="bi bi-x"></i></button></div></div></div></div>`:""}
+          <div class="${window.extraLanguageCertificatesVisible?'col-4':'col-12'}"><div class="detail-group editable ${(s.languageCertificate === "NO CERTIFICATE") ? "missing-field-highlight" : ""}" data-field="languageCertificate"><label class="detail-label">Language Certificate</label><div class="detail-value-wrap"><span class="detail-value"><span class="badge badge-language">${s.languageCertificate}</span>${s.certificateScore?` <span class="badge badge-score">Score: ${s.certificateScore}</span>`:""}</span><div class="action-btns"><button class="edit-btn" onclick="showExtraLanguageCertificates();event.stopPropagation();" title="Add more"><i class="bi bi-plus-lg"></i></button>${window.extraLanguageCertificatesVisible?`<button class="edit-btn" onclick="hideExtraLanguageCertificates();event.stopPropagation();" title="Hide extra"><i class="bi bi-dash-lg"></i></button>`:""}<button class="edit-btn" onclick="startEdit('languageCertificate','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><div class="d-flex gap-2 cert-edit-row"><select class="form-select ios-input form-control-sm cert-name-input" id="edit-languageCertificate" onchange="handleCertNameChange('languageCertificate', this.value, '')"><option value="NO CERTIFICATE" ${s.languageCertificate==="NO CERTIFICATE"?"selected":""}>NO CERTIFICATE</option><option value="TOPIK" ${s.languageCertificate==="TOPIK"?"selected":""}>TOPIK</option><option value="SKA" ${s.languageCertificate==="SKA"?"selected":""}>SKA</option><option value="IELTS" ${s.languageCertificate==="IELTS"?"selected":""}>IELTS</option><option value="TOEFL" ${s.languageCertificate==="TOEFL"?"selected":""}>TOEFL</option><option value="SAT" ${s.languageCertificate==="SAT"?"selected":""}>SAT</option><option value="CEFR" ${s.languageCertificate==="CEFR"?"selected":""}>CEFR</option></select><div id="container-score-languageCertificate" class="flex-grow-1">${renderScoreInputField('languageCertificate', s.languageCertificate, s.certificateScore)}</div></div><div class="edit-actions"><button class="save-btn" onclick="saveEdit('languageCertificate')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('languageCertificate')"><i class="bi bi-x"></i></button></div></div></div></div>
+          ${window.extraLanguageCertificatesVisible?`<div class="col-4"><div class="detail-group editable" data-field="languageCertificate2"><label class="detail-label">Language Certificate 2</label><div class="detail-value-wrap"><span class="detail-value"><span class="badge badge-language">${s.languageCertificate2}</span>${s.certificateScore2?` <span class="badge badge-score">Score: ${s.certificateScore2}</span>`:""}</span><button class="edit-btn" onclick="startEdit('languageCertificate2','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div><div class="edit-field" style="display:none;"><div class="d-flex gap-2 cert-edit-row"><select class="form-select ios-input form-control-sm cert-name-input" id="edit-languageCertificate2" onchange="handleCertNameChange('languageCertificate2', this.value, '')"><option value="NO CERTIFICATE" ${s.languageCertificate2==="NO CERTIFICATE"?"selected":""}>NO CERTIFICATE</option><option value="TOPIK" ${s.languageCertificate2==="TOPIK"?"selected":""}>TOPIK</option><option value="SKA" ${s.languageCertificate2==="SKA"?"selected":""}>SKA</option><option value="IELTS" ${s.languageCertificate2==="IELTS"?"selected":""}>IELTS</option><option value="TOEFL" ${s.languageCertificate2==="TOEFL"?"selected":""}>TOEFL</option><option value="SAT" ${s.languageCertificate2==="SAT"?"selected":""}>SAT</option><option value="CEFR" ${s.languageCertificate2==="CEFR"?"selected":""}>CEFR</option></select><div id="container-score-languageCertificate2" class="flex-grow-1">${renderScoreInputField('languageCertificate2', s.languageCertificate2, s.certificateScore2)}</div></div><div class="edit-actions"><button class="save-btn" onclick="saveEdit('languageCertificate2')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('languageCertificate2')"><i class="bi bi-x"></i></button></div></div></div></div><div class="col-4"><div class="detail-group editable" data-field="languageCertificate3"><label class="detail-label">Language Certificate 3</label><div class="detail-value-wrap"><span class="detail-value"><span class="badge badge-language">${s.languageCertificate3}</span>${s.certificateScore3?` <span class="badge badge-score">Score: ${s.certificateScore3}</span>`:""}</span><button class="edit-btn" onclick="startEdit('languageCertificate3','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div><div class="edit-field" style="display:none;"><div class="d-flex gap-2 cert-edit-row"><select class="form-select ios-input form-control-sm cert-name-input" id="edit-languageCertificate3" onchange="handleCertNameChange('languageCertificate3', this.value, '')"><option value="NO CERTIFICATE" ${s.languageCertificate3==="NO CERTIFICATE"?"selected":""}>NO CERTIFICATE</option><option value="TOPIK" ${s.languageCertificate3==="TOPIK"?"selected":""}>TOPIK</option><option value="SKA" ${s.languageCertificate3==="SKA"?"selected":""}>SKA</option><option value="IELTS" ${s.languageCertificate3==="IELTS"?"selected":""}>IELTS</option><option value="TOEFL" ${s.languageCertificate3==="TOEFL"?"selected":""}>TOEFL</option><option value="SAT" ${s.languageCertificate3==="SAT"?"selected":""}>SAT</option><option value="CEFR" ${s.languageCertificate3==="CEFR"?"selected":""}>CEFR</option></select><div id="container-score-languageCertificate3" class="flex-grow-1">${renderScoreInputField('languageCertificate3', s.languageCertificate3, s.certificateScore3)}</div></div><div class="edit-actions"><button class="save-btn" onclick="saveEdit('languageCertificate3')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('languageCertificate3')"><i class="bi bi-x"></i></button></div></div></div></div>`:""}
             <!-- Row: University 1, University 2, University 3 -->
             ` +
             [1, 2, 3].map(function(n) {
@@ -2055,7 +2110,7 @@ function saveEdit(field) {
         languageCertificate3: "certificateScore3",
       };
       const scoreValue = s[scoreFieldMap[field]];
-      valueSpan.innerHTML = `<span class="badge badge-language">${newValue}</span>${scoreValue ? ` <span class="score-text">Score: ${scoreValue}</span>` : ""}`;
+      valueSpan.innerHTML = `<span class="badge badge-language">${newValue}</span>${scoreValue ? ` <span class="badge badge-score">Score: ${scoreValue}</span>` : ""}`;
     } else if (field === "level" || field === "group") {
       // Handle other badges if necessary (though they don't have secondary fields like score)
       const badgeClass = field === "level" ? "badge-level" : "badge-group";
@@ -2619,10 +2674,14 @@ function applyFilters(resetPage = true) {
           ? `background:${ballColor}; border-color:${ballColor}; box-shadow:0 0 0 2px ${ballColor}33;`
           : "";
 
-        const certText =
-          s.languageCertificate && s.languageCertificate !== "NO CERTIFICATE"
-            ? `${s.languageCertificate}${s.certificateScore ? ": " + s.certificateScore : ""}`
-            : "";
+        let certHtml = "";
+        if (s.languageCertificate && s.languageCertificate !== "NO CERTIFICATE") {
+          certHtml = `<div class="mt-1 d-flex gap-1 align-items-center flex-wrap"><span class="badge badge-language" style="font-size: 0.58rem; padding: 0.12rem 0.4rem; text-transform: uppercase; border-radius: 4px;">${s.languageCertificate}</span>`;
+          if (s.certificateScore) {
+            certHtml += `<span class="badge badge-score" style="font-size: 0.58rem; padding: 0.12rem 0.4rem; text-transform: uppercase; border-radius: 4px; margin-left: 0;">${s.certificateScore}</span>`;
+          }
+          certHtml += `</div>`;
+        }
 
         return `
             <tr class="student-table-row ${s.deleted ? "deleted-row" : ""}" ${inlineStyle}
@@ -2647,7 +2706,7 @@ function applyFilters(resetPage = true) {
                 <!-- Level + Certificate ghost -->
                 <td class="table-level-cell">
                     ${s.level ? `<span class="table-pill pill-level">${s.level}</span>` : '<span class="text-muted">\u2014</span>'}
-                    ${certText ? `<span class="table-ghost-sub">${certText}</span>` : ""}
+                    ${certHtml}
                 </td>
 
                 <!-- University 1 + University 2 as bullets -->
@@ -4267,10 +4326,18 @@ function updatePaymentStudentInfo() {
     set("psiLevel",     s.level    || "—");
 
     // Language Certificate: show cert + score inline if available
-    const certDisplay = s.languageCertificate
-      ? (s.certificateScore ? s.languageCertificate + " · " + s.certificateScore : s.languageCertificate)
-      : "—";
-    set("psiLangCert",  certDisplay);
+    const psiLangCertEl = document.getElementById("psiLangCert");
+    if (psiLangCertEl) {
+      if (s.languageCertificate && s.languageCertificate !== "NO CERTIFICATE") {
+        let html = `<span class="badge badge-language" style="font-size:0.68rem; padding:0.15rem 0.45rem;">${s.languageCertificate}</span>`;
+        if (s.certificateScore) {
+          html += ` <span class="badge badge-score" style="font-size:0.68rem; padding:0.15rem 0.45rem; margin-left:2px;">${s.certificateScore}</span>`;
+        }
+        psiLangCertEl.innerHTML = html;
+      } else {
+        psiLangCertEl.textContent = s.languageCertificate || "—";
+      }
+    }
 
     set("psiTariff",    s.tariff || "—");
     set("psiDiscount",  s.discount ? fmt(s.discount) : "—");

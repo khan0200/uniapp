@@ -708,10 +708,21 @@
  color: #6d28d9;
 }
 
-#viewStudentModal .badge-language {
- background: #fee2e2;
- color: #b91c1c;
+#viewStudentModal .badge-language,
+.badge-language {
+ background: #fee2e2 !important;
+ color: #b91c1c !important;
+ border: 1px solid rgba(239, 68, 68, 0.25) !important;
 }
+
+#viewStudentModal .badge-score,
+.badge-score {
+ background: #e0f2fe !important;
+ color: #0369a1 !important;
+ border: 1px solid rgba(14, 165, 233, 0.25) !important;
+ margin-left: 0.35rem;
+}
+
 
 #viewStudentModal .score-text {
  margin-left: 0.35rem;
@@ -754,13 +765,22 @@
  width: 60%;
  min-width: 0;
  padding-right: 1.75rem;
+ background-color: #fee2e2 !important;
+ color: #b91c1c !important;
+ border: 1px solid rgba(239, 68, 68, 0.35) !important;
 }
 
-#viewStudentModal .cert-edit-row .cert-score-input {
+#viewStudentModal .cert-edit-row [id^="container-score-"] {
  flex: 0 1 40%;
  width: 40%;
  min-width: 0;
- padding-right: 0.5rem;
+}
+
+#viewStudentModal .cert-edit-row .cert-score-input {
+ width: 100% !important;
+ background-color: #e0f2fe !important;
+ color: #0369a1 !important;
+ border: 1px solid rgba(14, 165, 233, 0.35) !important;
 }
 
 #viewStudentModal .sd3-wrap > .col-md-3.sd3-col .detail-group {
@@ -947,6 +967,32 @@
 [data-bs-theme="dark"] #viewStudentModal .sd3-wrap > .sd3-col::before,
 [data-bs-theme="dark"] #viewStudentModal .score-text {
  color: var(--text-primary);
+}
+
+[data-bs-theme="dark"] #viewStudentModal .badge-language,
+[data-bs-theme="dark"] .badge-language {
+ background: rgba(239, 68, 68, 0.15) !important;
+ color: #f87171 !important;
+ border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+[data-bs-theme="dark"] #viewStudentModal .badge-score,
+[data-bs-theme="dark"] .badge-score {
+ background: rgba(14, 165, 233, 0.15) !important;
+ color: #38bdf8 !important;
+ border-color: rgba(14, 165, 233, 0.3) !important;
+}
+
+[data-bs-theme="dark"] #viewStudentModal .cert-edit-row .cert-name-input {
+ background-color: #3c1e1e !important;
+ color: #f87171 !important;
+ border: 1px solid rgba(239, 68, 68, 0.5) !important;
+}
+
+[data-bs-theme="dark"] #viewStudentModal .cert-edit-row .cert-score-input {
+ background-color: #1e3a8a !important;
+ color: #38bdf8 !important;
+ border: 1px solid rgba(14, 165, 233, 0.5) !important;
 }
 
 [data-bs-theme="dark"] #viewStudentModal .detail-label {

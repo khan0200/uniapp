@@ -556,6 +556,34 @@
             border: 1px solid rgba(239, 68, 68, 0.3);
         }
 
+        /* Language Certificate and Score Badges */
+        .badge-language {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.2rem 0.6rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            text-transform: uppercase;
+        }
+
+        .badge-score {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.2rem 0.6rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: rgba(14, 165, 233, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            text-transform: uppercase;
+            margin-left: 0.35rem;
+        }
+
         /* Financial Card */
         .financial-grid {
             display: grid;
@@ -2214,10 +2242,15 @@
             
             // Certificate
             let certText = student.languageCertificate || '-';
-            if (student.certificateScore) {
-                certText += ` (${student.certificateScore})`;
+            if (certText && certText !== '-' && certText !== 'NO CERTIFICATE') {
+                let html = `<span class="badge-language">${certText}</span>`;
+                if (student.certificateScore) {
+                    html += ` <span class="badge-score">Score: ${student.certificateScore}</span>`;
+                }
+                document.getElementById('infoCertificate').innerHTML = html;
+            } else {
+                document.getElementById('infoCertificate').textContent = certText;
             }
-            document.getElementById('infoCertificate').textContent = certText;
 
             // Universities
             const universitiesContainer = document.getElementById('universitiesList');
