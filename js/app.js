@@ -353,6 +353,12 @@ let _tempRowColor = "";
 window.customTagsRegistry = window.customTagsRegistry || [];
 
 window.showFlagsPopover = function (wrapperEl, uniqueId, context) {
+  const popup = document.getElementById("flagsPopover");
+  if (_flagsCurrentId === uniqueId && popup && popup.style.display === "flex") {
+    hideFlagsPopover();
+    return;
+  }
+
   _flagsCurrentId = uniqueId;
   _flagsContext = context || "students";
   _flagsWrapperEl = wrapperEl; // Save for re-renders
@@ -369,8 +375,34 @@ window.showFlagsPopover = function (wrapperEl, uniqueId, context) {
 };
 
 function renderFlagsPopover() {
-  const wrapperEl = _flagsWrapperEl;
+  let wrapperEl = _flagsWrapperEl;
   if (!wrapperEl) return;
+
+  // Resolve detached wrapper element after table re-render
+  if (!document.body.contains(wrapperEl) && _flagsCurrentId) {
+    let newWrapper = null;
+    if (_flagsContext === "status") {
+      const tbody = document.getElementById("statusTableBody");
+      if (tbody) {
+        newWrapper = tbody.querySelector(`.cp-ball-wrapper[data-student-id="${_flagsCurrentId}"]`);
+      }
+    } else if (_flagsContext === "excel") {
+      const tbody = document.getElementById("excelStudentList");
+      if (tbody) {
+        newWrapper = tbody.querySelector(`.cp-ball-wrapper[data-student-id="${_flagsCurrentId}"]`);
+      }
+    } else {
+      const tbody = document.getElementById("studentsTableBody");
+      if (tbody) {
+        newWrapper = tbody.querySelector(`.cp-ball-wrapper[data-student-id="${_flagsCurrentId}"]`);
+      }
+    }
+    if (newWrapper) {
+      _flagsWrapperEl = newWrapper;
+      wrapperEl = newWrapper;
+    }
+  }
+
   const popup = document.getElementById("flagsPopover");
   if (!popup) return;
 
@@ -2626,8 +2658,8 @@ function applyFilters(resetPage = true) {
 
                 <!-- Action: colour ball triggers picker on hover -->
                 <td class="table-action-cell" onclick="event.stopPropagation()">
-                    <div class="cp-ball-wrapper"
-                         onmouseenter="showFlagsPopover(this, '${uniqueId}')"
+                    <div class="cp-ball-wrapper" data-student-id="${uniqueId}"
+                         onclick="showFlagsPopover(this, '${uniqueId}')"
                          onmouseleave="startHideFlagsPopover()">
                         <div class="cp-ball" style="${ballStyle}"></div>
                         <div class="table-tags-container">
@@ -3246,8 +3278,8 @@ function applyStatusFilters(resetPage = true) {
             </td>
 
             <td class="table-action-cell" onclick="event.stopPropagation()">
-                <div class="cp-ball-wrapper"
-                     onmouseenter="showFlagsPopover(this, '${uniqueId}', 'status')"
+                <div class="cp-ball-wrapper" data-student-id="${uniqueId}"
+                     onclick="showFlagsPopover(this, '${uniqueId}', 'status')"
                      onmouseleave="startHideFlagsPopover()">
                     <div class="cp-ball" style="${ballStyle}"></div>
                     <div class="table-tags-container">
@@ -3497,8 +3529,8 @@ function populateExcelModal() {
                 ${certText ? `<span class="table-ghost-sub">${certText}</span>` : ""}
             </td>
             <td class="table-action-cell" onclick="event.stopPropagation()">
-                <div class="cp-ball-wrapper"
-                     onmouseenter="showFlagsPopover(this, '${uniqueId}', 'excel')"
+                <div class="cp-ball-wrapper" data-student-id="${uniqueId}"
+                     onclick="showFlagsPopover(this, '${uniqueId}', 'excel')"
                      onmouseleave="startHideFlagsPopover()">
                     <div class="cp-ball" style="${ballStyle}"></div>
                     <div class="table-tags-container">
