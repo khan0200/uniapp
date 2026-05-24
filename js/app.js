@@ -2218,7 +2218,7 @@ function setUniStatus(field, value) {
   s[field] = value;
   localStorage.setItem("studentsData", JSON.stringify(window.studentsData));
   if (typeof updateStudentInFirestore === "function" && s.firestoreId) {
-    updateStudentInFirestore(s.firestoreId, s);
+    updateStudentInFirestore(s.firestoreId, s, true);
   }
 
   const popup = document.getElementById("uniStatusPopup");
