@@ -694,18 +694,21 @@
 }
 
 #viewStudentModal .badge-tariff {
- background: #dcfce7;
- color: #166534;
+ background: #10b981 !important;
+ color: #ffffff !important;
+ border: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
 
 #viewStudentModal .badge-level {
- background: #dbeafe;
- color: #1d4ed8;
+ background: #3b82f6 !important;
+ color: #ffffff !important;
+ border: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
 
 #viewStudentModal .badge-group {
- background: #ede9fe;
- color: #6d28d9;
+ background: #db2777 !important;
+ color: #ffffff !important;
+ border: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
 
 #viewStudentModal .badge-language,
@@ -979,6 +982,24 @@
 [data-bs-theme="dark"] #viewStudentModal .badge-score,
 [data-bs-theme="dark"] .badge-score {
  background: #0284c7 !important;
+ color: #ffffff !important;
+ border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+[data-bs-theme="dark"] #viewStudentModal .badge-tariff {
+ background: #059669 !important;
+ color: #ffffff !important;
+ border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+[data-bs-theme="dark"] #viewStudentModal .badge-level {
+ background: #2563eb !important;
+ color: #ffffff !important;
+ border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+[data-bs-theme="dark"] #viewStudentModal .badge-group {
+ background: #be185d !important;
  color: #ffffff !important;
  border: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
