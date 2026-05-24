@@ -830,95 +830,112 @@
 }
 
 /* Default Theme (Dark Theme States) */
+#viewStudentModal [data-field="office"] {
+ background: #2563eb !important;
+ border-left: 3px solid #3b82f6 !important;
+}
+#viewStudentModal [data-field="office"] .detail-label,
+#viewStudentModal [data-field="office"] .detail-value {
+ color: #ffffff !important;
+}
+
 #viewStudentModal .bal-positive-box {
- background: rgba(22, 163, 74, 0.15) !important;
- border-left: 3px solid #4ade80 !important;
+ background: #059669 !important;
+ border-left: 3px solid #10b981 !important;
 }
 #viewStudentModal .bal-positive-box .detail-label,
 #viewStudentModal .bal-positive-box .detail-value {
- color: #a7f3d0 !important;
+ color: #ffffff !important;
 }
 
 #viewStudentModal .bal-negative-box {
- background: rgba(220, 38, 38, 0.15) !important;
+ background: #dc2626 !important;
  border-left: 3px solid #ef4444 !important;
 }
 #viewStudentModal .bal-negative-box .detail-label,
 #viewStudentModal .bal-negative-box .detail-value {
- color: #fca5a5 !important;
+ color: #ffffff !important;
 }
 
 #viewStudentModal .bal-zero-box {
- background: rgba(107, 114, 128, 0.15) !important;
- border-left: 3px solid #9ca3af !important;
+ background: #4b5563 !important;
+ border-left: 3px solid #6b7280 !important;
 }
 #viewStudentModal .bal-zero-box .detail-label,
 #viewStudentModal .bal-zero-box .detail-value {
- color: #d1d5db !important;
+ color: #ffffff !important;
 }
 
 #viewStudentModal .pmt-done-box {
- background: rgba(22, 163, 74, 0.15) !important;
- border-left: 3px solid #4ade80 !important;
+ background: #059669 !important;
+ border-left: 3px solid #10b981 !important;
 }
 #viewStudentModal .pmt-done-box .detail-label,
 #viewStudentModal .pmt-done-box .detail-value {
- color: #a7f3d0 !important;
+ color: #ffffff !important;
 }
 
 #viewStudentModal .discount-box {
- background: rgba(217, 119, 6, 0.15) !important;
- border-left: 3px solid #fb923c !important;
+ background: #d97706 !important;
+ border-left: 3px solid #f59e0b !important;
 }
 #viewStudentModal .discount-box .detail-label,
 #viewStudentModal .discount-box .detail-value {
- color: #fed7aa !important;
+ color: #ffffff !important;
 }
 
-/* Day Mode Theme (Light Theme States) */
+[data-bs-theme="light"] #viewStudentModal [data-field="office"] {
+ background: #3b82f6 !important;
+ border-left: 3px solid #2563eb !important;
+}
+[data-bs-theme="light"] #viewStudentModal [data-field="office"] .detail-label,
+[data-bs-theme="light"] #viewStudentModal [data-field="office"] .detail-value {
+ color: #ffffff !important;
+}
+
 [data-bs-theme="light"] #viewStudentModal .bal-positive-box {
- background: rgba(22, 163, 74, 0.08) !important;
- border-left: 3px solid #16a34a !important;
+ background: #10b981 !important;
+ border-left: 3px solid #059669 !important;
 }
 [data-bs-theme="light"] #viewStudentModal .bal-positive-box .detail-label,
 [data-bs-theme="light"] #viewStudentModal .bal-positive-box .detail-value {
- color: #15803d !important;
+ color: #ffffff !important;
 }
 
 [data-bs-theme="light"] #viewStudentModal .bal-negative-box {
- background: rgba(220, 38, 38, 0.08) !important;
+ background: #ef4444 !important;
  border-left: 3px solid #dc2626 !important;
 }
 [data-bs-theme="light"] #viewStudentModal .bal-negative-box .detail-label,
 [data-bs-theme="light"] #viewStudentModal .bal-negative-box .detail-value {
- color: #b91c1c !important;
+ color: #ffffff !important;
 }
 
 [data-bs-theme="light"] #viewStudentModal .bal-zero-box {
- background: rgba(107, 114, 128, 0.08) !important;
- border-left: 3px solid #6b7280 !important;
+ background: #6b7280 !important;
+ border-left: 3px solid #4b5563 !important;
 }
 [data-bs-theme="light"] #viewStudentModal .bal-zero-box .detail-label,
 [data-bs-theme="light"] #viewStudentModal .bal-zero-box .detail-value {
- color: #4b5563 !important;
+ color: #ffffff !important;
 }
 
 [data-bs-theme="light"] #viewStudentModal .pmt-done-box {
- background: rgba(22, 163, 74, 0.08) !important;
- border-left: 3px solid #16a34a !important;
+ background: #10b981 !important;
+ border-left: 3px solid #059669 !important;
 }
 [data-bs-theme="light"] #viewStudentModal .pmt-done-box .detail-label,
 [data-bs-theme="light"] #viewStudentModal .pmt-done-box .detail-value {
- color: #15803d !important;
+ color: #ffffff !important;
 }
 
 [data-bs-theme="light"] #viewStudentModal .discount-box {
- background: rgba(217, 119, 6, 0.08) !important;
+ background: #f59e0b !important;
  border-left: 3px solid #d97706 !important;
 }
 [data-bs-theme="light"] #viewStudentModal .discount-box .detail-label,
 [data-bs-theme="light"] #viewStudentModal .discount-box .detail-value {
- color: #b45309 !important;
+ color: #ffffff !important;
 }
 
 @media (max-width: 992px) {
