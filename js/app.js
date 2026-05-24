@@ -811,23 +811,31 @@ function getEffectiveMissingDocs(s) {
     return effectiveList;
 }
 
-// Helper for document pill colors
-function getDocPillStyle(docName) {
+// Helper for document color scheme
+function getDocColor(docName) {
+  if (docName === "FULL OK") {
+    return { bg: '#10b981', color: '#ffffff', border: 'rgba(255,255,255,0.15)' };
+  }
   const colors = [
-      { bg: '#fee2e2', color: '#991b1b', border: '#fca5a5' }, // light red
-      { bg: '#dcfce7', color: '#065f46', border: '#6ee7b7' }, // light green
-      { bg: '#fef3c7', color: '#92400e', border: '#fcd34d' }, // light yellow
-      { bg: '#e0e7ff', color: '#3730a3', border: '#a5b4fc' }, // light indigo
-      { bg: '#fce7f3', color: '#9d174d', border: '#f9a8d4' }, // light pink
-      { bg: '#ffedd5', color: '#9a3412', border: '#fdba74' }, // light orange
-      { bg: '#1e3a8a', color: '#bfdbfe', border: '#1e40af' }, // dark blue
-      { bg: '#991b1b', color: '#fecaca', border: '#7f1d1d' }, // dark red
+      { bg: '#ef4444', color: '#ffffff', border: 'rgba(255,255,255,0.15)' }, // solid red
+      { bg: '#10b981', color: '#ffffff', border: 'rgba(255,255,255,0.15)' }, // solid green
+      { bg: '#f59e0b', color: '#ffffff', border: 'rgba(255,255,255,0.15)' }, // solid orange
+      { bg: '#6366f1', color: '#ffffff', border: 'rgba(255,255,255,0.15)' }, // solid indigo
+      { bg: '#db2777', color: '#ffffff', border: 'rgba(255,255,255,0.15)' }, // solid pink
+      { bg: '#ea580c', color: '#ffffff', border: 'rgba(255,255,255,0.15)' }, // solid dark orange
+      { bg: '#2563eb', color: '#ffffff', border: 'rgba(255,255,255,0.15)' }, // solid blue
+      { bg: '#8b5cf6', color: '#ffffff', border: 'rgba(255,255,255,0.15)' }, // solid purple
   ];
   let hash = 0;
   for (let i = 0; i < docName.length; i++) {
       hash = docName.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const c = colors[Math.abs(hash) % colors.length];
+  return colors[Math.abs(hash) % colors.length];
+}
+
+// Helper for document pill colors
+function getDocPillStyle(docName) {
+  const c = getDocColor(docName);
   return `background-color: ${c.bg}; color: ${c.color}; border: 1px solid ${c.border}; padding: 0.15rem 0.5rem; border-radius: 50rem; font-size: 0.65rem; font-weight: 700; white-space: nowrap; display: inline-block; font-family: system-ui, -apple-system, sans-serif; letter-spacing: 0.02em;`;
 }
 
@@ -858,7 +866,7 @@ function getDocRemainingCount(s, docName) {
 // Helper to determine and render missing/submitted states of specific documents (with copy counting logic and override support)
 function getDocStatusHtml(s, docName) {
   if (docName === "MARRIAGE CERTIFICATE" && s.hasMc === false) {
-    return `<span class="badge bg-secondary bg-opacity-10 text-secondary rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 24px; height: 24px; font-weight: 700; font-size: 0.65rem; border: 1px solid rgba(108, 117, 125, 0.2);" title="Not Applicable">N/A</span>`;
+    return `<span class="badge doc-na-badge rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 24px; height: 24px; font-weight: 700; font-size: 0.65rem;" title="Not Applicable">N/A</span>`;
   }
 
   const missingList = getEffectiveMissingDocs(s);
@@ -872,9 +880,9 @@ function getDocStatusHtml(s, docName) {
   const remaining = getDocRemainingCount(s, docName);
   
   if (remaining === 0) {
-    return `<span class="badge bg-warning bg-opacity-10 text-warning rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 24px; height: 24px; font-weight: 700; font-size: 0.8rem; border: 1px solid rgba(255, 193, 7, 0.2);" title="0 copies left">0</span>`;
+    return `<span class="badge doc-warning-badge rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 24px; height: 24px; font-weight: 700; font-size: 0.8rem;" title="0 copies left">0</span>`;
   } else {
-    return `<span class="badge bg-success bg-opacity-10 text-success rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 24px; height: 24px; font-weight: 700; font-size: 0.8rem; border: 1px solid rgba(40, 167, 69, 0.2);" title="${remaining} copies left">${remaining}</span>`;
+    return `<span class="badge doc-success-badge rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 24px; height: 24px; font-weight: 700; font-size: 0.8rem;" title="${remaining} copies left">${remaining}</span>`;
   }
 }
 
@@ -1049,7 +1057,7 @@ function filterDocuments(resetPage = true) {
     let docsHtml = '<div class="text-secondary small fst-italic">No missing documents</div>';
     
     if (missingDocs.includes("FULL OK")) {
-         docsHtml = '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>FULL OK</span>';
+         docsHtml = `<span style="${getDocPillStyle("FULL OK")}"><i class="bi bi-check-circle me-1"></i>FULL OK</span>`;
     } else {
          const itemsToRender = missingDocs.filter(doc => {
            if (doc === "FULL OK") return false;
@@ -1207,24 +1215,25 @@ function viewDocumentsModal(uniqueId) {
       missingList.forEach(doc => {
         if (doc === "FULL OK") {
           missingHtml += `
-            <div class="d-flex align-items-center justify-content-between p-2 rounded" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2);">
+            <div class="d-flex align-items-center justify-content-between p-2 rounded shadow-sm" style="background: #10b981; border: 1px solid rgba(255,255,255,0.15); color: #ffffff;">
               <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-check-circle-fill text-success"></i>
-                <span class="fw-medium" style="font-size: 0.85rem; color: #065f46;">${doc}</span>
+                <i class="bi bi-check-circle-fill text-white"></i>
+                <span class="fw-bold" style="font-size: 0.85rem;">${doc}</span>
               </div>
-              <button class="btn btn-sm text-secondary p-0" onclick="togglePickNeeded('${uniqueId}', '${doc}')" title="Remove">
+              <button class="btn btn-sm text-white p-0 opacity-75" style="transition: opacity 0.15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.75'" onclick="togglePickNeeded('${uniqueId}', '${doc}')" title="Remove">
                 <i class="bi bi-x-lg"></i>
               </button>
             </div>
           `;
         } else {
+          const c = getDocColor(doc);
           missingHtml += `
-            <div class="d-flex align-items-center justify-content-between p-2 rounded" style="background: rgba(220, 53, 69, 0.08); border: 1px solid rgba(220, 53, 69, 0.2);">
+            <div class="d-flex align-items-center justify-content-between p-2 rounded shadow-sm" style="background: ${c.bg}; border: 1px solid ${c.border}; color: ${c.color};">
               <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-file-earmark-x text-danger"></i>
-                <span class="fw-medium" style="font-size: 0.85rem; color: var(--text-primary);">${doc}</span>
+                <i class="bi bi-file-earmark-x text-white"></i>
+                <span class="fw-bold" style="font-size: 0.85rem;">${doc}</span>
               </div>
-              <button class="btn btn-sm text-secondary p-0" onclick="togglePickNeeded('${uniqueId}', '${doc}')" title="Remove from missing">
+              <button class="btn btn-sm text-white p-0 opacity-75" style="transition: opacity 0.15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.75'" onclick="togglePickNeeded('${uniqueId}', '${doc}')" title="Remove from missing">
                 <i class="bi bi-x-lg"></i>
               </button>
             </div>
@@ -1250,14 +1259,25 @@ function viewDocumentsModal(uniqueId) {
     pickNeededList.forEach(pill => {
       const isActive = selectedPills.includes(pill);
       let btnClass = 'btn btn-sm rounded-pill fw-bold ';
+      let styleAttr = 'font-size: 0.75rem; border-width: 1.5px;';
       
       if (pill === "FULL OK") {
-        btnClass += isActive ? 'btn-success shadow-sm' : 'btn-outline-success';
+        if (isActive) {
+          btnClass += 'btn-success shadow-sm text-white';
+        } else {
+          btnClass += 'btn-outline-success';
+        }
       } else {
-        btnClass += isActive ? 'btn-primary shadow-sm' : 'btn-outline-secondary';
+        if (isActive) {
+          const c = getDocColor(pill);
+          btnClass += 'shadow-sm text-white';
+          styleAttr += ` background-color: ${c.bg}; border-color: ${c.bg};`;
+        } else {
+          btnClass += 'btn-outline-secondary';
+        }
       }
       
-      pillsHtml += `<button class="${btnClass}" onclick="togglePickNeeded('${uniqueId}', '${pill}')" style="font-size: 0.75rem; border-width: 1.5px;">${pill}</button>`;
+      pillsHtml += `<button class="${btnClass}" onclick="togglePickNeeded('${uniqueId}', '${pill}')" style="${styleAttr}">${pill}</button>`;
     });
     pillsHtml += '</div>';
     
@@ -1720,12 +1740,21 @@ function viewStudentDetails(uniqueId) {
           <div class="col-12">
             <div class="detail-group" style="padding-top: 2px;">
               <label class="detail-label text-danger" style="font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">Missing documents</label>
-              <div class="ghost-text" style="display: flex; flex-direction: column; gap: 2px;">
+              <div class="detail-value-wrap" style="display: flex; flex-wrap: wrap; gap: 4px; border: none; padding: 0;">
                 ${(() => {
                   const effective = getEffectiveMissingDocs(s);
-                  return (effective && effective.length > 0) 
-                    ? effective.map(doc => `<div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-tertiary); opacity: 0.5;">•</span> ${doc}</div>`).join("") 
-                    : '<div style="margin-left: 4px; opacity: 0.5;">None</div>';
+                  if (effective && effective.length > 0) {
+                    return effective.map(doc => {
+                      let label = doc;
+                      if (doc === "BIRTH CERTIFICATE") label = "BC";
+                      else if (doc === "MARRIAGE CERTIFICATE") label = "MC";
+                      else if (doc === "APOSTILLE") label = "APOS";
+                      else if (doc === "3.5x4.5") label = "PIC";
+                      return `<span style="${getDocPillStyle(label)}">${label}</span>`;
+                    }).join("");
+                  } else {
+                    return '<div style="margin-left: 4px; opacity: 0.5; font-size: 0.85rem;">None</div>';
+                  }
                 })()}
               </div>
             </div>
