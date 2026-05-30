@@ -1915,12 +1915,12 @@ function viewStudentDetails(uniqueId) {
               <label class="detail-label"><i class="bi bi-tag me-1"></i>Discount</label>
               <span class="detail-value">${fmt(discount)} <span class="currency-label">UZS</span></span>
             </div>
-            <div class="detail-group pmt-box doc-fill-box" onclick="viewDocumentsModal('${s.firestoreId || s.id}')" style="cursor: pointer; transition: all 0.2s ease; border: 1.5px solid rgba(124, 58, 237, 0.4); background: rgba(124, 58, 237, 0.08);">
+            <div class="detail-group pmt-box doc-fill-box" onclick="window.open('document-extractor.html?studentId=${s.firestoreId || s.id}', '_blank')" style="cursor: pointer; transition: all 0.2s ease; border: 1.5px solid rgba(124, 58, 237, 0.4); background: rgba(124, 58, 237, 0.08);">
               <label class="detail-label" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; color: #a78bfa; font-weight: 700; margin-bottom: 0.25rem;">
-                <span><i class="bi bi-folder2-open me-1"></i>Fill by Document</span>
+                <span><i class="bi bi-cpu-fill me-1"></i>Fill by Document</span>
                 <i class="bi bi-chevron-right"></i>
               </label>
-              <span class="detail-value" style="font-size: 0.8rem; font-weight: 500; opacity: 0.85; color: var(--text-primary);">Manage & Check Documents</span>
+              <span class="detail-value" style="font-size: 0.8rem; font-weight: 500; opacity: 0.85; color: var(--text-primary);">AI Document Extraction</span>
             </div>
           </div>`;
         })()}
