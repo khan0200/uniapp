@@ -1144,6 +1144,17 @@ function filterDocuments(resetPage = true) {
 }
 
 function viewDocumentsModal(uniqueId) {
+  // If viewStudentModal is open, hide it and set restoration flag
+  const studentModalEl = document.getElementById("viewStudentModal");
+  if (studentModalEl && studentModalEl.classList.contains("show")) {
+    let studentModal = bootstrap.Modal.getInstance(studentModalEl);
+    if (!studentModal) {
+      studentModal = new bootstrap.Modal(studentModalEl);
+    }
+    studentModal.hide();
+    window.restoreStudentModalAfterDocs = true;
+  }
+
   let index = window.studentsData.findIndex(
     (student) => student.firestoreId === uniqueId,
   );
@@ -1903,6 +1914,13 @@ function viewStudentDetails(uniqueId) {
             <div class="detail-group pmt-box discount-box">
               <label class="detail-label"><i class="bi bi-tag me-1"></i>Discount</label>
               <span class="detail-value">${fmt(discount)} <span class="currency-label">UZS</span></span>
+            </div>
+            <div class="detail-group pmt-box doc-fill-box" onclick="viewDocumentsModal('${s.firestoreId || s.id}')" style="cursor: pointer; transition: all 0.2s ease; border: 1.5px solid rgba(124, 58, 237, 0.4); background: rgba(124, 58, 237, 0.08);">
+              <label class="detail-label" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; color: #a78bfa; font-weight: 700; margin-bottom: 0.25rem;">
+                <span><i class="bi bi-folder2-open me-1"></i>Fill by Document</span>
+                <i class="bi bi-chevron-right"></i>
+              </label>
+              <span class="detail-value" style="font-size: 0.8rem; font-weight: 500; opacity: 0.85; color: var(--text-primary);">Manage & Check Documents</span>
             </div>
           </div>`;
         })()}
@@ -9029,6 +9047,19 @@ document.addEventListener('click', () => {
 // Run initialization on DOM Content Loaded
 document.addEventListener('DOMContentLoaded', () => {
   initAllMultiSelectFilters();
+
+  // Restore Student Details modal when Documents modal is closed
+  const docsModalEl = document.getElementById("documentsModal");
+  if (docsModalEl) {
+    docsModalEl.addEventListener("hidden.bs.modal", function () {
+      if (window.restoreStudentModalAfterDocs) {
+        window.restoreStudentModalAfterDocs = false;
+        if (window.currentStudentFirestoreId) {
+          viewStudentDetails(window.currentStudentFirestoreId);
+        }
+      }
+    });
+  }
 });
 
 window.initAllMultiSelectFilters = initAllMultiSelectFilters;
