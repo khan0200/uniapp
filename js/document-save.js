@@ -10,7 +10,12 @@
     "DATE OF BIRTH": "birthday",
     "DATE OF ISSUE": "dateOfIssue",
     "DATE OF EXPIRATION": "dateOfExpiration",
-    "SEX": "gender"
+    "SEX": "gender",
+    "NAME OF SCHOOL / EDUCATIONAL INSTITUTION": "educationalBackground",
+    "NAME OF SCHOOL OR EDUCATIONAL INSTITUTION": "educationalBackground",
+    "NAME OF SCHOOL": "educationalBackground",
+    "EDUCATIONAL INSTITUTION": "educationalBackground",
+    "SCHOOL NAME": "educationalBackground"
   };
 
   document.addEventListener("DOMContentLoaded", () => {
@@ -161,6 +166,15 @@
         const escapedKey = formattedKey.replace(/'/g, "\\'").replace(/"/g, "&quot;");
         const escapedValue = field.value.replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
+        let saveButtonHtml = "";
+        if (firestoreField) {
+          saveButtonHtml = `
+            <button class="${buttonClass}" onclick="saveFieldToStudent(this, '${escapedKey}', '${escapedValue}')" title="${titleText}" ${disabledAttr}>
+              ${buttonText}
+            </button>
+          `;
+        }
+
         return `
           <div class="field-item">
             <div>
@@ -177,9 +191,7 @@
               <button class="action-btn delete" onclick="confirmDeleteField(${index})" title="Delete field">
                 <i class="bi bi-trash"></i>
               </button>
-              <button class="${buttonClass}" onclick="saveFieldToStudent(this, '${escapedKey}', '${escapedValue}')" title="${titleText}" ${disabledAttr}>
-                ${buttonText}
-              </button>
+              ${saveButtonHtml}
             </div>
           </div>
         `;
@@ -324,24 +336,29 @@
 
     try {
       if (typeof db !== "undefined") {
+        let finalValue = value;
+        if (["fullName", "passport", "address", "educationalBackground"].includes(firestoreField)) {
+          finalValue = value.toUpperCase();
+        }
+
         const updateData = {
-          [firestoreField]: value,
+          [firestoreField]: finalValue,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
         // If field is gender, write to sex as well to support existing DB schema
         if (firestoreField === "gender") {
-          updateData["sex"] = value;
+          updateData["sex"] = finalValue;
         }
 
         // If field is dateOfIssue, write to passportIssueDate as well to support existing DB schema
         if (firestoreField === "dateOfIssue") {
-          updateData["passportIssueDate"] = value;
+          updateData["passportIssueDate"] = finalValue;
         }
 
         // If field is dateOfExpiration, write to passportExpireDate as well to support existing DB schema
         if (firestoreField === "dateOfExpiration") {
-          updateData["passportExpireDate"] = value;
+          updateData["passportExpireDate"] = finalValue;
         }
 
         // Run update query in Firebase Firestore
