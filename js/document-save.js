@@ -139,12 +139,18 @@
           const cleanDbExpireValue = dbExpireValue.toString().trim().toUpperCase();
           const cleanNewValue = field.value.toString().trim().toUpperCase();
 
-          if (
-            cleanDbValue === cleanNewValue || 
-            (firestoreField === "gender" && cleanDbSexValue === cleanNewValue) ||
-            (firestoreField === "dateOfIssue" && cleanDbIssueValue === cleanNewValue) ||
-            (firestoreField === "dateOfExpiration" && cleanDbExpireValue === cleanNewValue)
-          ) {
+          let isSaved = false;
+          if (firestoreField === "gender") {
+            isSaved = (cleanDbValue === cleanNewValue) && (cleanDbSexValue === cleanNewValue);
+          } else if (firestoreField === "dateOfIssue") {
+            isSaved = (cleanDbValue === cleanNewValue) && (cleanDbIssueValue === cleanNewValue);
+          } else if (firestoreField === "dateOfExpiration") {
+            isSaved = (cleanDbValue === cleanNewValue) && (cleanDbExpireValue === cleanNewValue);
+          } else {
+            isSaved = (cleanDbValue === cleanNewValue);
+          }
+
+          if (isSaved) {
             buttonText = `Saved ✓`;
             buttonClass = "action-btn save-to success-saved-btn";
             disabledAttr = "disabled";
@@ -277,9 +283,7 @@
     if (!studentId) {
       window.showToast("Student ID not found in URL", "danger");
       return;
-    }
-
-    // Check if value already matches current student data in Firestore
+    }    // Check if value already matches current student data in Firestore
     if (window.currentStudentData) {
       const dbValue = window.currentStudentData[firestoreField] || "";
       const dbSexValue = (firestoreField === "gender") ? (window.currentStudentData["sex"] || "") : "";
@@ -292,12 +296,18 @@
       const cleanDbExpireValue = dbExpireValue.toString().trim().toUpperCase();
       const cleanNewValue = value.toString().trim().toUpperCase();
 
-      if (
-        cleanDbValue === cleanNewValue || 
-        (firestoreField === "gender" && cleanDbSexValue === cleanNewValue) ||
-        (firestoreField === "dateOfIssue" && cleanDbIssueValue === cleanNewValue) ||
-        (firestoreField === "dateOfExpiration" && cleanDbExpireValue === cleanNewValue)
-      ) {
+      let isSaved = false;
+      if (firestoreField === "gender") {
+        isSaved = (cleanDbValue === cleanNewValue) && (cleanDbSexValue === cleanNewValue);
+      } else if (firestoreField === "dateOfIssue") {
+        isSaved = (cleanDbValue === cleanNewValue) && (cleanDbIssueValue === cleanNewValue);
+      } else if (firestoreField === "dateOfExpiration") {
+        isSaved = (cleanDbValue === cleanNewValue) && (cleanDbExpireValue === cleanNewValue);
+      } else {
+        isSaved = (cleanDbValue === cleanNewValue);
+      }
+
+      if (isSaved) {
         window.showToast(`${cleanLabel} is already up to date`, "info");
         btn.innerHTML = `Saved ✓`;
         btn.className = "action-btn save-to success-saved-btn"; 
