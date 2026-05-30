@@ -63,7 +63,8 @@
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-glass sticky-top">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold d-flex align-items-center" href="#" onclick="showTab('students'); return false;">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="#"
+                onclick="showTab('students'); return false;">
                 <img src="Logo.png" alt="UNIAPP Logo" style="width: 32px; height: 32px; object-fit: contain;"
                     class="me-2">
                 UNIAPP
@@ -76,7 +77,8 @@
                 <!-- Navbar Global Search -->
                 <div class="navbar-search-wrapper d-none d-lg-flex">
                     <div class="navbar-search-group">
-                        <select class="form-select search-type-select" id="headerSearchType" onchange="syncSearchInputs('desktop')">
+                        <select class="form-select search-type-select" id="headerSearchType"
+                            onchange="syncSearchInputs('desktop')">
                             <option value="all">All Fields</option>
                             <option value="id">ID</option>
                             <option value="name">Name</option>
@@ -85,7 +87,8 @@
                         </select>
                         <div class="navbar-search-input-container">
                             <i class="bi bi-search search-icon"></i>
-                            <input type="text" id="headerSearchInput" class="form-control" placeholder="Search..." oninput="syncSearchInputs('desktop')">
+                            <input type="text" id="headerSearchInput" class="form-control" placeholder="Search..."
+                                oninput="syncSearchInputs('desktop')">
                         </div>
                     </div>
                 </div>
@@ -98,7 +101,8 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-link-apple" href="https://admissions-university.vercel.app/" id="nav-admissions" target="_blank">
+                        <a class="nav-link nav-link-apple" href="https://admissions-university.vercel.app/"
+                            id="nav-admissions" target="_blank">
                             <i class="bi bi-mortarboard-fill me-1"></i> ADMISSIONS
                         </a>
                     </li>
@@ -119,7 +123,8 @@
             </select>
             <div class="navbar-search-input-container">
                 <i class="bi bi-search search-icon"></i>
-                <input type="text" id="mobileSearchInput" class="form-control" placeholder="Search..." oninput="syncSearchInputs('mobile')">
+                <input type="text" id="mobileSearchInput" class="form-control" placeholder="Search..."
+                    oninput="syncSearchInputs('mobile')">
             </div>
         </div>
     </div>
@@ -191,7 +196,8 @@
                     <!-- Task Tags Filter -->
                     <div class="filter-item tag-filter-item">
                         <i class="bi bi-bookmark-check filter-icon"></i>
-                        <select class="form-select filter-input" id="filterTags" onchange="applyFilters()" aria-label="Filter by task tags">
+                        <select class="form-select filter-input" id="filterTags" onchange="applyFilters()"
+                            aria-label="Filter by task tags">
                             <option value="">All Tasks/Tags</option>
                             <option value="Call">📞 Call</option>
                             <option value="Apply">🎓 Apply</option>
@@ -234,7 +240,8 @@
                         </colgroup>
                         <thead>
                             <tr>
-                                <th onclick="toggleSortOrder('students')" style="cursor: pointer; user-select: none;" title="Sort by ID">
+                                <th onclick="toggleSortOrder('students')" style="cursor: pointer; user-select: none;"
+                                    title="Sort by ID">
                                     ID <i id="studentsSortIcon" class="bi bi-chevron-down ms-1"></i>
                                 </th>
                                 <th>Full Name</th>
@@ -267,7 +274,8 @@
                     <!-- Search Type -->
                     <div class="filter-item">
                         <i class="bi bi-funnel filter-icon"></i>
-                        <select class="form-select filter-input" id="statusSearchType" onchange="syncSearchInputs('status')" aria-label="Search Type">
+                        <select class="form-select filter-input" id="statusSearchType"
+                            onchange="syncSearchInputs('status')" aria-label="Search Type">
                             <option value="all">All Fields</option>
                             <option value="id">ID</option>
                             <option value="name">Name</option>
@@ -386,7 +394,8 @@
                         </colgroup>
                         <thead>
                             <tr>
-                                <th onclick="toggleSortOrder('status')" style="cursor: pointer; user-select: none;" title="Sort by ID">
+                                <th onclick="toggleSortOrder('status')" style="cursor: pointer; user-select: none;"
+                                    title="Sort by ID">
                                     ID <i id="statusSortIcon" class="bi bi-chevron-down ms-1"></i>
                                 </th>
                                 <th>Full Name</th>
@@ -806,7 +815,8 @@
                                     D120)</span>
                             </label>
                             <input type="text" class="form-control ios-input" id="studentId" placeholder="D120"
-                                autocomplete="off" style="font-size: 1rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;"
+                                autocomplete="off"
+                                style="font-size: 1rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;"
                                 oninput="this.value = this.value.toUpperCase()" required>
                             <div id="lastStudentHint" class="text-secondary mt-1"
                                 style="font-size: 0.75rem; display: none;">
@@ -932,7 +942,7 @@
                         <i class="bi bi-file-earmark-excel text-success me-2"></i>Download as Excel
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                         aria-label="Close"></button>
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <!-- Search and Filters -->
@@ -941,7 +951,8 @@
                         <div class="row g-2 mb-3">
                             <div class="col-md-4">
                                 <label class="form-label text-secondary small fw-bold mb-1">Search Type</label>
-                                <select class="form-select ios-input" id="excelSearchType" onchange="filterExcelStudents()">
+                                <select class="form-select ios-input" id="excelSearchType"
+                                    onchange="filterExcelStudents()">
                                     <option value="all">All Fields</option>
                                     <option value="id">ID</option>
                                     <option value="name">Name</option>
@@ -952,9 +963,10 @@
                             <div class="col-md-8">
                                 <label class="form-label text-secondary small fw-bold mb-1">Search Query</label>
                                 <div class="search-wrapper w-100 position-relative">
-                                    <i class="bi bi-search search-icon" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); pointer-events: none;"></i>
-                                    <input type="text" id="excelSearchInput" class="form-control ios-input ps-5" 
-                                           placeholder="Search students..." oninput="filterExcelStudents()">
+                                    <i class="bi bi-search search-icon"
+                                        style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); pointer-events: none;"></i>
+                                    <input type="text" id="excelSearchInput" class="form-control ios-input ps-5"
+                                        placeholder="Search students..." oninput="filterExcelStudents()">
                                 </div>
                             </div>
                         </div>
@@ -964,7 +976,8 @@
                             <!-- Tariff Filter -->
                             <div class="col-lg col-md-4 col-sm-6 excel-filter-col">
                                 <label class="form-label text-secondary small fw-bold mb-1">Tariff</label>
-                                <select class="form-select ios-input" id="excelTariffFilter" onchange="filterExcelStudents()">
+                                <select class="form-select ios-input" id="excelTariffFilter"
+                                    onchange="filterExcelStudents()">
                                     <option value="">All Tariffs</option>
                                     <option value="STANDART">STANDART</option>
                                     <option value="PREMIUM">PREMIUM</option>
@@ -977,7 +990,8 @@
                             <!-- Level Filter -->
                             <div class="col-lg col-md-4 col-sm-6 excel-filter-col">
                                 <label class="form-label text-secondary small fw-bold mb-1">Education Level</label>
-                                <select class="form-select ios-input" id="excelLevelFilter" onchange="filterExcelStudents()">
+                                <select class="form-select ios-input" id="excelLevelFilter"
+                                    onchange="filterExcelStudents()">
                                     <option value="">All Levels</option>
                                     <option value="COLLEGE">COLLEGE</option>
                                     <option value="BACHELOR">BACHELOR</option>
@@ -990,7 +1004,8 @@
                             <!-- Group Filter -->
                             <div class="col-lg col-md-4 col-sm-6 excel-filter-col">
                                 <label class="form-label text-secondary small fw-bold mb-1">Group</label>
-                                <select class="form-select ios-input" id="excelGroupFilter" onchange="filterExcelStudents()">
+                                <select class="form-select ios-input" id="excelGroupFilter"
+                                    onchange="filterExcelStudents()">
                                     <option value="">All Groups</option>
                                     <option value="NO_GROUP">No Group</option>
                                 </select>
@@ -999,7 +1014,8 @@
                             <!-- Language Certificate Filter -->
                             <div class="col-lg col-md-6 col-sm-6 excel-filter-col">
                                 <label class="form-label text-secondary small fw-bold mb-1">Language Certificate</label>
-                                <select class="form-select ios-input" id="excelLanguageCertificateFilter" onchange="filterExcelStudents()">
+                                <select class="form-select ios-input" id="excelLanguageCertificateFilter"
+                                    onchange="filterExcelStudents()">
                                     <option value="">All Certificates</option>
                                     <option value="NO CERTIFICATE">NO CERTIFICATE</option>
                                     <option value="TOPIK">TOPIK</option>
@@ -1014,7 +1030,8 @@
                             <!-- Task Tags Filter -->
                             <div class="col-lg col-md-6 col-sm-12 excel-filter-col">
                                 <label class="form-label text-secondary small fw-bold mb-1">Tasks/Tags</label>
-                                <select class="form-select ios-input" id="excelTagsFilter" onchange="filterExcelStudents()">
+                                <select class="form-select ios-input" id="excelTagsFilter"
+                                    onchange="filterExcelStudents()">
                                     <option value="">All Tasks/Tags</option>
                                     <option value="Call">📞 Call</option>
                                     <option value="Apply">🎓 Apply</option>
@@ -1027,13 +1044,15 @@
                     </div>
 
                     <!-- Selected Count Badge -->
-                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
+                    <div
+                        class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
                         <span class="fw-bold text-secondary">Select Students to Export</span>
                         <span id="selectedCount" class="badge bg-success">0 selected</span>
                     </div>
 
                     <!-- Student Table Container -->
-                    <div class="students-table-wrapper scroll-container-md" style="max-height: 400px; overflow-y: auto;">
+                    <div class="students-table-wrapper scroll-container-md"
+                        style="max-height: 400px; overflow-y: auto;">
                         <table class="students-table" id="excelStudentsTable">
                             <colgroup>
                                 <col style="width: 4%;">
@@ -1045,9 +1064,11 @@
                             <thead>
                                 <tr>
                                     <th style="text-align: center;">
-                                        <input class="form-check-input" type="checkbox" id="selectAllStudents" onchange="toggleSelectAll()">
+                                        <input class="form-check-input" type="checkbox" id="selectAllStudents"
+                                            onchange="toggleSelectAll()">
                                     </th>
-                                    <th onclick="toggleSortOrder('students')" style="cursor: pointer; user-select: none;" title="Sort by ID">
+                                    <th onclick="toggleSortOrder('students')"
+                                        style="cursor: pointer; user-select: none;" title="Sort by ID">
                                         ID <i id="excelSortIcon" class="bi bi-chevron-down ms-1"></i>
                                     </th>
                                     <th>Full Name</th>
@@ -1791,7 +1812,7 @@
     <!-- Shared Flags / Tasks Popover -->
     <div id="flagsPopover" class="cp-popup flags-popover" onmouseenter="cancelHideFlagsPopover()"
         onmouseleave="startHideFlagsPopover(200)">
-        
+
         <div class="flags-section">
             <div class="flags-section-title">Select Color</div>
             <div class="flags-colors-grid" id="flagsColorsGrid">
@@ -1815,7 +1836,7 @@
                 <!-- Custom tags appear here -->
             </div>
             <div class="custom-tag-input-group">
-                <input type="text" id="customTagInput" class="custom-tag-input" placeholder="New tag..." 
+                <input type="text" id="customTagInput" class="custom-tag-input" placeholder="New tag..."
                     onkeypress="if(event.key==='Enter')addCustomTaskTag()">
                 <button class="btn btn-primary btn-add-tag" onclick="addCustomTaskTag()">
                     <i class="bi bi-plus"></i>
@@ -1824,7 +1845,8 @@
         </div>
 
         <div class="flags-actions">
-            <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearAllFlags()">Clear All Tasks & Color</button>
+            <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearAllFlags()">Clear All Tasks &
+                Color</button>
         </div>
     </div>
     <!-- Shared Status Multi-Select Dropdown Popup -->
@@ -1834,7 +1856,8 @@
     <!-- ============================================================ -->
     <!-- Custom Tag Edit Modal                                         -->
     <!-- ============================================================ -->
-    <div class="modal fade" id="customTagEditModal" tabindex="-1" aria-labelledby="customTagEditModalLabel" aria-hidden="true">
+    <div class="modal fade" id="customTagEditModal" tabindex="-1" aria-labelledby="customTagEditModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" style="max-width:410px">
             <div class="modal-content modal-glass" style="border-radius:20px;overflow:hidden">
 
@@ -1847,7 +1870,8 @@
                         </div>
                         <h5 class="modal-title fw-bold mb-0" id="customTagEditModalLabel">Edit Custom Tag</h5>
                     </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
 
                 <!-- Body -->
@@ -1859,26 +1883,24 @@
                     <!-- Tag Name with live icon preview -->
                     <div class="mb-4">
                         <label class="form-label small fw-bold text-secondary text-uppercase mb-2"
-                               style="letter-spacing:.05em;font-size:.7rem">Tag Name</label>
+                            style="letter-spacing:.05em;font-size:.7rem">Tag Name</label>
                         <div class="input-group">
                             <span class="input-group-text" id="customTagEditSelectedIcon"
-                                  style="font-size:1.3rem;min-width:52px;justify-content:center;
+                                style="font-size:1.3rem;min-width:52px;justify-content:center;
                                          background:var(--bg-elevated);border-color:var(--border-default);border-right:none">
                                 🏷️
                             </span>
                             <input type="text" class="form-control ios-input" id="customTagEditName"
-                                   placeholder="Enter tag name…"
-                                   style="font-weight:600;font-size:.95rem;border-left:none"
-                                   onkeypress="if(event.key==='Enter')saveCustomTagEdit()">
+                                placeholder="Enter tag name…" style="font-weight:600;font-size:.95rem;border-left:none"
+                                onkeypress="if(event.key==='Enter')saveCustomTagEdit()">
                         </div>
                     </div>
 
                     <!-- Emoji Picker -->
                     <div class="mb-1">
                         <label class="form-label small fw-bold text-secondary text-uppercase mb-2"
-                               style="letter-spacing:.05em;font-size:.7rem">Choose Icon</label>
-                        <div id="customTagEmojiGrid"
-                             style="display:flex;flex-wrap:wrap;gap:5px;max-height:188px;overflow-y:auto;
+                            style="letter-spacing:.05em;font-size:.7rem">Choose Icon</label>
+                        <div id="customTagEmojiGrid" style="display:flex;flex-wrap:wrap;gap:5px;max-height:188px;overflow-y:auto;
                                     padding:8px;background:var(--bg-primary);border-radius:10px;
                                     border:1px solid var(--border-subtle)">
                             <!-- Populated by JS -->
@@ -1890,16 +1912,15 @@
                 <div class="modal-footer border-0 px-4 pb-4 pt-1" style="gap:8px">
                     <!-- Delete (two-step) -->
                     <button type="button" class="btn btn-outline-danger rounded-pill px-3 me-auto"
-                            id="deleteCustomTagBtn" onclick="deleteCustomTagGlobal()"
-                            style="font-size:.82rem;height:38px">
+                        id="deleteCustomTagBtn" onclick="deleteCustomTagGlobal()" style="font-size:.82rem;height:38px">
                         <i class="bi bi-trash me-1"></i> Delete Tag
                     </button>
                     <button type="button" class="btn rounded-pill px-4" data-bs-dismiss="modal"
-                            style="height:38px;background:var(--bg-elevated);color:var(--text-secondary);border:1px solid var(--border-default)">
+                        style="height:38px;background:var(--bg-elevated);color:var(--text-secondary);border:1px solid var(--border-default)">
                         Cancel
                     </button>
-                    <button type="button" class="btn btn-primary-apple rounded-pill px-4"
-                            onclick="saveCustomTagEdit()" style="height:38px;font-weight:600">
+                    <button type="button" class="btn btn-primary-apple rounded-pill px-4" onclick="saveCustomTagEdit()"
+                        style="height:38px;font-weight:600">
                         <i class="bi bi-check-circle me-1"></i> Save
                     </button>
                 </div>
@@ -1910,4 +1931,3 @@
 </body>
 
 </html>
-

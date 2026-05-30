@@ -16,15 +16,8 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Gemini API Key is not configured. Please configure it in AI Settings.' });
     }
 
-    // Map selection to standard Gemini model identifiers
-    let finalModel = 'gemini-2.5-flash';
-    if (model) {
-      if (model.includes('Pro')) {
-        finalModel = 'gemini-2.5-pro';
-      } else if (model.includes('Lite')) {
-        finalModel = 'gemini-2.5-flash-lite';
-      }
-    }
+    // Use the model sent by the client directly, defaulting to gemini-3.5-flash
+    const finalModel = model || 'gemini-3.5-flash';
 
     // Construct prompt extra instructions
     let extraInstructions = "";
@@ -44,7 +37,9 @@ Extract all readable information.
 Specific instructions:
 ${extraInstructions}
 - Identify the document type automatically (e.g. Passport, ID Card, Diploma, Certificate, Visa, Transcript).
-- Extract only meaningful fields (e.g. FULL NAME, PASSPORT NUMBER, DATE OF BIRTH, NATIONALITY, DATE OF ISSUE, DATE OF EXPIRATION, etc.).
+- The "FULL_NAME" field MUST be constructed as the concatenation of: Surname + Given Names + Father's Name (patronymic / Otasining ismi) if present on the document, in that exact order (e.g., combining Surname + Given Names + Otasining ismi like "ISAKJONOV MUKHAMMADIYOR NAVRUZBEK UGLI" or "ABDUKHOSHIMOV DONIYORBEK SIROJIDDIN UGLI"). Ensure no part of the name (like Father's name / Otasining ismi) is omitted.
+- Extract the sex/gender field as "SEX" (value must be exactly "M" or "F").
+- Extract only meaningful fields (e.g. FULL NAME, PASSPORT NUMBER, DATE OF BIRTH, DATE OF ISSUE, DATE OF EXPIRATION, SEX, etc.).
 - Ignore watermarks, decorative branding, or irrelevant numbers.
 - Provide a full raw OCR text in the "ocr_text" property.
 
@@ -56,9 +51,9 @@ Return JSON only. Do not explain anything. Output must be exactly in this JSON f
     "FULL_NAME": "...",
     "PASSPORT_NUMBER": "...",
     "DATE_OF_BIRTH": "...",
-    "NATIONALITY": "...",
     "DATE_OF_ISSUE": "...",
-    "DATE_OF_EXPIRATION": "..."
+    "DATE_OF_EXPIRATION": "...",
+    "SEX": "..."
   }
 }`;
 

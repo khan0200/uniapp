@@ -1718,8 +1718,8 @@
                                 <div class="info-value" id="infoPhone2">-</div>
                             </div>
                         </div>
-                        <!-- Row 2: Email, Birthday -->
-                        <div class="info-row-2">
+                        <!-- Row 2: Email, Birthday, Sex -->
+                        <div class="info-row-3">
                             <div class="info-item">
                                 <div class="info-label">Email</div>
                                 <div class="info-value" id="infoEmail">-</div>
@@ -1727,6 +1727,10 @@
                             <div class="info-item">
                                 <div class="info-label">Birthday</div>
                                 <div class="info-value" id="infoBirthday">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Sex</div>
+                                <div class="info-value" id="infoSex">-</div>
                             </div>
                         </div>
                         <!-- Row 3: Address -->
@@ -2233,6 +2237,7 @@
             document.getElementById('infoPhone2').textContent = student.phone2 || '-';
             document.getElementById('infoEmail').textContent = student.email || '-';
             document.getElementById('infoBirthday').textContent = student.birthday || '-';
+            document.getElementById('infoSex').textContent = student.sex || '-';
             document.getElementById('infoAddress').textContent = student.address || '-';
 
             // Education info - Fixed field name from educationLevel to level

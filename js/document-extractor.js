@@ -38,30 +38,34 @@
     });
   }
 
-  // Fetch the selected student's info from Firebase
-  async function loadStudentDetails(studentId) {
+  // Fetch the selected student's info from Firebase in real-time
+  function loadStudentDetails(studentId) {
     try {
       if (typeof db !== "undefined") {
-        const doc = await db.collection("students").doc(studentId).get();
-        if (doc.exists) {
-          const s = doc.data();
+        db.collection("students").doc(studentId).onSnapshot((doc) => {
+          if (doc.exists) {
+            const s = doc.data();
+            window.currentStudentData = s;
 
-          // Populate Header Elements
-          const nameEl = document.getElementById("studentHeaderName");
-          const idEl = document.getElementById("studentHeaderId");
-          const passportEl = document.getElementById("studentHeaderPassport");
+            // Populate Header Elements
+            const nameEl = document.getElementById("studentHeaderName");
+            const idEl = document.getElementById("studentHeaderId");
+            const passportEl = document.getElementById("studentHeaderPassport");
 
-          if (nameEl) nameEl.textContent = s.fullName || "Unnamed Student";
-          if (idEl) idEl.textContent = `Student ID: ${s.id || "-"}`;
-          if (passportEl) passportEl.textContent = `Passport: ${s.passport || "-"}`;
-        } else {
-          alert("Error: Student profile not found in database!");
-          window.close();
-        }
+            if (nameEl) nameEl.textContent = s.fullName || "Unnamed Student";
+            if (idEl) idEl.textContent = `Student ID: ${s.id || "-"}`;
+            if (passportEl) passportEl.textContent = `Passport: ${s.passport || "-"}`;
+          } else {
+            alert("Error: Student profile not found in database!");
+            window.close();
+          }
+        }, (error) => {
+          console.error("Error watching student profile:", error);
+          alert("Error loading student profile. Please check Firebase connection.");
+        });
       }
     } catch (error) {
-      console.error("Error fetching student profile:", error);
-      alert("Error loading student profile. Please check Firebase connection.");
+      console.error("Error setting up snapshot watcher:", error);
     }
   }
 
@@ -78,9 +82,23 @@
     const modelBadge = document.getElementById("extractionModelBadge");
     if (modelBadge) {
       // Map names to clean display
-      let displayModel = "Gemini 2.5 Flash";
-      if (settings.model === "gemini-2.5-pro") {
+      let displayModel = "Gemini 3.5 Flash";
+      if (settings.model === "gemini-3.5-flash") {
+        displayModel = "Gemini 3.5 Flash";
+      } else if (settings.model === "gemini-3.1-pro") {
+        displayModel = "Gemini 3.1 Pro";
+      } else if (settings.model === "gemini-3.1-flash-lite") {
+        displayModel = "Gemini 3.1 Flash Lite";
+      } else if (settings.model === "gemini-2.5-flash") {
+        displayModel = "Gemini 2.5 Flash";
+      } else if (settings.model === "gemini-2.5-pro") {
         displayModel = "Gemini 2.5 Pro";
+      } else if (settings.model === "gemini-2.0-flash") {
+        displayModel = "Gemini 2.0 Flash";
+      } else if (settings.model === "gemini-1.5-pro") {
+        displayModel = "Gemini 1.5 Pro";
+      } else if (settings.model === "gemini-1.5-flash") {
+        displayModel = "Gemini 1.5 Flash";
       } else if (settings.model === "gemini-2.5-flash-lite") {
         displayModel = "Gemini Flash Lite";
       } else if (settings.model) {

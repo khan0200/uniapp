@@ -4,6 +4,15 @@
   let ocrPanel, ocrTextarea;
   let currentExtractedFields = []; // Local cached list of extracted fields: {key, value}
 
+  const FIELD_MAPPING = {
+    "FULL NAME": "fullName",
+    "PASSPORT NUMBER": "passport",
+    "DATE OF BIRTH": "birthday",
+    "DATE OF ISSUE": "dateOfIssue",
+    "DATE OF EXPIRATION": "dateOfExpiration",
+    "SEX": "gender"
+  };
+
   document.addEventListener("DOMContentLoaded", () => {
     fieldsContainer = document.getElementById("fieldsContainer");
     quickCopyPanel = document.getElementById("quickCopyPanel");
@@ -55,6 +64,9 @@
 
   // Display all results extracted by Gemini
   window.displayExtractionResults = function (data) {
+    window.currentExtractionData = data;
+    window.hasLoggedExtraction = false;
+
     if (noResultsText) noResultsText.style.display = "none";
     if (fieldsContainer) fieldsContainer.style.display = "block";
 
@@ -104,6 +116,45 @@
     fieldsContainer.innerHTML = currentExtractedFields
       .map((field, index) => {
         const formattedKey = field.key.replace(/_/g, " ");
+        const cleanLabel = formattedKey.toUpperCase().trim();
+        const firestoreField = FIELD_MAPPING[cleanLabel] || "";
+        const titleText = firestoreField 
+          ? `Save To >>\nUpdates: ${firestoreField}` 
+          : `Save To >>\nUpdates: (not mapped)`;
+        
+        let disabledAttr = firestoreField ? "" : "disabled style='opacity: 0.5; cursor: not-allowed;'";
+        let buttonText = `<i class="bi bi-cloud-arrow-down"></i> Save To &gt;&gt;`;
+        let buttonClass = "action-btn save-to";
+
+        // Pre-render as Saved if current student data already matches this field's value
+        if (firestoreField && window.currentStudentData) {
+          const dbValue = window.currentStudentData[firestoreField] || "";
+          const dbSexValue = (firestoreField === "gender") ? (window.currentStudentData["sex"] || "") : "";
+          const dbIssueValue = (firestoreField === "dateOfIssue") ? (window.currentStudentData["passportIssueDate"] || "") : "";
+          const dbExpireValue = (firestoreField === "dateOfExpiration") ? (window.currentStudentData["passportExpireDate"] || "") : "";
+          
+          const cleanDbValue = dbValue.toString().trim().toUpperCase();
+          const cleanDbSexValue = dbSexValue.toString().trim().toUpperCase();
+          const cleanDbIssueValue = dbIssueValue.toString().trim().toUpperCase();
+          const cleanDbExpireValue = dbExpireValue.toString().trim().toUpperCase();
+          const cleanNewValue = field.value.toString().trim().toUpperCase();
+
+          if (
+            cleanDbValue === cleanNewValue || 
+            (firestoreField === "gender" && cleanDbSexValue === cleanNewValue) ||
+            (firestoreField === "dateOfIssue" && cleanDbIssueValue === cleanNewValue) ||
+            (firestoreField === "dateOfExpiration" && cleanDbExpireValue === cleanNewValue)
+          ) {
+            buttonText = `Saved ✓`;
+            buttonClass = "action-btn save-to success-saved-btn";
+            disabledAttr = "disabled";
+          }
+        }
+        
+        // Escape quotes to prevent breaks in HTML attributes/JSON onclick params
+        const escapedKey = formattedKey.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+        const escapedValue = field.value.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
         return `
           <div class="field-item">
             <div>
@@ -111,7 +162,7 @@
               <div class="field-value" id="field-value-${index}">${field.value}</div>
             </div>
             <div class="action-btn-group">
-              <button class="action-btn copy" onclick="copyValue('${field.value.replace(/'/g, "\\'")}')" title="Copy to clipboard">
+              <button class="action-btn copy" onclick="copyValue('${escapedValue}')" title="Copy to clipboard">
                 <i class="bi bi-clipboard"></i>
               </button>
               <button class="action-btn edit" onclick="openEditFieldModal(${index})" title="Edit value">
@@ -120,8 +171,8 @@
               <button class="action-btn delete" onclick="confirmDeleteField(${index})" title="Delete field">
                 <i class="bi bi-trash"></i>
               </button>
-              <button class="action-btn save-to" onclick="openSaveToModal(${index})" title="Save to student profile">
-                <i class="bi bi-cloud-arrow-down"></i> Save To &gt;&gt;
+              <button class="${buttonClass}" onclick="saveFieldToStudent(this, '${escapedKey}', '${escapedValue}')" title="${titleText}" ${disabledAttr}>
+                ${buttonText}
               </button>
             </div>
           </div>
@@ -212,110 +263,123 @@
     }
   };
 
-  // Save to Student Profile modal & handler
-  let activeSaveIndex = null;
-  window.openSaveToModal = function (index) {
-    activeSaveIndex = index;
-    const field = currentExtractedFields[index];
+  // Save Field directly to Student Profile in Firestore
+  window.saveFieldToStudent = async function (btn, fieldLabel, value) {
+    const cleanLabel = fieldLabel.replace(/_/g, " ").toUpperCase().trim();
+    const firestoreField = FIELD_MAPPING[cleanLabel];
 
-    const valDisplay = document.getElementById("saveToModalValue");
-    if (valDisplay) valDisplay.textContent = field.value;
-
-    // Smart auto-suggest
-    const selectEl = document.getElementById("saveToFieldSelect");
-    const suggestText = document.getElementById("smartSuggestText");
-
-    if (selectEl) {
-      const suggestField = suggestDestinationField(field.key);
-      if (suggestField) {
-        selectEl.value = suggestField;
-        if (suggestText) {
-          suggestText.innerHTML = `<i class="bi bi-lightbulb-fill"></i> Suggested match: <strong>${selectEl.options[selectEl.selectedIndex].text}</strong>`;
-          suggestText.style.display = "block";
-        }
-      } else {
-        if (suggestText) suggestText.style.display = "none";
-      }
-    }
-
-    const modal = new bootstrap.Modal(document.getElementById("saveToModal"));
-    modal.show();
-  };
-
-  // Smart suggestions mapping helper
-  function suggestDestinationField(geminiKey) {
-    const key = geminiKey.toUpperCase();
-    if (key.includes("FULL_NAME") || key === "NAME") return "fullName";
-    if (key.includes("PASSPORT_NUMBER") || key === "PASSPORT") return "passport";
-    if (key.includes("DATE_OF_BIRTH") || key === "DOB" || key.includes("BIRTHDATE") || key.includes("DATE_OF_BIRTH")) return "birthday";
-    if (key.includes("DATE_OF_ISSUE") || key.includes("ISSUE_DATE")) return "passportIssueDate";
-    if (key.includes("DATE_OF_EXPIRATION") || key.includes("EXPIRE_DATE") || key.includes("EXPIRY_DATE")) return "passportExpireDate";
-    if (key.includes("NATIONALITY")) return "nationality";
-    if (key.includes("PHONE") || key.includes("MOBILE") || key.includes("NUMBER")) return "phone1";
-    if (key.includes("EMAIL")) return "email";
-    if (key.includes("ADDRESS")) return "address";
-    if (key.includes("EDUCATIONAL") || key.includes("BACKGROUND") || key.includes("EDUCATION")) return "educationalBackground";
-    if (key.includes("LEAD")) return "leadBy";
-    return null;
-  }
-
-  // Update field selection suggest label on selection changes
-  document.addEventListener("DOMContentLoaded", () => {
-    const selectEl = document.getElementById("saveToFieldSelect");
-    if (selectEl) {
-      selectEl.addEventListener("change", () => {
-        const suggestText = document.getElementById("smartSuggestText");
-        if (suggestText) suggestText.style.display = "none"; // Hide suggestion info once changed manually
-      });
-    }
-  });
-
-  // Execute actual Firestore update
-  window.executeFieldSave = async function () {
-    if (activeSaveIndex === null) return;
-
-    const selectEl = document.getElementById("saveToFieldSelect");
-    const fieldName = selectEl.value;
-    const fieldText = selectEl.options[selectEl.selectedIndex].text;
-    const value = currentExtractedFields[activeSaveIndex].value;
-
-    const studentId = window.currentStudentId; // Set in document-extractor.js
-    if (!studentId) {
-      window.showToast("Error: No student profile loaded!", "danger");
+    if (!firestoreField) {
+      window.showToast(`No mapping found for field: ${fieldLabel}`, "warning");
       return;
     }
 
+    const studentId = new URLSearchParams(window.location.search).get("studentId");
+    if (!studentId) {
+      window.showToast("Student ID not found in URL", "danger");
+      return;
+    }
+
+    // Check if value already matches current student data in Firestore
+    if (window.currentStudentData) {
+      const dbValue = window.currentStudentData[firestoreField] || "";
+      const dbSexValue = (firestoreField === "gender") ? (window.currentStudentData["sex"] || "") : "";
+      const dbIssueValue = (firestoreField === "dateOfIssue") ? (window.currentStudentData["passportIssueDate"] || "") : "";
+      const dbExpireValue = (firestoreField === "dateOfExpiration") ? (window.currentStudentData["passportExpireDate"] || "") : "";
+      
+      const cleanDbValue = dbValue.toString().trim().toUpperCase();
+      const cleanDbSexValue = dbSexValue.toString().trim().toUpperCase();
+      const cleanDbIssueValue = dbIssueValue.toString().trim().toUpperCase();
+      const cleanDbExpireValue = dbExpireValue.toString().trim().toUpperCase();
+      const cleanNewValue = value.toString().trim().toUpperCase();
+
+      if (
+        cleanDbValue === cleanNewValue || 
+        (firestoreField === "gender" && cleanDbSexValue === cleanNewValue) ||
+        (firestoreField === "dateOfIssue" && cleanDbIssueValue === cleanNewValue) ||
+        (firestoreField === "dateOfExpiration" && cleanDbExpireValue === cleanNewValue)
+      ) {
+        window.showToast(`${cleanLabel} is already up to date`, "info");
+        btn.innerHTML = `Saved ✓`;
+        btn.className = "action-btn save-to success-saved-btn"; 
+        btn.disabled = true;
+        return;
+      }
+    }
+
+    const originalHtml = btn.innerHTML;
+    
+    // Set saving state: button text becomes "Saving...", disable, show spinner
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Saving...`;
+
     try {
       if (typeof db !== "undefined") {
-        const updateData = {};
-        
-        // Handle special values / formatting
-        if (fieldName === "fullName" || fieldName === "passport" || fieldName === "address") {
-          updateData[fieldName] = value.toUpperCase();
-        } else {
-          updateData[fieldName] = value;
+        const updateData = {
+          [firestoreField]: value,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        // If field is gender, write to sex as well to support existing DB schema
+        if (firestoreField === "gender") {
+          updateData["sex"] = value;
+        }
+
+        // If field is dateOfIssue, write to passportIssueDate as well to support existing DB schema
+        if (firestoreField === "dateOfIssue") {
+          updateData["passportIssueDate"] = value;
+        }
+
+        // If field is dateOfExpiration, write to passportExpireDate as well to support existing DB schema
+        if (firestoreField === "dateOfExpiration") {
+          updateData["passportExpireDate"] = value;
         }
 
         // Run update query in Firebase Firestore
         await db.collection("students").doc(studentId).update(updateData);
 
-        // Hide modal
-        const modalEl = document.getElementById("saveToModal");
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
-
-        window.showToast(`${fieldText} updated successfully!`, "success");
+        // Success state: show success toast, button changes to "Saved ✓", disable button, green success styling
+        window.showToast(`${cleanLabel} saved successfully`, "success");
+        btn.innerHTML = `Saved ✓`;
+        btn.className = "action-btn save-to success-saved-btn"; 
+        btn.disabled = true;
 
         // Sync header details if matching
-        if (fieldName === "fullName") {
-          document.getElementById("studentHeaderName").textContent = value.toUpperCase();
-        } else if (fieldName === "passport") {
-          document.getElementById("studentHeaderPassport").textContent = `Passport: ${value.toUpperCase()}`;
+        if (firestoreField === "fullName") {
+          const nameHeader = document.getElementById("studentHeaderName");
+          if (nameHeader) nameHeader.textContent = value.toUpperCase();
+        } else if (firestoreField === "passport") {
+          const passportHeader = document.getElementById("studentHeaderPassport");
+          if (passportHeader) passportHeader.textContent = `Passport: ${value.toUpperCase()}`;
         }
+
+        // Log history in Firestore if enabled and not already logged for this extraction session
+        let aiSettings = {};
+        try {
+          const stored = localStorage.getItem("ai_settings");
+          if (stored) aiSettings = JSON.parse(stored);
+        } catch (e) {
+          console.warn("Failed to load stored AI config settings:", e);
+        }
+
+        if (aiSettings.saveHistory !== false && !window.hasLoggedExtraction && window.currentExtractionData) {
+          const filename = window.uploadedFileData ? window.uploadedFileData.filename : "uploaded_image.png";
+          window.logExtractionHistory(
+            window.currentExtractionData.document_type || "Unknown",
+            window.currentExtractionData.fields || {},
+            filename
+          );
+          window.hasLoggedExtraction = true;
+        }
+      } else {
+        throw new Error("Firestore DB reference not found");
       }
     } catch (error) {
       console.error("Firestore update error:", error);
-      window.showToast("Failed to save to student profile.", "danger");
+      window.showToast("Failed to save field", "danger");
+      
+      // Restore button state on error to allow retry
+      btn.innerHTML = originalHtml;
+      btn.disabled = false;
     }
   };
 

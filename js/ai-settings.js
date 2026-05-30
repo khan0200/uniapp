@@ -3,7 +3,7 @@
   // Default configurations
   const defaultSettings = {
     apiKey: "",
-    model: "gemini-2.5-flash",
+    model: "gemini-3.5-flash",
     normalizeDates: true,
     mergeNames: true,
     extractStructured: true,
@@ -14,7 +14,23 @@
   // Load settings on initialization
   document.addEventListener("DOMContentLoaded", () => {
     loadAiSettings();
+    initModelCustomToggle();
   });
+
+  // Toggle custom model input visibility based on select dropdown value
+  function initModelCustomToggle() {
+    const modelEl = document.getElementById("geminiModel");
+    const customModelEl = document.getElementById("geminiModelCustom");
+    if (modelEl && customModelEl) {
+      modelEl.addEventListener("change", () => {
+        if (modelEl.value === "custom") {
+          customModelEl.style.display = "block";
+        } else {
+          customModelEl.style.display = "none";
+        }
+      });
+    }
+  }
 
   // Toggle show/hide API key
   window.toggleApiKeyVisibility = function() {
@@ -74,6 +90,7 @@
   function applySettingsToUI(settings) {
     const apiKeyEl = document.getElementById("geminiApiKey");
     const modelEl = document.getElementById("geminiModel");
+    const customModelEl = document.getElementById("geminiModelCustom");
     const normalizeDatesEl = document.getElementById("aiNormalizeDates");
     const mergeNamesEl = document.getElementById("aiMergeNames");
     const extractStructuredEl = document.getElementById("aiExtractStructured");
@@ -81,7 +98,30 @@
     const saveHistoryEl = document.getElementById("aiSaveHistory");
 
     if (apiKeyEl) apiKeyEl.value = settings.apiKey || "";
-    if (modelEl) modelEl.value = settings.model || "gemini-2.5-flash";
+
+    if (modelEl) {
+      const knownModels = [
+        "gemini-3.5-flash", "gemini-3.1-pro", "gemini-3.1-flash-lite",
+        "gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash",
+        "gemini-1.5-pro", "gemini-1.5-flash", "gemini-2.5-flash-lite"
+      ];
+      const modelVal = settings.model || "gemini-3.5-flash";
+
+      if (knownModels.includes(modelVal)) {
+        modelEl.value = modelVal;
+        if (customModelEl) {
+          customModelEl.style.display = "none";
+          customModelEl.value = "";
+        }
+      } else {
+        modelEl.value = "custom";
+        if (customModelEl) {
+          customModelEl.style.display = "block";
+          customModelEl.value = modelVal;
+        }
+      }
+    }
+
     if (normalizeDatesEl) normalizeDatesEl.checked = settings.normalizeDates !== false;
     if (mergeNamesEl) mergeNamesEl.checked = settings.mergeNames !== false;
     if (extractStructuredEl) extractStructuredEl.checked = settings.extractStructured !== false;
@@ -92,12 +132,22 @@
   // Save Settings to Firestore & LocalStorage
   window.saveAiSettings = async function() {
     const apiKey = document.getElementById("geminiApiKey")?.value.trim() || "";
-    const model = document.getElementById("geminiModel")?.value || "gemini-2.5-flash";
+    const modelEl = document.getElementById("geminiModel");
+    const customModelEl = document.getElementById("geminiModelCustom");
     const normalizeDates = document.getElementById("aiNormalizeDates")?.checked ?? true;
     const mergeNames = document.getElementById("aiMergeNames")?.checked ?? true;
     const extractStructured = document.getElementById("aiExtractStructured")?.checked ?? true;
     const includeOcr = document.getElementById("aiIncludeOcr")?.checked ?? true;
     const saveHistory = document.getElementById("aiSaveHistory")?.checked ?? true;
+
+    let model = "gemini-3.5-flash";
+    if (modelEl) {
+      if (modelEl.value === "custom") {
+        model = customModelEl?.value.trim() || "gemini-3.5-flash";
+      } else {
+        model = modelEl.value;
+      }
+    }
 
     const newSettings = {
       apiKey,
