@@ -699,17 +699,23 @@ function saveStudent() {
     office: officeEl ? officeEl.value.trim() : "",
     phone1: "",
     phone2: "",
+    fatherPhone: "",
+    motherPhone: "",
     email: "",
     birthday: "",
     passport: "",
+    passportIssueDate: "",
+    passportExpireDate: "",
     tariff: "",
     level: "",
+    level2: "",
     languageCertificate: "NO CERTIFICATE",
     certificateScore: "",
     languageCertificate2: "NO CERTIFICATE",
     certificateScore2: "",
     languageCertificate3: "NO CERTIFICATE",
     certificateScore3: "",
+    educationalBackground: "",
     university1: "",
     university1Status: "Chosen",
     university2: "",
@@ -718,6 +724,7 @@ function saveStudent() {
     university3Status: "Chosen",
     address: "",
     notes: "",
+    leadBy: "",
     balance: 0,
     discount: 0,
     createdAt: new Date().toISOString(),
@@ -1710,6 +1717,26 @@ function viewStudentDetails(uniqueId) {
     )
     .join("");
 
+  // Generate level2 options (same as level options)
+  const level2Options =
+    '<option value="">Select Level 2...</option>' +
+    (window.levelsData || [])
+      .map(
+        (l) =>
+          `<option value="${l.name}" ${s.level2 === l.name ? "selected" : ""}>${l.name}</option>`,
+      )
+      .join("");
+
+  // Generate Lead by options from dynamic data
+  const leadByOptions =
+    '<option value="">Select Lead by...</option>' +
+    (window.leadByData || [])
+      .map(
+        (lb) =>
+          `<option value="${lb.name}" ${s.leadBy === lb.name ? "selected" : ""}>${lb.name}</option>`,
+      )
+      .join("");
+
   const studentInitials = (s.fullName || "?")
     .split(/\s+/)
     .filter(Boolean)
@@ -1737,6 +1764,8 @@ function viewStudentDetails(uniqueId) {
           <div class="col-12"><div class="detail-group editable ${(!s.tariff || s.tariff === "" || s.tariff === "-") ? "missing-field-highlight" : ""}" data-field="tariff"><label class="detail-label">Tariff</label><div class="detail-value-wrap"><span class="detail-value"><span class="badge badge-tariff">${s.tariff}</span></span><button class="edit-btn" onclick="startEdit('tariff','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div><div class="edit-field" style="display:none;"><select class="form-select ios-input form-control-sm" id="edit-tariff">${tariffOptions}</select><div class="edit-actions"><button class="save-btn" onclick="saveEdit('tariff')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('tariff')"><i class="bi bi-x"></i></button></div></div></div></div>
           <div class="col-12"><div class="detail-group editable ${(!s.group || s.group === "" || s.group === "-" || s.group === "No Group") ? "missing-field-highlight" : ""}" data-field="group"><label class="detail-label">Group</label><div class="detail-value-wrap"><span class="detail-value"><span class="badge badge-group">${s.group||'No Group'}</span></span><button class="edit-btn" onclick="startEdit('group','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div><div class="edit-field" style="display:none;"><select class="form-select ios-input form-control-sm" id="edit-group"><option value="">No Group</option>${groupOptions}</select><div class="edit-actions"><button class="save-btn" onclick="saveEdit('group')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('group')"><i class="bi bi-x"></i></button></div></div></div></div>
           <div class="col-12"><div class="detail-group editable ${(!s.level || s.level === "" || s.level === "-") ? "missing-field-highlight" : ""}" data-field="level"><label class="detail-label">Education Level</label><div class="detail-value-wrap"><span class="detail-value"><span class="badge badge-level">${s.level}</span></span><button class="edit-btn" onclick="startEdit('level','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div><div class="edit-field" style="display:none;"><select class="form-select ios-input form-control-sm" id="edit-level">${levelOptions}</select><div class="edit-actions"><button class="save-btn" onclick="saveEdit('level')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('level')"><i class="bi bi-x"></i></button></div></div></div></div>
+          <div class="col-12"><div class="detail-group editable ${(!s.level2 || s.level2 === "" || s.level2 === "-") ? "missing-field-highlight" : ""}" data-field="level2"><label class="detail-label">Education Level 2</label><div class="detail-value-wrap"><span class="detail-value"><span class="badge badge-level">${s.level2||"-"}</span></span><button class="edit-btn" onclick="startEdit('level2','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div><div class="edit-field" style="display:none;"><select class="form-select ios-input form-control-sm" id="edit-level2">${level2Options}</select><div class="edit-actions"><button class="save-btn" onclick="saveEdit('level2')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('level2')"><i class="bi bi-x"></i></button></div></div></div></div>
+          <div class="col-12"><div class="detail-group editable ${(!s.leadBy || s.leadBy === "" || s.leadBy === "-") ? "missing-field-highlight" : ""}" data-field="leadBy"><label class="detail-label"><i class="bi bi-person-badge me-1" style="color:#5b8def;"></i>Lead by</label><div class="detail-value-wrap"><span class="detail-value">${s.leadBy||"-"}</span><button class="edit-btn" onclick="startEdit('leadBy','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div><div class="edit-field" style="display:none;"><select class="form-select ios-input form-control-sm" id="edit-leadBy">${leadByOptions}</select><div class="edit-actions"><button class="save-btn" onclick="saveEdit('leadBy')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('leadBy')"><i class="bi bi-x"></i></button></div></div></div></div>
           <div class="col-12">
             <div class="detail-group" style="padding-top: 2px;">
               <label class="detail-label text-danger" style="font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">Missing documents</label>
@@ -1795,11 +1824,16 @@ function viewStudentDetails(uniqueId) {
               </div>
             `;
           })()}
-          <div class="col-3"><div class="detail-group editable ${(!s.phone1 || s.phone1 === "-" || s.phone1 === "") ? "missing-field-highlight" : ""}" data-field="phone1"><label class="detail-label">Phone 1</label><div class="detail-value-wrap"><span class="detail-value">${s.phone1}</span><div class="action-btns"><button class="copy-btn" onclick="copyToClipboard('${s.phone1}',this);event.stopPropagation();"><i class="bi bi-clipboard"></i></button><button class="edit-btn" onclick="startEdit('phone1','text');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><input type="text" class="form-control ios-input form-control-sm" value="${s.phone1}" id="edit-phone1" placeholder="00-000-00-00" oninput="formatPhoneInline(this)"><div class="edit-actions"><button class="save-btn" onclick="saveEdit('phone1')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('phone1')"><i class="bi bi-x"></i></button></div></div></div></div>
-          <div class="col-3"><div class="detail-group editable ${(!s.phone2 || s.phone2 === "-" || s.phone2 === "") ? "missing-field-highlight" : ""}" data-field="phone2"><label class="detail-label">Phone 2</label><div class="detail-value-wrap"><span class="detail-value">${s.phone2||"-"}</span><div class="action-btns">${s.phone2?`<button class="copy-btn" onclick="copyToClipboard('${s.phone2}',this);event.stopPropagation();"><i class="bi bi-clipboard"></i></button>`:""}<button class="edit-btn" onclick="startEdit('phone2','text');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><input type="text" class="form-control ios-input form-control-sm" value="${s.phone2||""}" id="edit-phone2" placeholder="00-000-00-00" oninput="formatPhoneInline(this)"><div class="edit-actions"><button class="save-btn" onclick="saveEdit('phone2')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('phone2')"><i class="bi bi-x"></i></button></div></div></div></div>
+          <div class="col-3"><div class="detail-group editable ${(!s.phone1 || s.phone1 === "-" || s.phone1 === "") ? "missing-field-highlight" : ""}" data-field="phone1"><label class="detail-label">Student Number 1</label><div class="detail-value-wrap"><span class="detail-value">${s.phone1}</span><div class="action-btns"><button class="copy-btn" onclick="copyToClipboard('${s.phone1}',this);event.stopPropagation();"><i class="bi bi-clipboard"></i></button><button class="edit-btn" onclick="startEdit('phone1','text');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><input type="text" class="form-control ios-input form-control-sm" value="${s.phone1}" id="edit-phone1" placeholder="00-000-00-00" oninput="formatPhoneInline(this)"><div class="edit-actions"><button class="save-btn" onclick="saveEdit('phone1')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('phone1')"><i class="bi bi-x"></i></button></div></div></div></div>
+          <div class="col-3"><div class="detail-group editable ${(!s.phone2 || s.phone2 === "-" || s.phone2 === "") ? "missing-field-highlight" : ""}" data-field="phone2"><label class="detail-label">Student Number 2</label><div class="detail-value-wrap"><span class="detail-value">${s.phone2||"-"}</span><div class="action-btns">${s.phone2?`<button class="copy-btn" onclick="copyToClipboard('${s.phone2}',this);event.stopPropagation();"><i class="bi bi-clipboard"></i></button>`:""}<button class="edit-btn" onclick="startEdit('phone2','text');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><input type="text" class="form-control ios-input form-control-sm" value="${s.phone2||""}" id="edit-phone2" placeholder="00-000-00-00" oninput="formatPhoneInline(this)"><div class="edit-actions"><button class="save-btn" onclick="saveEdit('phone2')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('phone2')"><i class="bi bi-x"></i></button></div></div></div></div>
+          <div class="col-3"><div class="detail-group editable ${(!s.fatherPhone || s.fatherPhone === "-" || s.fatherPhone === "") ? "missing-field-highlight" : ""}" data-field="fatherPhone"><label class="detail-label">Father Phone</label><div class="detail-value-wrap"><span class="detail-value">${s.fatherPhone||"-"}</span><div class="action-btns">${s.fatherPhone?`<button class="copy-btn" onclick="copyToClipboard('${s.fatherPhone}',this);event.stopPropagation();"><i class="bi bi-clipboard"></i></button>`:""}<button class="edit-btn" onclick="startEdit('fatherPhone','text');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><input type="text" class="form-control ios-input form-control-sm" value="${s.fatherPhone||""}" id="edit-fatherPhone" placeholder="00-000-00-00" oninput="formatPhoneInline(this)"><div class="edit-actions"><button class="save-btn" onclick="saveEdit('fatherPhone')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('fatherPhone')"><i class="bi bi-x"></i></button></div></div></div></div>
+          <div class="col-3"><div class="detail-group editable ${(!s.motherPhone || s.motherPhone === "-" || s.motherPhone === "") ? "missing-field-highlight" : ""}" data-field="motherPhone"><label class="detail-label">Mother Phone</label><div class="detail-value-wrap"><span class="detail-value">${s.motherPhone||"-"}</span><div class="action-btns">${s.motherPhone?`<button class="copy-btn" onclick="copyToClipboard('${s.motherPhone}',this);event.stopPropagation();"><i class="bi bi-clipboard"></i></button>`:""}<button class="edit-btn" onclick="startEdit('motherPhone','text');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><input type="text" class="form-control ios-input form-control-sm" value="${s.motherPhone||""}" id="edit-motherPhone" placeholder="00-000-00-00" oninput="formatPhoneInline(this)"><div class="edit-actions"><button class="save-btn" onclick="saveEdit('motherPhone')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('motherPhone')"><i class="bi bi-x"></i></button></div></div></div></div>
           <div class="col-6"><div class="detail-group editable ${(!s.email || s.email === "-" || s.email === "") ? "missing-field-highlight" : ""}" data-field="email"><label class="detail-label">Email</label><div class="detail-value-wrap"><span class="detail-value">${s.email||"-"}</span><div class="action-btns">${s.email?`<button class="copy-btn" onclick="copyToClipboard('${s.email}',this);event.stopPropagation();"><i class="bi bi-clipboard"></i></button>`:""}<button class="edit-btn" onclick="startEdit('email','text');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><input type="email" class="form-control ios-input form-control-sm" value="${s.email||""}" id="edit-email" placeholder="student@email.com"><div class="edit-actions"><button class="save-btn" onclick="saveEdit('email')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('email')"><i class="bi bi-x"></i></button></div></div></div></div>
           <div class="col-6"><div class="detail-group editable ${(!s.birthday || s.birthday === "-" || s.birthday === "") ? "missing-field-highlight" : ""}" data-field="birthday"><label class="detail-label">Birthday</label><div class="detail-value-wrap"><span class="detail-value">${s.birthday||"-"}</span><div class="action-btns">${s.birthday?`<button class="copy-btn" onclick="copyToClipboard('${s.birthday}',this);event.stopPropagation();"><i class="bi bi-clipboard"></i></button>`:""}<button class="edit-btn" onclick="startEdit('birthday','date');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><input type="date" class="form-control ios-input form-control-sm" value="${s.birthday||""}" id="edit-birthday" min="1980-01-01" max="2010-12-31"><div class="edit-actions"><button class="save-btn" onclick="saveEdit('birthday')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('birthday')"><i class="bi bi-x"></i></button></div></div></div></div>
-          <div class="col-6"><div class="detail-group editable ${(!s.passport || s.passport === "-" || s.passport === "") ? "missing-field-highlight" : ""}" data-field="passport"><label class="detail-label">Passport</label><div class="detail-value-wrap"><span class="detail-value">${s.passport||"-"}</span><div class="action-btns">${s.passport?`<button class="copy-btn" onclick="copyToClipboard('${s.passport}',this);event.stopPropagation();"><i class="bi bi-clipboard"></i></button>`:""}<button class="edit-btn" onclick="startEdit('passport','text');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><input type="text" class="form-control ios-input form-control-sm" value="${s.passport||""}" id="edit-passport" placeholder="AA0000000" style="text-transform:uppercase;" oninput="formatPassportInline(this)"><div class="edit-actions"><button class="save-btn" onclick="saveEdit('passport')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('passport')"><i class="bi bi-x"></i></button></div></div></div></div>
+          <div class="col-4"><div class="detail-group editable ${(!s.passport || s.passport === "-" || s.passport === "") ? "missing-field-highlight" : ""}" data-field="passport"><label class="detail-label">Passport</label><div class="detail-value-wrap"><span class="detail-value">${s.passport||"-"}</span><div class="action-btns">${s.passport?`<button class="copy-btn" onclick="copyToClipboard('${s.passport}',this);event.stopPropagation();"><i class="bi bi-clipboard"></i></button>`:""}<button class="edit-btn" onclick="startEdit('passport','text');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><input type="text" class="form-control ios-input form-control-sm" value="${s.passport||""}" id="edit-passport" placeholder="AA0000000" style="text-transform:uppercase;" oninput="formatPassportInline(this)"><div class="edit-actions"><button class="save-btn" onclick="saveEdit('passport')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('passport')"><i class="bi bi-x"></i></button></div></div></div></div>
+          <div class="col-4"><div class="detail-group editable ${(!s.passportIssueDate || s.passportIssueDate === "-" || s.passportIssueDate === "") ? "missing-field-highlight" : ""}" data-field="passportIssueDate"><label class="detail-label">Date of Issue</label><div class="detail-value-wrap"><span class="detail-value">${s.passportIssueDate||"-"}</span><div class="action-btns">${s.passportIssueDate?`<button class="copy-btn" onclick="copyToClipboard('${s.passportIssueDate}',this);event.stopPropagation();"><i class="bi bi-clipboard"></i></button>`:""}<button class="edit-btn" onclick="startEdit('passportIssueDate','date');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><input type="date" class="form-control ios-input form-control-sm" value="${s.passportIssueDate||""}" id="edit-passportIssueDate"><div class="edit-actions"><button class="save-btn" onclick="saveEdit('passportIssueDate')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('passportIssueDate')"><i class="bi bi-x"></i></button></div></div></div></div>
+          <div class="col-4"><div class="detail-group editable ${(!s.passportExpireDate || s.passportExpireDate === "-" || s.passportExpireDate === "") ? "missing-field-highlight" : ""}" data-field="passportExpireDate"><label class="detail-label">Date of Expiration</label><div class="detail-value-wrap"><span class="detail-value">${s.passportExpireDate||"-"}</span><div class="action-btns">${s.passportExpireDate?`<button class="copy-btn" onclick="copyToClipboard('${s.passportExpireDate}',this);event.stopPropagation();"><i class="bi bi-clipboard"></i></button>`:""}<button class="edit-btn" onclick="startEdit('passportExpireDate','date');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><input type="date" class="form-control ios-input form-control-sm" value="${s.passportExpireDate||""}" id="edit-passportExpireDate"><div class="edit-actions"><button class="save-btn" onclick="saveEdit('passportExpireDate')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('passportExpireDate')"><i class="bi bi-x"></i></button></div></div></div></div>
+          <div class="col-12"><div class="detail-group editable ${(!s.educationalBackground || s.educationalBackground === "-" || s.educationalBackground === "") ? "missing-field-highlight" : ""}" data-field="educationalBackground"><label class="detail-label"><i class="bi bi-book me-1" style="color:#5b8def;"></i>Educational Background</label><div class="detail-value-wrap"><span class="detail-value">${s.educationalBackground||"-"}</span><button class="edit-btn" onclick="startEdit('educationalBackground','textarea');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div><div class="edit-field" style="display:none;"><textarea class="form-control ios-input form-control-sm" id="edit-educationalBackground" rows="2" placeholder="e.g. Bachelor of Science in Computer Science">${s.educationalBackground||""}</textarea><div class="edit-actions"><button class="save-btn" onclick="saveEdit('educationalBackground')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('educationalBackground')"><i class="bi bi-x"></i></button></div></div></div></div>
           <div class="${window.extraLanguageCertificatesVisible?'col-4':'col-12'}"><div class="detail-group editable ${(s.languageCertificate === "NO CERTIFICATE") ? "missing-field-highlight" : ""}" data-field="languageCertificate"><label class="detail-label">Language Certificate</label><div class="detail-value-wrap"><span class="detail-value"><span class="badge badge-language">${s.languageCertificate}</span>${s.certificateScore?` <span class="badge badge-score">Score: ${s.certificateScore}</span>`:""}</span><div class="action-btns"><button class="edit-btn" onclick="showExtraLanguageCertificates();event.stopPropagation();" title="Add more"><i class="bi bi-plus-lg"></i></button>${window.extraLanguageCertificatesVisible?`<button class="edit-btn" onclick="hideExtraLanguageCertificates();event.stopPropagation();" title="Hide extra"><i class="bi bi-dash-lg"></i></button>`:""}<button class="edit-btn" onclick="startEdit('languageCertificate','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div></div><div class="edit-field" style="display:none;"><div class="d-flex gap-2 cert-edit-row"><select class="form-select ios-input form-control-sm cert-name-input" id="edit-languageCertificate" onchange="handleCertNameChange('languageCertificate', this.value, '')"><option value="NO CERTIFICATE" ${s.languageCertificate==="NO CERTIFICATE"?"selected":""}>NO CERTIFICATE</option><option value="TOPIK" ${s.languageCertificate==="TOPIK"?"selected":""}>TOPIK</option><option value="SKA" ${s.languageCertificate==="SKA"?"selected":""}>SKA</option><option value="IELTS" ${s.languageCertificate==="IELTS"?"selected":""}>IELTS</option><option value="TOEFL" ${s.languageCertificate==="TOEFL"?"selected":""}>TOEFL</option><option value="SAT" ${s.languageCertificate==="SAT"?"selected":""}>SAT</option><option value="CEFR" ${s.languageCertificate==="CEFR"?"selected":""}>CEFR</option></select><div id="container-score-languageCertificate" class="flex-grow-1">${renderScoreInputField('languageCertificate', s.languageCertificate, s.certificateScore)}</div></div><div class="edit-actions"><button class="save-btn" onclick="saveEdit('languageCertificate')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('languageCertificate')"><i class="bi bi-x"></i></button></div></div></div></div>
           ${window.extraLanguageCertificatesVisible?`<div class="col-4"><div class="detail-group editable" data-field="languageCertificate2"><label class="detail-label">Language Certificate 2</label><div class="detail-value-wrap"><span class="detail-value"><span class="badge badge-language">${s.languageCertificate2}</span>${s.certificateScore2?` <span class="badge badge-score">Score: ${s.certificateScore2}</span>`:""}</span><button class="edit-btn" onclick="startEdit('languageCertificate2','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div><div class="edit-field" style="display:none;"><div class="d-flex gap-2 cert-edit-row"><select class="form-select ios-input form-control-sm cert-name-input" id="edit-languageCertificate2" onchange="handleCertNameChange('languageCertificate2', this.value, '')"><option value="NO CERTIFICATE" ${s.languageCertificate2==="NO CERTIFICATE"?"selected":""}>NO CERTIFICATE</option><option value="TOPIK" ${s.languageCertificate2==="TOPIK"?"selected":""}>TOPIK</option><option value="SKA" ${s.languageCertificate2==="SKA"?"selected":""}>SKA</option><option value="IELTS" ${s.languageCertificate2==="IELTS"?"selected":""}>IELTS</option><option value="TOEFL" ${s.languageCertificate2==="TOEFL"?"selected":""}>TOEFL</option><option value="SAT" ${s.languageCertificate2==="SAT"?"selected":""}>SAT</option><option value="CEFR" ${s.languageCertificate2==="CEFR"?"selected":""}>CEFR</option></select><div id="container-score-languageCertificate2" class="flex-grow-1">${renderScoreInputField('languageCertificate2', s.languageCertificate2, s.certificateScore2)}</div></div><div class="edit-actions"><button class="save-btn" onclick="saveEdit('languageCertificate2')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('languageCertificate2')"><i class="bi bi-x"></i></button></div></div></div></div><div class="col-4"><div class="detail-group editable" data-field="languageCertificate3"><label class="detail-label">Language Certificate 3</label><div class="detail-value-wrap"><span class="detail-value"><span class="badge badge-language">${s.languageCertificate3}</span>${s.certificateScore3?` <span class="badge badge-score">Score: ${s.certificateScore3}</span>`:""}</span><button class="edit-btn" onclick="startEdit('languageCertificate3','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div><div class="edit-field" style="display:none;"><div class="d-flex gap-2 cert-edit-row"><select class="form-select ios-input form-control-sm cert-name-input" id="edit-languageCertificate3" onchange="handleCertNameChange('languageCertificate3', this.value, '')"><option value="NO CERTIFICATE" ${s.languageCertificate3==="NO CERTIFICATE"?"selected":""}>NO CERTIFICATE</option><option value="TOPIK" ${s.languageCertificate3==="TOPIK"?"selected":""}>TOPIK</option><option value="SKA" ${s.languageCertificate3==="SKA"?"selected":""}>SKA</option><option value="IELTS" ${s.languageCertificate3==="IELTS"?"selected":""}>IELTS</option><option value="TOEFL" ${s.languageCertificate3==="TOEFL"?"selected":""}>TOEFL</option><option value="SAT" ${s.languageCertificate3==="SAT"?"selected":""}>SAT</option><option value="CEFR" ${s.languageCertificate3==="CEFR"?"selected":""}>CEFR</option></select><div id="container-score-languageCertificate3" class="flex-grow-1">${renderScoreInputField('languageCertificate3', s.languageCertificate3, s.certificateScore3)}</div></div><div class="edit-actions"><button class="save-btn" onclick="saveEdit('languageCertificate3')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('languageCertificate3')"><i class="bi bi-x"></i></button></div></div></div></div>`:""}
             <!-- Row: University 1, University 2, University 3 -->
@@ -1853,7 +1887,7 @@ function viewStudentDetails(uniqueId) {
           const balSign=balance>0?"+":balance<0?"-":"";
           const balClass=balance>0?"bal-positive-box":balance<0?"bal-negative-box":"bal-zero-box";
           return `<div class="d-flex flex-column gap-2">
-            <div class="detail-group editable" data-field="office" style="border-left:3px solid #5b8def;">
+            <div class="detail-group editable ${(!s.office || s.office === "" || s.office === "—" || s.office === "-") ? "missing-field-highlight" : ""}" data-field="office" style="border-left:3px solid #5b8def;">
               <label class="detail-label"><i class="bi bi-geo-alt-fill me-1" style="color:#5b8def;"></i>Office</label>
               <div class="detail-value-wrap"><span class="detail-value" style="font-size:0.85rem;">${office}</span><button class="edit-btn" onclick="startEdit('office','select');event.stopPropagation();"><i class="bi bi-pencil"></i></button></div>
               <div class="edit-field" style="display:none;"><select class="form-select ios-input form-control-sm" id="edit-office"><option value="" ${!s.office?"selected":""}>Select office...</option><option value="ANDIJON OFFIS" ${s.office==="ANDIJON OFFIS"?"selected":""}>ANDIJON OFFIS</option><option value="TOSHKENT OFFIS" ${s.office==="TOSHKENT OFFIS"?"selected":""}>TOSHKENT OFFIS</option></select><div class="edit-actions"><button class="save-btn" onclick="saveEdit('office')"><i class="bi bi-check"></i></button><button class="cancel-btn" onclick="cancelEdit('office')"><i class="bi bi-x"></i></button></div></div>
@@ -2511,6 +2545,7 @@ function applyFilters(resetPage = true) {
   const groupFilter = getSelectValues("filterGroup");
   const languageCertificateFilter = getSelectValues("filterLanguageCertificate");
   const tagsFilter = getSelectValues("filterTags");
+  const leadByFilter = getSelectValues("filterLeadBy");
 
   const filtered = window.studentsData.filter((s) => {
     // Handle deleted students filter
@@ -2621,7 +2656,20 @@ function applyFilters(resetPage = true) {
       });
     }
 
-    return matchesSearch && matchesTariff && matchesLevel && matchesGroup && matchesLanguageCertificate && matchesTags;
+    // Lead by filter - handle "No Lead by" special case
+    let matchesLeadBy = false;
+    if (leadByFilter.length === 0) {
+      matchesLeadBy = true;
+    } else {
+      if (leadByFilter.includes("NO_LEADBY") && (!s.leadBy || s.leadBy === "")) {
+        matchesLeadBy = true;
+      }
+      if (s.leadBy && leadByFilter.includes(s.leadBy)) {
+        matchesLeadBy = true;
+      }
+    }
+
+    return matchesSearch && matchesTariff && matchesLevel && matchesGroup && matchesLanguageCertificate && matchesTags && matchesLeadBy;
   });
 
   // Update Counter
@@ -5512,6 +5560,33 @@ function updateGroupDropdowns() {
   });
 }
 
+function updateLeadByDropdowns() {
+  const leadBySelects = document.querySelectorAll("#filterLeadBy");
+
+  leadBySelects.forEach((select) => {
+    const currentValue = select.value;
+
+    select.innerHTML = '<option value="">All Lead by</option>';
+
+    const noLeadByOption = document.createElement("option");
+    noLeadByOption.value = "NO_LEADBY";
+    noLeadByOption.textContent = "No Lead by";
+    select.appendChild(noLeadByOption);
+
+    (window.leadByData || []).forEach((lb) => {
+      const option = document.createElement("option");
+      option.value = lb.name;
+      option.textContent = lb.name;
+      select.appendChild(option);
+    });
+
+    if (currentValue) {
+      select.value = currentValue;
+    }
+  });
+}
+window.updateLeadByDropdowns = updateLeadByDropdowns;
+
 // ==========================================
 // UNIVERSITIES MANAGEMENT
 // ==========================================
@@ -5706,6 +5781,11 @@ function executeSettingsDelete() {
         deleteVideoFromFirestore(id);
       }
       break;
+    case "leadBy":
+      if (typeof deleteLeadByFromFirestore === "function") {
+        deleteLeadByFromFirestore(id);
+      }
+      break;
   }
 
   pendingSettingsDelete = null;
@@ -5861,6 +5941,131 @@ window.saveGroup = saveGroup;
 window.confirmDeleteGroup = confirmDeleteGroup;
 window.renderGroupsList = renderGroupsList;
 window.updateGroupDropdowns = updateGroupDropdowns;
+
+// ==========================================
+// LEAD BY MANAGEMENT
+// ==========================================
+
+// Global lead by data
+window.leadByData = [];
+
+function renderLeadByList() {
+  const container = document.getElementById("leadByListContainer");
+  if (!container) return;
+
+  if (!window.leadByData || window.leadByData.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-4 text-secondary">
+        <i class="bi bi-person-badge" style="font-size: 2rem; opacity: 0.5;"></i>
+        <p class="mt-2 mb-0">No "Lead by" options configured. Add your first option.</p>
+      </div>
+    `;
+    updateLeadByDropdowns();
+    return;
+  }
+
+  container.innerHTML = window.leadByData
+    .map(
+      (lb) => `
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <span class="settings-item-name">${lb.name}</span>
+        </div>
+        <div class="settings-item-actions">
+          <button class="settings-item-btn edit-btn" onclick="editLeadBy('${lb.firestoreId}')" title="Edit">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="settings-item-btn delete-btn" onclick="confirmDeleteLeadBy('${lb.firestoreId}')" title="Delete">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </div>
+    `,
+    )
+    .join("");
+
+  updateLeadByDropdowns();
+}
+
+function openLeadByModal(leadById = null) {
+  const modal = new bootstrap.Modal(document.getElementById("leadByModal"));
+  const form = document.getElementById("leadByForm");
+  const title = document.getElementById("leadByModalTitle");
+
+  form.reset();
+  document.getElementById("leadByEditId").value = "";
+
+  if (leadById) {
+    const leadBy = window.leadByData.find((lb) => lb.firestoreId === leadById);
+    if (leadBy) {
+      title.innerHTML = '<i class="bi bi-person-badge-fill me-2"></i>Edit Lead by Option';
+      document.getElementById("leadByEditId").value = leadById;
+      document.getElementById("leadByName").value = leadBy.name;
+    }
+  } else {
+    title.innerHTML = '<i class="bi bi-person-badge-fill me-2"></i>Add Lead by Option';
+  }
+
+  modal.show();
+}
+
+function editLeadBy(leadById) {
+  openLeadByModal(leadById);
+}
+
+function saveLeadBy() {
+  const name = document.getElementById("leadByName").value.trim();
+  const editId = document.getElementById("leadByEditId").value;
+
+  if (!name) {
+    showNotification("Please enter a name!", "error");
+    return;
+  }
+
+  const leadByData = { name };
+
+  if (editId) {
+    if (typeof updateLeadByInFirestore === "function") {
+      updateLeadByInFirestore(editId, leadByData);
+    }
+  } else {
+    if (typeof saveLeadByToFirestore === "function") {
+      saveLeadByToFirestore(leadByData);
+    }
+  }
+
+  const modal = bootstrap.Modal.getInstance(
+    document.getElementById("leadByModal"),
+  );
+  if (modal) modal.hide();
+}
+
+function confirmDeleteLeadBy(leadById) {
+  const leadBy = window.leadByData.find((lb) => lb.firestoreId === leadById);
+  if (!leadBy) return;
+
+  pendingSettingsDelete = {
+    type: "leadBy",
+    id: leadById,
+  };
+
+  document.getElementById("confirmSettingsDeleteTitle").textContent =
+    'Delete "Lead by" Option';
+  document.getElementById("confirmSettingsDeleteMessage").textContent =
+    `Are you sure you want to delete "${leadBy.name}"? This will not affect existing students.`;
+
+  const modal = new bootstrap.Modal(
+    document.getElementById("confirmSettingsDeleteModal"),
+  );
+  modal.show();
+}
+
+window.openLeadByModal = openLeadByModal;
+window.editLeadBy = editLeadBy;
+window.saveLeadBy = saveLeadBy;
+window.confirmDeleteLeadBy = confirmDeleteLeadBy;
+window.renderLeadByList = renderLeadByList;
+
 
 // ==========================================
 // TAGS FILTER DROPDOWN - DYNAMIC CUSTOM TAGS

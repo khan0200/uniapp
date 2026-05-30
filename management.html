@@ -126,6 +126,26 @@
                             <i class="bi bi-gear-fill me-1"></i> SETTINGS
                         </a>
                     </li>
+                    <!-- Add Student Button (shows in navbar) -->
+                    <li class="nav-item ms-2 d-flex align-items-center">
+                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3" data-bs-toggle="modal"
+                            data-bs-target="#addStudentModal" id="navAddStudentBtn"
+                            style="
+                                font-size: 0.78rem;
+                                font-weight: 700;
+                                letter-spacing: 0.05em;
+                                border-color: var(--accent-primary);
+                                color: var(--accent-primary);
+                                background: rgba(37,99,235,0.10);
+                                transition: all 0.2s ease;
+                                padding-top: 0.3rem;
+                                padding-bottom: 0.3rem;
+                            "
+                            onmouseover="this.style.background='var(--accent-primary)';this.style.color='#fff';"
+                            onmouseout="this.style.background='rgba(37,99,235,0.10)';this.style.color='var(--accent-primary)';">
+                            <i class="bi bi-plus-lg me-1"></i>ADD STUDENT
+                        </button>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -227,16 +247,21 @@
                         </select>
                     </div>
 
-                    <!-- Actions -->
+                    <!-- Lead by Filter -->
+                    <div class="filter-item">
+                        <i class="bi bi-person-badge filter-icon" style="color:#5b8def;"></i>
+                        <select class="form-select filter-input" id="filterLeadBy" aria-label="Filter by lead by" onchange="applyFilters()">
+                            <option value="">All Lead by</option>
+                            <option value="NO_LEADBY">No Lead by</option>
+                            <!-- Lead by options populated dynamically -->
+                        </select>
+                    </div>
 
+                    <!-- Actions -->
                     <div class="filter-actions">
                         <button class="btn btn-filter-action" data-bs-toggle="modal"
                             data-bs-target="#downloadExcelModal" title="Export to Excel">
                             <i class="bi bi-file-earmark-excel"></i>
-                        </button>
-                        <button class="btn btn-primary-apple rounded-pill px-4" data-bs-toggle="modal"
-                            data-bs-target="#addStudentModal">
-                            <i class="bi bi-plus-circle me-2"></i>Add Student
                         </button>
                     </div>
                 </div>
@@ -871,10 +896,10 @@
                 </div>
             </div>
 
-            <!-- Tariff, Education Levels & Groups Row (Side by Side on Desktop) -->
+                <!-- Tariff, Education Levels, Groups & Lead By Row (Side by Side on Desktop) -->
             <div class="row g-4 mb-4">
                 <!-- Tariff Management Section -->
-                <div class="col-lg-4">
+                <div class="col-lg-3">
                     <div class="card-apple p-4 h-100">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div>
@@ -894,7 +919,7 @@
                 </div>
 
                 <!-- Education Levels Section -->
-                <div class="col-lg-4">
+                <div class="col-lg-3">
                     <div class="card-apple p-4 h-100">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div>
@@ -914,7 +939,7 @@
                 </div>
 
                 <!-- Groups Section -->
-                <div class="col-lg-4">
+                <div class="col-lg-3">
                     <div class="card-apple p-4 h-100">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div>
@@ -928,6 +953,26 @@
                         <div id="groupsListContainer" class="settings-list">
                             <div class="text-center py-4 text-secondary">
                                 <i class="bi bi-hourglass-split"></i> Loading groups...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lead by Section -->
+                <div class="col-lg-3">
+                    <div class="card-apple p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="mb-1"><i class="bi bi-person-badge-fill me-2" style="color:#5b8def;"></i>Lead by</h5>
+                                <p class="text-secondary mb-0 small">Manage lead source options</p>
+                            </div>
+                            <button class="btn btn-primary-apple rounded-pill px-3" onclick="openLeadByModal()">
+                                <i class="bi bi-plus-circle me-1"></i> Add
+                            </button>
+                        </div>
+                        <div id="leadByListContainer" class="settings-list">
+                            <div class="text-center py-4 text-secondary">
+                                <i class="bi bi-hourglass-split"></i> Loading...
                             </div>
                         </div>
                     </div>
@@ -1762,6 +1807,38 @@
                         data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary-apple rounded-pill px-4" onclick="saveGroup()">
                         <i class="bi bi-check-circle me-2"></i>Save Group
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lead By Modal (Add/Edit) -->
+    <div class="modal fade" id="leadByModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-glass">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title fw-bold" id="leadByModalTitle">
+                        <i class="bi bi-person-badge-fill me-2" style="color:#5b8def;"></i>Add Lead by Option
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="leadByForm">
+                        <input type="hidden" id="leadByEditId">
+                        <div class="mb-3">
+                            <label for="leadByName" class="form-label">Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control ios-input" id="leadByName"
+                                placeholder="e.g., Instagram, Friend, Website" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary-apple rounded-pill px-4" onclick="saveLeadBy()">
+                        <i class="bi bi-check-circle me-2"></i>Save
                     </button>
                 </div>
             </div>

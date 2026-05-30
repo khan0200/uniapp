@@ -1517,6 +1517,7 @@ document.addEventListener('DOMContentLoaded', function () {
             loadGroupsFromFirestore();
             loadVideosFromFirestore();
             loadCustomTagsFromFirestore(); // load custom tag registry (name + icon)
+            loadLeadByFromFirestore();
         }
     } else {
         console.log('📦 Using localStorage mode');
@@ -1594,6 +1595,101 @@ window.saveGroupToFirestore = saveGroupToFirestore;
 window.loadGroupsFromFirestore = loadGroupsFromFirestore;
 window.updateGroupInFirestore = updateGroupInFirestore;
 window.deleteGroupFromFirestore = deleteGroupFromFirestore;
+
+// ==========================================
+// LEAD BY FIRESTORE FUNCTIONS
+// ==========================================
+
+async function saveLeadByToFirestore(leadByData) {
+    if (!firebaseInitialized) {
+        console.log('Firebase not available');
+        showNotification('Error: Firebase not available', 'error');
+        return;
+    }
+
+    try {
+        const existingLeadBy = await db.collection('leadby')
+            .where('name', '==', leadByData.name)
+            .get();
+
+        if (!existingLeadBy.empty) {
+            showNotification(`"${leadByData.name}" already exists!`, 'error');
+            return;
+        }
+
+        leadByData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        const docRef = await db.collection('leadby').add(leadByData);
+        console.log('✅ Lead by saved with ID:', docRef.id);
+        showNotification('Lead by option saved successfully!', 'success');
+        await loadLeadByFromFirestore();
+    } catch (error) {
+        console.error('❌ Error saving lead by:', error);
+        showNotification('Error saving lead by: ' + error.message, 'error');
+    }
+}
+
+async function loadLeadByFromFirestore() {
+    if (!firebaseInitialized) {
+        console.log('Firebase not available, using empty lead by list');
+        window.leadByData = [];
+        if (typeof renderLeadByList === 'function') renderLeadByList();
+        return;
+    }
+
+    try {
+        const snapshot = await db.collection('leadby').orderBy('name').get();
+        window.leadByData = [];
+
+        snapshot.forEach((doc) => {
+            window.leadByData.push({
+                firestoreId: doc.id,
+                ...doc.data()
+            });
+        });
+
+        window.leadByData = Array.from(new Map(window.leadByData.map(lb => [lb.firestoreId, lb])).values());
+
+        console.log(`✅ Loaded ${window.leadByData.length} lead by options from Firestore`);
+
+        if (typeof renderLeadByList === 'function') renderLeadByList();
+    } catch (error) {
+        console.error('❌ Error loading lead by options:', error);
+    }
+}
+
+async function updateLeadByInFirestore(firestoreId, updatedData) {
+    if (!firebaseInitialized || !firestoreId) return;
+
+    try {
+        updatedData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+        await db.collection('leadby').doc(firestoreId).update(updatedData);
+        console.log('✅ Lead by updated');
+        showNotification('Lead by option updated successfully!', 'success');
+        await loadLeadByFromFirestore();
+    } catch (error) {
+        console.error('❌ Error updating lead by:', error);
+        showNotification('Error updating lead by: ' + error.message, 'error');
+    }
+}
+
+async function deleteLeadByFromFirestore(firestoreId) {
+    if (!firebaseInitialized || !firestoreId) return;
+
+    try {
+        await db.collection('leadby').doc(firestoreId).delete();
+        console.log('✅ Lead by deleted');
+        showNotification('Lead by option deleted successfully!', 'success');
+        await loadLeadByFromFirestore();
+    } catch (error) {
+        console.error('❌ Error deleting lead by:', error);
+        showNotification('Error deleting lead by: ' + error.message, 'error');
+    }
+}
+
+window.saveLeadByToFirestore = saveLeadByToFirestore;
+window.loadLeadByFromFirestore = loadLeadByFromFirestore;
+window.updateLeadByInFirestore = updateLeadByInFirestore;
+window.deleteLeadByFromFirestore = deleteLeadByFromFirestore;
 
 // ==========================================
 // ADMISSIONS FIRESTORE FUNCTIONS
