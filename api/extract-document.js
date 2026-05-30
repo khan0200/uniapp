@@ -32,14 +32,23 @@ export default async function handler(req, res) {
 
     const promptText = `You are an OCR and document extraction assistant.
 Analyze the uploaded document.
-Extract all readable information.
 
 Specific instructions:
 ${extraInstructions}
 - Identify the document type automatically (e.g. Passport, ID Card, Diploma, Certificate, Visa, Transcript).
-- The "FULL_NAME" field MUST be constructed as the concatenation of: Surname + Given Names + Father's Name (patronymic / Otasining ismi) if present on the document, in that exact order (e.g., combining Surname + Given Names + Otasining ismi like "ISAKJONOV MUKHAMMADIYOR NAVRUZBEK UGLI" or "ABDUKHOSHIMOV DONIYORBEK SIROJIDDIN UGLI"). Ensure no part of the name (like Father's name / Otasining ismi) is omitted.
-- Extract the sex/gender field as "SEX" (value must be exactly "M" or "F").
-- Extract only meaningful fields (e.g. FULL NAME, PASSPORT NUMBER, DATE OF BIRTH, DATE OF ISSUE, DATE OF EXPIRATION, SEX, etc.).
+- Generate ONLY necessary structured fields that are meaningful for the identified document type. Do not perform a general OCR of every text block, and do not extract design markings, watermarks, signatures, or noisy metadata.
+- If the document is a Passport or ID Card, extract ONLY these fields:
+  - "FULL_NAME": Concatenation of Surname + Given Names + Father's Name (patronymic / Otasining ismi) in that exact order (e.g. "ISAKJONOV MUKHAMMADIYOR NAVRUZBEK UGLI").
+  - "PASSPORT_NUMBER"
+  - "DATE_OF_BIRTH"
+  - "DATE_OF_ISSUE"
+  - "DATE_OF_EXPIRATION"
+  - "SEX" (value must be exactly "M" or "F")
+- If the document is a graduation/educational document (e.g. Shahodatnoma, Diploma, Certificate, Transcript):
+  - Generate ONLY the primary educational fields available on the document, such as: "GRADUATION_DATE", "YEAR_OF_ISSUE", "NAME_OF_SCHOOL_OR_EDUCATIONAL_INSTITUTION", "MAJOR_OR_SPECIALTY", "DEPARTMENT".
+  - The "NAME_OF_SCHOOL_OR_EDUCATIONAL_INSTITUTION" field MUST be translated into English and formatted in all UPPERCASE (e.g. "SPECIALIZED SCHOOL NO. 72 OF MARHAMAT DISTRICT" or "TASHKENT STATE UNIVERSITY").
+- If the document is of another type:
+  - Automatically detect and generate ONLY the key fields (maximum 5-6 core identifiers or dates) necessary to describe that document. Do not perform a general OCR of every text block.
 - Ignore watermarks, decorative branding, or irrelevant numbers.
 - Provide a full raw OCR text in the "ocr_text" property.
 
@@ -48,12 +57,9 @@ Return JSON only. Do not explain anything. Output must be exactly in this JSON f
   "document_type": "...",
   "ocr_text": "...",
   "fields": {
-    "FULL_NAME": "...",
-    "PASSPORT_NUMBER": "...",
-    "DATE_OF_BIRTH": "...",
-    "DATE_OF_ISSUE": "...",
-    "DATE_OF_EXPIRATION": "...",
-    "SEX": "..."
+    // Generate appropriate fields here dynamically depending on document type.
+    // For Passports: FULL_NAME, PASSPORT_NUMBER, DATE_OF_BIRTH, DATE_OF_ISSUE, DATE_OF_EXPIRATION, SEX.
+    // For Diplomas/Certificates: NAME_OF_SCHOOL_OR_EDUCATIONAL_INSTITUTION, GRADUATION_DATE, YEAR_OF_ISSUE, MAJOR_OR_SPECIALTY, DEPARTMENT.
   }
 }`;
 
