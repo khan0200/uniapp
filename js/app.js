@@ -2000,6 +2000,83 @@ function viewStudentDetails(uniqueId) {
   modal.show();
 }
 
+async function refreshStudentDetails() {
+  const firestoreId = window.currentStudentFirestoreId;
+  if (!firestoreId) {
+    showNotification("No student selected to refresh", "error");
+    return;
+  }
+  
+  const refreshBtn = document.getElementById("refreshStudentBtn");
+  let icon = null;
+  let animation = null;
+  if (refreshBtn) {
+    icon = refreshBtn.querySelector("i");
+    if (icon) {
+      animation = icon.animate([
+        { transform: 'rotate(0deg)' },
+        { transform: 'rotate(360deg)' }
+      ], {
+        duration: 1000,
+        iterations: Infinity,
+        easing: 'linear'
+      });
+    }
+    refreshBtn.disabled = true;
+  }
+
+  try {
+    if (typeof firebase !== 'undefined' && typeof db !== 'undefined' && db) {
+      const doc = await db.collection('students').doc(firestoreId).get();
+      if (doc.exists) {
+        const data = doc.data();
+        if (data.createdAt && data.createdAt.toDate) {
+          data.createdAt = data.createdAt.toDate().toISOString();
+        }
+        if (data.updatedAt && data.updatedAt.toDate) {
+          data.updatedAt = data.updatedAt.toDate().toISOString();
+        }
+
+        const index = window.studentsData.findIndex(s => s.firestoreId === firestoreId);
+        const studentObj = {
+          firestoreId: doc.id,
+          ...data
+        };
+        
+        if (index !== -1) {
+          window.studentsData[index] = studentObj;
+        } else {
+          window.studentsData.push(studentObj);
+        }
+
+        localStorage.setItem('studentsData', JSON.stringify(window.studentsData));
+
+        // Re-render student details modal and sync main list
+        viewStudentDetails(firestoreId);
+        if (typeof renderStudents === 'function') {
+          renderStudents();
+        }
+        showNotification("Student data refreshed!", "success");
+      } else {
+        showNotification("Student not found in database", "error");
+      }
+    } else {
+      showNotification("Database connection not available", "error");
+    }
+  } catch (error) {
+    console.error("Error refreshing student data:", error);
+    showNotification("Failed to refresh: " + error.message, "error");
+  } finally {
+    if (refreshBtn) {
+      refreshBtn.disabled = false;
+      if (animation) {
+        animation.cancel();
+      }
+    }
+  }
+}
+
+window.refreshStudentDetails = refreshStudentDetails;
 window.editAuthFlag = 0;
 
 function showAuthModal(callback, title = "Enter Password") {
@@ -2503,16 +2580,303 @@ function downloadStudentExcel(index) {
   const s = window.studentsData[index];
   const data = [
     ["Field", "Value"],
-    ["ID", s.id],
-    ["Name", s.fullName],
-    ["Phone 1", s.phone1],
-    ["Tariff", s.tariff],
+    ["ID", s.id || ""],
+    ["Name", s.fullName || ""],
+    ["Phone 1", s.phone1 || ""],
+    ["Phone 2", s.phone2 || ""],
+    ["Father Phone", s.fatherPhone || ""],
+    ["Mother Phone", s.motherPhone || ""],
+    ["Email", s.email || ""],
+    ["Birthday", s.birthday || ""],
+    ["Sex", s.sex || ""],
+    ["Passport", s.passport || ""],
+    ["Date of Issue", s.passportIssueDate || ""],
+    ["Date of Expiration", s.passportExpireDate || ""],
+    ["Education Level 1", s.level || ""],
+    ["Education Level 2", s.level2 || ""],
+    ["Tariff", s.tariff || ""],
+    ["Group", s.group || ""],
+    ["Lead by", s.leadBy || ""],
+    ["Office", s.office || ""],
+    ["Educational Background", s.educationalBackground || ""],
+    ["University 1", s.university1 || ""],
+    ["University 1 Status", s.university1Status || ""],
+    ["University 2", s.university2 || ""],
+    ["University 2 Status", s.university2Status || ""],
+    ["University 3", s.university3 || ""],
+    ["University 3 Status", s.university3Status || ""],
+    ["Language Certificate 1", s.languageCertificate || ""],
+    ["Score 1", s.certificateScore || ""],
+    ["Language Certificate 2", s.languageCertificate2 || ""],
+    ["Score 2", s.certificateScore2 || ""],
+    ["Language Certificate 3", s.languageCertificate3 || ""],
+    ["Score 3", s.certificateScore3 || ""],
+    ["Address", s.address || ""],
+    ["Notes", s.notes || ""],
+    ["Priority", s.noteImportance || ""],
+    ["Balance (UZS)", s.balance !== undefined ? s.balance : ""],
+    ["Discount (UZS)", s.discount !== undefined ? s.discount : ""],
   ];
   const ws = XLSX.utils.aoa_to_sheet(data);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Student");
+  
+  if (typeof styleWorksheet === "function") {
+    styleWorksheet(ws, true);
+  }
+
   XLSX.writeFile(wb, `${s.fullName}_${s.id}.xlsx`);
   showNotification("Excel downloaded!", "success");
+}
+
+// Helper to style SheetJS worksheets beautifully
+function styleWorksheet(ws, isStudentSingle = false) {
+  if (!ws || typeof XLSX === "undefined") return;
+
+  // Get range of sheet
+  const range = XLSX.utils.decode_range(ws['!ref']);
+
+  // Styles definition using Segoe UI font for high compatibility and aesthetics
+  const headerStyle = {
+    font: { name: "Segoe UI", sz: 11, bold: true, color: { rgb: "FFFFFF" } },
+    fill: { fgColor: { rgb: "1F497D" } }, // Premium Deep Navy Blue
+    alignment: { horizontal: "center", vertical: "center", wrapText: true },
+    border: {
+      top: { style: "thin", color: { rgb: "1F497D" } },
+      bottom: { style: "medium", color: { rgb: "000000" } },
+      left: { style: "thin", color: { rgb: "1F497D" } },
+      right: { style: "thin", color: { rgb: "1F497D" } }
+    }
+  };
+
+  const centerStyleEven = {
+    font: { name: "Segoe UI", sz: 10 },
+    fill: { fgColor: { rgb: "F2F6FB" } }, // Subtle light blue-gray for zebra striping
+    alignment: { horizontal: "center", vertical: "center" },
+    border: {
+      top: { style: "thin", color: { rgb: "D9D9D9" } },
+      bottom: { style: "thin", color: { rgb: "D9D9D9" } },
+      left: { style: "thin", color: { rgb: "D9D9D9" } },
+      right: { style: "thin", color: { rgb: "D9D9D9" } }
+    }
+  };
+
+  const centerStyleOdd = {
+    font: { name: "Segoe UI", sz: 10 },
+    fill: { fgColor: { rgb: "FFFFFF" } },
+    alignment: { horizontal: "center", vertical: "center" },
+    border: {
+      top: { style: "thin", color: { rgb: "D9D9D9" } },
+      bottom: { style: "thin", color: { rgb: "D9D9D9" } },
+      left: { style: "thin", color: { rgb: "D9D9D9" } },
+      right: { style: "thin", color: { rgb: "D9D9D9" } }
+    }
+  };
+
+  const leftStyleEven = {
+    font: { name: "Segoe UI", sz: 10 },
+    fill: { fgColor: { rgb: "F2F6FB" } },
+    alignment: { horizontal: "left", vertical: "center" },
+    border: {
+      top: { style: "thin", color: { rgb: "D9D9D9" } },
+      bottom: { style: "thin", color: { rgb: "D9D9D9" } },
+      left: { style: "thin", color: { rgb: "D9D9D9" } },
+      right: { style: "thin", color: { rgb: "D9D9D9" } }
+    }
+  };
+
+  const leftStyleOdd = {
+    font: { name: "Segoe UI", sz: 10 },
+    fill: { fgColor: { rgb: "FFFFFF" } },
+    alignment: { horizontal: "left", vertical: "center" },
+    border: {
+      top: { style: "thin", color: { rgb: "D9D9D9" } },
+      bottom: { style: "thin", color: { rgb: "D9D9D9" } },
+      left: { style: "thin", color: { rgb: "D9D9D9" } },
+      right: { style: "thin", color: { rgb: "D9D9D9" } }
+    }
+  };
+
+  const rightStyleEven = {
+    font: { name: "Segoe UI", sz: 10 },
+    fill: { fgColor: { rgb: "F2F6FB" } },
+    alignment: { horizontal: "right", vertical: "center" },
+    border: {
+      top: { style: "thin", color: { rgb: "D9D9D9" } },
+      bottom: { style: "thin", color: { rgb: "D9D9D9" } },
+      left: { style: "thin", color: { rgb: "D9D9D9" } },
+      right: { style: "thin", color: { rgb: "D9D9D9" } }
+    }
+  };
+
+  const rightStyleOdd = {
+    font: { name: "Segoe UI", sz: 10 },
+    fill: { fgColor: { rgb: "FFFFFF" } },
+    alignment: { horizontal: "right", vertical: "center" },
+    border: {
+      top: { style: "thin", color: { rgb: "D9D9D9" } },
+      bottom: { style: "thin", color: { rgb: "D9D9D9" } },
+      left: { style: "thin", color: { rgb: "D9D9D9" } },
+      right: { style: "thin", color: { rgb: "D9D9D9" } }
+    }
+  };
+
+  // Loop through all cell coordinates in range
+  for (let R = range.s.r; R <= range.e.r; ++R) {
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+      let cell = ws[cellRef];
+      if (!cell) {
+        // Create an empty text cell placeholder to display clean borders
+        cell = { t: "s", v: "" };
+        ws[cellRef] = cell;
+      }
+
+      // 1. Header row formatting
+      if (R === 0 && !isStudentSingle) {
+        cell.s = headerStyle;
+        continue;
+      }
+
+      // If it's a single student vertical layout (Field | Value), style column A as header
+      if (isStudentSingle) {
+        if (R === 0) {
+          cell.s = headerStyle;
+          continue;
+        }
+        if (C === 0) {
+          // Field Name Column (vertical header style)
+          cell.s = {
+            font: { name: "Segoe UI", sz: 10, bold: true, color: { rgb: "1F497D" } },
+            fill: { fgColor: { rgb: "E9EEF4" } },
+            alignment: { horizontal: "left", vertical: "center" },
+            border: {
+              top: { style: "thin", color: { rgb: "D9D9D9" } },
+              bottom: { style: "thin", color: { rgb: "D9D9D9" } },
+              left: { style: "thin", color: { rgb: "D9D9D9" } },
+              right: { style: "medium", color: { rgb: "1F497D" } }
+            }
+          };
+          continue;
+        }
+      }
+
+      // 2. Data Row Styling (Odd / Even zebra striping and alignment rules)
+      const isEven = R % 2 === 0;
+      let style = isEven ? leftStyleEven : leftStyleOdd;
+
+      if (isStudentSingle) {
+        // Value column in vertical list
+        const fieldCell = ws[XLSX.utils.encode_cell({ r: R, c: 0 })];
+        const fieldName = fieldCell ? String(fieldCell.v).toUpperCase() : "";
+
+        if (
+          fieldName.includes("ID") ||
+          fieldName.includes("BIRTHDAY") ||
+          fieldName.includes("SEX") ||
+          fieldName.includes("PASSPORT") ||
+          fieldName.includes("DATE") ||
+          fieldName.includes("STATUS") ||
+          fieldName.includes("SCORE") ||
+          fieldName.includes("PRIORITY") ||
+          fieldName.includes("PHONE") ||
+          fieldName.includes("TARIFF") ||
+          fieldName.includes("GROUP") ||
+          fieldName.includes("OFFICE") ||
+          fieldName.includes("LEAD") ||
+          fieldName.includes("LEVEL")
+        ) {
+          style = isEven ? centerStyleEven : centerStyleOdd;
+        } else if (fieldName.includes("UZS") || fieldName.includes("BALANCE") || fieldName.includes("DISCOUNT")) {
+          style = isEven ? rightStyleEven : rightStyleOdd;
+          if (cell.v !== "" && cell.v !== null && cell.v !== undefined) {
+            const num = parseFloat(String(cell.v).replace(/,/g, ""));
+            if (!isNaN(num)) {
+              cell.t = "n";
+              cell.v = num;
+              cell.z = "#,##0";
+            }
+          }
+        }
+      } else {
+        // Horizontal list coordinates
+        const colHeaderCell = ws[XLSX.utils.encode_cell({ r: 0, c: C })];
+        const headerName = colHeaderCell ? String(colHeaderCell.v).toUpperCase() : "";
+
+        if (
+          headerName === "NO" ||
+          headerName === "STUDENT ID" ||
+          headerName === "SEX" ||
+          headerName === "BIRTHDAY" ||
+          headerName === "PASSPORT" ||
+          headerName === "DATE OF ISSUE" ||
+          headerName === "DATE OF EXPIRATION" ||
+          headerName.includes("STATUS") ||
+          headerName.includes("SCORE") ||
+          headerName === "PRIORITY" ||
+          headerName === "DATE & TIME" ||
+          headerName === "DATE" ||
+          headerName.includes("PHONE") ||
+          headerName.includes("TARIFF") ||
+          headerName.includes("GROUP") ||
+          headerName.includes("OFFICE") ||
+          headerName.includes("LEAD") ||
+          headerName.includes("LEVEL")
+        ) {
+          style = isEven ? centerStyleEven : centerStyleOdd;
+        } else if (headerName.includes("UZS") || headerName.includes("BALANCE") || headerName.includes("DISCOUNT") || headerName.includes("AMOUNT")) {
+          style = isEven ? rightStyleEven : rightStyleOdd;
+          if (cell.v !== "" && cell.v !== null && cell.v !== undefined) {
+            const num = parseFloat(String(cell.v).replace(/,/g, ""));
+            if (!isNaN(num)) {
+              cell.t = "n";
+              cell.v = num;
+              cell.z = "#,##0";
+            }
+          }
+        }
+      }
+
+      cell.s = style;
+    }
+  }
+
+  // Apply row heights (Header: 28px, Rows: 22px for spacious touch)
+  const rowHeights = [];
+  rowHeights.push({ hpx: 28 }); // Header row
+  for (let R = 1; R <= range.e.r; ++R) {
+    rowHeights.push({ hpx: 22 });
+  }
+  ws['!rows'] = rowHeights;
+
+  // Calculate dynamic column widths based on longest content
+  const colWidths = [];
+  for (let C = range.s.c; C <= range.e.c; ++C) {
+    let maxLen = 10; // Default minimum width
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+      const cell = ws[cellRef];
+      if (cell && cell.v !== undefined && cell.v !== null) {
+        let valStr = String(cell.v);
+        // Estimate formatted number width
+        if (cell.t === 'n' || cell.z === '#,##0') {
+          const num = Number(cell.v);
+          if (!isNaN(num)) {
+            valStr = num.toLocaleString('en-US');
+          }
+        }
+        // Handle newlines
+        const lines = valStr.split('\n');
+        for (const line of lines) {
+          if (line.length > maxLen) {
+            maxLen = line.length;
+          }
+        }
+      }
+    }
+    colWidths.push({ wch: maxLen + 3 }); // Add character padding
+  }
+  ws['!cols'] = colWidths;
 }
 
 function showNotification(message, type = "success") {
@@ -3748,25 +4112,26 @@ function updateSelectedCount() {
   const checkboxes = document.querySelectorAll(
     "#excelStudentList .form-check-input:checked",
   );
-  const countBadge = document.getElementById("selectedCount");
-  countBadge.textContent = `${checkboxes.length} selected`;
-
-  // Update item selection styling
-  document
-    .querySelectorAll("#excelStudentList .form-check-input")
-    .forEach((cb) => {
-      const parent = cb.closest(".student-checkbox-item, .student-table-row");
-      if (parent) {
-        parent.classList.toggle("selected", cb.checked);
-      }
-    });
-
-  // Update select all checkbox state
   const allCheckboxes = document.querySelectorAll(
     "#excelStudentList .form-check-input",
   );
+  const countBadge = document.getElementById("selectedCount");
+  
+  if (countBadge) {
+    countBadge.textContent = `${checkboxes.length}/${allCheckboxes.length} SELECTED`;
+  }
+
+  // Update item selection styling
+  allCheckboxes.forEach((cb) => {
+    const parent = cb.closest(".student-checkbox-item, .student-table-row");
+    if (parent) {
+      parent.classList.toggle("selected", cb.checked);
+    }
+  });
+
+  // Update select all checkbox state
   const selectAllCheckbox = document.getElementById("selectAllStudents");
-  if (allCheckboxes.length > 0) {
+  if (selectAllCheckbox && allCheckboxes.length > 0) {
     selectAllCheckbox.checked = checkboxes.length === allCheckboxes.length;
     selectAllCheckbox.indeterminate =
       checkboxes.length > 0 && checkboxes.length < allCheckboxes.length;
@@ -3798,22 +4163,42 @@ function downloadSelectedAsExcel() {
   // Prepare data for Excel
   const excelData = selectedStudents.map((s, index) => ({
     No: index + 1,
-    "Student ID": s.id,
-    "Full Name": s.fullName,
+    "Student ID": s.id || "",
+    "Full Name": s.fullName || "",
     "Phone 1": s.phone1 || "",
     "Phone 2": s.phone2 || "",
+    "Father Phone": s.fatherPhone || "",
+    "Mother Phone": s.motherPhone || "",
     Email: s.email || "",
-    "Education Level": s.level || "",
-    Tariff: s.tariff || "",
-    "University 1": s.university1 || "",
-    "University 2": s.university2 || "",
-    "Language Certificate": s.languageCertificate || "",
-    Score: s.certificateScore || "",
-    Passport: s.passport || "",
     Birthday: s.birthday || "",
     Sex: s.sex || "",
+    Passport: s.passport || "",
+    "Date of Issue": s.passportIssueDate || "",
+    "Date of Expiration": s.passportExpireDate || "",
+    "Education Level 1": s.level || "",
+    "Education Level 2": s.level2 || "",
+    Tariff: s.tariff || "",
+    Group: s.group || "",
+    "Lead by": s.leadBy || "",
+    Office: s.office || "",
+    "Educational Background": s.educationalBackground || "",
+    "University 1": s.university1 || "",
+    "University 1 Status": s.university1Status || "",
+    "University 2": s.university2 || "",
+    "University 2 Status": s.university2Status || "",
+    "University 3": s.university3 || "",
+    "University 3 Status": s.university3Status || "",
+    "Language Certificate 1": s.languageCertificate || "",
+    "Score 1": s.certificateScore || "",
+    "Language Certificate 2": s.languageCertificate2 || "",
+    "Score 2": s.certificateScore2 || "",
+    "Language Certificate 3": s.languageCertificate3 || "",
+    "Score 3": s.certificateScore3 || "",
     Address: s.address || "",
     Notes: s.notes || "",
+    Priority: s.noteImportance || "",
+    "Balance (UZS)": s.balance !== undefined ? s.balance : "",
+    "Discount (UZS)": s.discount !== undefined ? s.discount : "",
   }));
 
   // Create workbook and worksheet
@@ -3823,54 +4208,43 @@ function downloadSelectedAsExcel() {
 
   // Set column widths
   ws["!cols"] = [
-    {
-      wch: 5,
-    }, // No
-    {
-      wch: 12,
-    }, // ID
-    {
-      wch: 35,
-    }, // Full Name
-    {
-      wch: 15,
-    }, // Phone 1
-    {
-      wch: 15,
-    }, // Phone 2
-    {
-      wch: 25,
-    }, // Email
-    {
-      wch: 20,
-    }, // Level
-    {
-      wch: 15,
-    }, // Tariff
-    {
-      wch: 30,
-    }, // University 1
-    {
-      wch: 30,
-    }, // University 2
-    {
-      wch: 18,
-    }, // Language Certificate
-    {
-      wch: 8,
-    }, // Score
-    {
-      wch: 12,
-    }, // Passport
-    {
-      wch: 12,
-    }, // Birthday
-    {
-      wch: 40,
-    }, // Address
-    {
-      wch: 30,
-    }, // Notes
+    { wch: 5 },  // No
+    { wch: 12 }, // Student ID
+    { wch: 35 }, // Full Name
+    { wch: 15 }, // Phone 1
+    { wch: 15 }, // Phone 2
+    { wch: 15 }, // Father Phone
+    { wch: 15 }, // Mother Phone
+    { wch: 25 }, // Email
+    { wch: 12 }, // Birthday
+    { wch: 6 },  // Sex
+    { wch: 12 }, // Passport
+    { wch: 12 }, // Date of Issue
+    { wch: 12 }, // Date of Expiration
+    { wch: 20 }, // Education Level 1
+    { wch: 20 }, // Education Level 2
+    { wch: 15 }, // Tariff
+    { wch: 15 }, // Group
+    { wch: 15 }, // Lead by
+    { wch: 15 }, // Office
+    { wch: 35 }, // Educational Background
+    { wch: 30 }, // University 1
+    { wch: 18 }, // University 1 Status
+    { wch: 30 }, // University 2
+    { wch: 18 }, // University 2 Status
+    { wch: 30 }, // University 3
+    { wch: 18 }, // University 3 Status
+    { wch: 20 }, // Language Certificate 1
+    { wch: 8 },  // Score 1
+    { wch: 20 }, // Language Certificate 2
+    { wch: 8 },  // Score 2
+    { wch: 20 }, // Language Certificate 3
+    { wch: 8 },  // Score 3
+    { wch: 40 }, // Address
+    { wch: 30 }, // Notes
+    { wch: 12 }, // Priority
+    { wch: 15 }, // Balance
+    { wch: 15 }  // Discount
   ];
 
   // Generate filename with date and filter info
@@ -3880,6 +4254,11 @@ function downloadSelectedAsExcel() {
     ? `_${levelFilters.join("_").replace(/\s+/g, "_")}`
     : "_All";
   const filename = `Students${levelStr}_${dateStr}.xlsx`;
+
+  // Apply premium styling
+  if (typeof styleWorksheet === "function") {
+    styleWorksheet(ws, false);
+  }
 
   // Download
   XLSX.writeFile(wb, filename);
@@ -3970,6 +4349,11 @@ function downloadPaymentHistoryAsExcel() {
   // Generate filename with date
   const dateStr = new Date().toISOString().split("T")[0];
   const filename = `Payment_History_${dateStr}.xlsx`;
+
+  // Apply premium styling
+  if (typeof styleWorksheet === "function") {
+    styleWorksheet(ws, false);
+  }
 
   // Download
   XLSX.writeFile(wb, filename);
@@ -6468,6 +6852,7 @@ window.confirmDeleteVideo = confirmDeleteVideo;
 window.showTab = showTab;
 window.saveStudent = saveStudent;
 window.viewStudentDetails = viewStudentDetails;
+window.refreshStudentDetails = refreshStudentDetails;
 window.downloadStudentExcel = downloadStudentExcel;
 window.copyToClipboard = copyToClipboard;
 window.startEdit = startEdit;
@@ -7450,6 +7835,7 @@ function deleteNotification() {
 window.showTab = showTab;
 window.saveStudent = saveStudent;
 window.viewStudentDetails = viewStudentDetails;
+window.refreshStudentDetails = refreshStudentDetails;
 window.downloadStudentExcel = downloadStudentExcel;
 window.renderStudents = renderStudents;
 window.applyFilters = applyFilters;

@@ -900,6 +900,10 @@
                         <i class="bi bi-person-circle me-2"></i> Student Details
                     </h5>
                     <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-outline-success btn-sm rounded-pill" id="refreshStudentBtn"
+                            onclick="refreshStudentDetails()" title="Refresh Student Data">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
                         <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" id="deleteStudentBtn"
                             onclick="confirmDeleteStudent()">
                             <i class="bi bi-trash"></i>
@@ -1795,8 +1799,8 @@
         </div>
     </div>
 
-    <!-- SheetJS Library for Excel Export -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <!-- SheetJS Library for Excel Export with Styling support -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 
     <!-- Bootstrap Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
