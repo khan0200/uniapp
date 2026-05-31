@@ -15,7 +15,14 @@
     "NAME OF SCHOOL OR EDUCATIONAL INSTITUTION": "educationalBackground",
     "NAME OF SCHOOL": "educationalBackground",
     "EDUCATIONAL INSTITUTION": "educationalBackground",
-    "SCHOOL NAME": "educationalBackground"
+    "SCHOOL NAME": "educationalBackground",
+    // Contact Info fields
+    "EMAIL": "email",
+    "PHONE NUMBER 1": "phone1",
+    "PHONE NUMBER 2": "phone2",
+    "PHONE 1": "phone1",
+    "PHONE 2": "phone2",
+    "ADDRESS": "address"
   };
 
   document.addEventListener("DOMContentLoaded", () => {
@@ -337,7 +344,8 @@
     try {
       if (typeof db !== "undefined") {
         let finalValue = value;
-        if (["fullName", "passport", "address", "educationalBackground"].includes(firestoreField)) {
+        // Uppercase these fields (email is intentionally excluded to preserve case)
+        if (["fullName", "passport", "address", "educationalBackground", "phone1", "phone2"].includes(firestoreField)) {
           finalValue = value.toUpperCase();
         }
 

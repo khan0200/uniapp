@@ -35,7 +35,7 @@ Analyze the uploaded document.
 
 Specific instructions:
 ${extraInstructions}
-- Identify the document type automatically (e.g. Passport, ID Card, Diploma, Certificate, Visa, Transcript).
+- Identify the document type automatically (e.g. Passport, ID Card, Diploma, Certificate, Visa, Transcript, Contact Info).
 - Generate ONLY necessary structured fields that are meaningful for the identified document type. Do not perform a general OCR of every text block, and do not extract design markings, watermarks, signatures, or noisy metadata.
 - If the document is a Passport or ID Card, extract ONLY these fields:
   - "FULL_NAME": Concatenation of Surname + Given Names + Father's Name (patronymic / Otasining ismi) in that exact order (e.g. "ISAKJONOV MUKHAMMADIYOR NAVRUZBEK UGLI").
@@ -47,6 +47,14 @@ ${extraInstructions}
 - If the document is a graduation/educational document (e.g. Shahodatnoma, Diploma, Certificate, Transcript):
   - Generate ONLY the primary educational fields available on the document, such as: "GRADUATION_DATE", "YEAR_OF_ISSUE", "NAME_OF_SCHOOL_OR_EDUCATIONAL_INSTITUTION", "MAJOR_OR_SPECIALTY", "DEPARTMENT".
   - The "NAME_OF_SCHOOL_OR_EDUCATIONAL_INSTITUTION" field MUST be translated into English and formatted in all UPPERCASE (e.g. "SPECIALIZED SCHOOL NO. 72 OF MARHAMAT DISTRICT" or "TASHKENT STATE UNIVERSITY").
+- If the document contains contact information (e.g. a screenshot of a chat, message, or Telegram conversation showing an email, phone numbers, or address):
+  - Set document_type to "CONTACT INFO".
+  - Extract ONLY these fields if present:
+    - "EMAIL": The email address exactly as written (preserve original case).
+    - "PHONE_NUMBER_1": The first phone number found.
+    - "PHONE_NUMBER_2": The second phone number found (if any).
+    - "ADDRESS": The physical/home address. MUST be translated into English and formatted in ALL UPPERCASE (e.g. "SURKHANDARYA REGION, QIZIRIQ DISTRICT, QORASUV MAHALLA").
+  - Only include fields that are actually present in the document. Do not hallucinate fields.
 - If the document is of another type:
   - Automatically detect and generate ONLY the key fields (maximum 5-6 core identifiers or dates) necessary to describe that document. Do not perform a general OCR of every text block.
 - Ignore watermarks, decorative branding, or irrelevant numbers.
@@ -60,6 +68,7 @@ Return JSON only. Do not explain anything. Output must be exactly in this JSON f
     // Generate appropriate fields here dynamically depending on document type.
     // For Passports: FULL_NAME, PASSPORT_NUMBER, DATE_OF_BIRTH, DATE_OF_ISSUE, DATE_OF_EXPIRATION, SEX.
     // For Diplomas/Certificates: NAME_OF_SCHOOL_OR_EDUCATIONAL_INSTITUTION, GRADUATION_DATE, YEAR_OF_ISSUE, MAJOR_OR_SPECIALTY, DEPARTMENT.
+    // For Contact Info: EMAIL, PHONE_NUMBER_1, PHONE_NUMBER_2, ADDRESS.
   }
 }`;
 
