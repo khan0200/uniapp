@@ -196,6 +196,11 @@
       processingOverlay.classList.add("show");
     }
 
+    // Show skeletons immediately on start
+    if (window.showSkeletonFields) {
+      window.showSkeletonFields(5);
+    }
+
     // Fetch AI config settings from localStorage
     let aiSettings = {};
     try {
@@ -267,14 +272,21 @@
 
       window.showToast("Document analyzed successfully!", "success");
 
-
-      // Display results
-      window.displayExtractionResults(data);
+      // Display results progressively
+      if (window.displayExtractionResultsProgressively) {
+        window.displayExtractionResultsProgressively(data, callDirectly);
+      } else {
+        window.displayExtractionResults(data);
+      }
 
     } catch (error) {
       console.error("Extraction error:", error);
       if (processingOverlay) {
         processingOverlay.classList.remove("show");
+      }
+      // If failed, make sure we clear the skeletons
+      if (window.clearRemainingSkeletons) {
+        window.clearRemainingSkeletons();
       }
       window.showToast(`Extraction failed: ${error.message}`, "danger");
     }
@@ -330,16 +342,16 @@ ${extraInstructions}
 Return JSON only. Do not explain anything. Output must be exactly in this JSON format:
 {
   "document_type": "...",
-  "ocr_text": "...",
   "fields": {
     // Generate appropriate fields here dynamically depending on document type.
     // For Passports: FULL_NAME, PASSPORT_NUMBER, DATE_OF_BIRTH, DATE_OF_ISSUE, DATE_OF_EXPIRATION, SEX.
     // For Diplomas/Certificates: NAME_OF_SCHOOL_OR_EDUCATIONAL_INSTITUTION, GRADUATION_DATE, YEAR_OF_ISSUE, MAJOR_OR_SPECIALTY, DEPARTMENT.
     // For Contact Info: EMAIL, PHONE_NUMBER_1, PHONE_NUMBER_2, ADDRESS.
-  }
+  },
+  "ocr_text": "..."
 }`;
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
 
     const response = await fetch(geminiUrl, {
       method: "POST",
@@ -366,22 +378,96 @@ Return JSON only. Do not explain anything. Output must be exactly in this JSON f
       })
     });
 
-    const data = await response.json();
     if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
       const errMsg = data.error?.message || "Error communicating with Gemini API";
       throw new Error(errMsg);
     }
 
-    const candidates = data.candidates || [];
-    if (candidates.length === 0 || !candidates[0].content?.parts?.[0]?.text) {
-      throw new Error("No content returned from Gemini");
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let accumulatedText = "";
+    let buffer = "";
+    const revealedFields = new Set();
+
+    function processProgressiveFields(text) {
+      const fieldsIdx = text.indexOf('"fields"');
+      if (fieldsIdx === -1) return;
+
+      const fieldsSub = text.substring(fieldsIdx);
+      const regex = /"([^"\\]+(?:\\.[^"\\]*)*)"\s*:\s*"((?:[^"\\]|\\.)*)"/g;
+      let match;
+      while ((match = regex.exec(fieldsSub)) !== null) {
+        const key = match[1];
+        const val = match[2];
+        const cleanKey = key.trim();
+        if (cleanKey === "document_type" || cleanKey === "ocr_text" || cleanKey === "fields") continue;
+
+        if (!revealedFields.has(cleanKey)) {
+          revealedFields.add(cleanKey);
+          if (window.revealExtractedField) {
+            window.revealExtractedField(cleanKey, val);
+          }
+        }
+      }
+
+      // Extract document type as soon as it appears
+      const docTypeMatch = text.match(/"document_type"\s*:\s*"([^"\\]+(?:\\.[^"\\]*)*)"/);
+      if (docTypeMatch && docTypeMatch[1] && window.revealDocumentType) {
+        window.revealDocumentType(docTypeMatch[1]);
+      }
     }
 
-    const resultText = candidates[0].content.parts[0].text;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop(); // Keep partial line in buffer
+
+      for (let line of lines) {
+        line = line.trim();
+        if (!line) continue;
+        if (line.startsWith("data: ")) {
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") continue;
+          try {
+            const chunkData = JSON.parse(jsonStr);
+            const chunkText = chunkData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+            accumulatedText += chunkText;
+            processProgressiveFields(accumulatedText);
+          } catch (e) {
+            console.warn("Failed to parse SSE JSON chunk:", e, jsonStr);
+          }
+        }
+      }
+    }
+
+    // Process any remaining buffer
+    if (buffer) {
+      let line = buffer.trim();
+      if (line.startsWith("data: ")) {
+        const jsonStr = line.slice(6).trim();
+        try {
+          const chunkData = JSON.parse(jsonStr);
+          const chunkText = chunkData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+          accumulatedText += chunkText;
+          processProgressiveFields(accumulatedText);
+        } catch (e) {}
+      }
+    }
+
+    // Clean up markdown block format in case Gemini returned it enclosed in ```json
+    let cleanJson = accumulatedText.trim();
+    if (cleanJson.startsWith("```")) {
+      cleanJson = cleanJson.replace(/^```json/, "").replace(/^```/, "").replace(/```$/, "").trim();
+    }
+
     try {
-      return JSON.parse(resultText);
+      return JSON.parse(cleanJson);
     } catch (parseErr) {
-      console.error("Failed to parse Gemini JSON output:", resultText);
+      console.error("Failed to parse accumulated Gemini JSON output:", cleanJson);
       throw new Error("Gemini output was not valid JSON");
     }
   }

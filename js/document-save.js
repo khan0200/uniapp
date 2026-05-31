@@ -74,8 +74,183 @@
     }, 4000);
   };
 
-  // Display all results extracted by Gemini
-  window.displayExtractionResults = function (data) {
+  // Show skeleton shimmer placeholders
+  window.showSkeletonFields = function (count = 5) {
+    currentExtractedFields = []; // Reset locally
+    if (noResultsText) noResultsText.style.display = "none";
+    if (fieldsContainer) {
+      fieldsContainer.style.display = "block";
+      let skeletonHtml = "";
+      for (let i = 0; i < count; i++) {
+        skeletonHtml += `
+          <div class="field-item skeleton-field">
+            <div>
+              <div class="skeleton-name"></div>
+              <div class="skeleton-value"></div>
+            </div>
+            <div class="skeleton-btn-group">
+              <div class="skeleton-btn"></div>
+              <div class="skeleton-btn"></div>
+              <div class="skeleton-btn"></div>
+              <div class="skeleton-btn save-to"></div>
+            </div>
+          </div>
+        `;
+      }
+      fieldsContainer.innerHTML = skeletonHtml;
+    }
+
+    if (quickCopyPanel) quickCopyPanel.style.display = "none";
+    if (ocrPanel) ocrPanel.style.display = "none";
+    if (docTypeBadge) docTypeBadge.style.display = "none";
+  };
+
+  // Reveal a single extracted field in the UI
+  window.revealExtractedField = function (key, value) {
+    // Check if this field is already revealed to avoid duplicates
+    const cleanKey = key.trim();
+    const existingIndex = currentExtractedFields.findIndex(f => f.key === cleanKey);
+    if (existingIndex !== -1) {
+      // Just update value if it has changed
+      if (currentExtractedFields[existingIndex].value !== value) {
+        currentExtractedFields[existingIndex].value = value;
+        const valEl = document.getElementById(`field-value-${existingIndex}`);
+        if (valEl) valEl.textContent = value;
+      }
+      return;
+    }
+
+    currentExtractedFields.push({ key: cleanKey, value: value });
+    const index = currentExtractedFields.length - 1;
+
+    const formattedKey = cleanKey.replace(/_/g, " ");
+    const cleanLabel = formattedKey.toUpperCase().trim();
+    const firestoreField = FIELD_MAPPING[cleanLabel] || "";
+    const titleText = firestoreField 
+      ? `Save To >>\nUpdates: ${firestoreField}` 
+      : `Save To >>\nUpdates: (not mapped)`;
+    
+    let disabledAttr = firestoreField ? "" : "disabled style='opacity: 0.5; cursor: not-allowed;'";
+    let buttonText = `<i class="bi bi-cloud-arrow-down"></i> Save To &gt;&gt;`;
+    let buttonClass = "action-btn save-to";
+
+    // Pre-render as Saved if current student data already matches this field's value
+    if (firestoreField && window.currentStudentData) {
+      const dbValue = window.currentStudentData[firestoreField] || "";
+      const dbSexValue = (firestoreField === "gender") ? (window.currentStudentData["sex"] || "") : "";
+      const dbIssueValue = (firestoreField === "dateOfIssue") ? (window.currentStudentData["passportIssueDate"] || "") : "";
+      const dbExpireValue = (firestoreField === "dateOfExpiration") ? (window.currentStudentData["passportExpireDate"] || "") : "";
+      
+      const cleanDbValue = dbValue.toString().trim().toUpperCase();
+      const cleanDbSexValue = dbSexValue.toString().trim().toUpperCase();
+      const cleanDbIssueValue = dbIssueValue.toString().trim().toUpperCase();
+      const cleanDbExpireValue = dbExpireValue.toString().trim().toUpperCase();
+      const cleanNewValue = value.toString().trim().toUpperCase();
+
+      let isSaved = false;
+      if (firestoreField === "gender") {
+        isSaved = (cleanDbValue === cleanNewValue) && (cleanDbSexValue === cleanNewValue);
+      } else if (firestoreField === "dateOfIssue") {
+        isSaved = (cleanDbValue === cleanNewValue) && (cleanDbIssueValue === cleanNewValue);
+      } else if (firestoreField === "dateOfExpiration") {
+        isSaved = (cleanDbValue === cleanNewValue) && (cleanDbExpireValue === cleanNewValue);
+      } else {
+        isSaved = (cleanDbValue === cleanNewValue);
+      }
+
+      if (isSaved) {
+        buttonText = `Saved ✓`;
+        buttonClass = "action-btn save-to success-saved-btn";
+        disabledAttr = "disabled";
+      }
+    }
+    
+    // Escape quotes to prevent breaks in HTML attributes/JSON onclick params
+    const escapedKey = formattedKey.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+    const escapedValue = value.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+    let saveButtonHtml = "";
+    if (firestoreField) {
+      saveButtonHtml = `
+        <button class="${buttonClass}" onclick="saveFieldToStudent(this, '${escapedKey}', '${escapedValue}')" title="${titleText}" ${disabledAttr}>
+          ${buttonText}
+        </button>
+      `;
+    }
+
+    const fieldHtml = `
+      <div class="field-item">
+        <div>
+          <div class="field-name">${formattedKey}</div>
+          <div class="field-value" id="field-value-${index}">${value}</div>
+        </div>
+        <div class="action-btn-group">
+          <button class="action-btn copy" onclick="copyValue('${escapedValue}')" title="Copy to clipboard">
+            <i class="bi bi-clipboard"></i>
+          </button>
+          <button class="action-btn edit" onclick="openEditFieldModal(${index})" title="Edit value">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="action-btn delete" onclick="confirmDeleteField(${index})" title="Delete field">
+            <i class="bi bi-trash"></i>
+          </button>
+          ${saveButtonHtml}
+        </div>
+      </div>
+    `;
+
+    if (fieldsContainer) {
+      // Find the first skeleton field
+      const firstSkeleton = fieldsContainer.querySelector(".skeleton-field");
+      if (firstSkeleton) {
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = fieldHtml.trim();
+        fieldsContainer.replaceChild(tempDiv.firstChild, firstSkeleton);
+      } else {
+        fieldsContainer.insertAdjacentHTML("beforeend", fieldHtml);
+      }
+    }
+
+    // Add to quick copy chips
+    if (quickCopyPanel && quickCopyChips) {
+      const chipHtml = `
+        <button class="chip-button" onclick="copyValue('${escapedValue}')">
+          <i class="bi bi-clipboard me-1"></i>
+          <strong>${formattedKey}:</strong> ${value}
+        </button>
+      `;
+      if (quickCopyPanel.style.display === "none") {
+        quickCopyChips.innerHTML = chipHtml;
+        quickCopyPanel.style.display = "block";
+      } else {
+        quickCopyChips.insertAdjacentHTML("beforeend", chipHtml);
+      }
+    }
+  };
+
+  // Reveal document type badge in real-time
+  window.revealDocumentType = function (docType) {
+    if (docTypeBadge) {
+      docTypeBadge.textContent = `Type: ${docType}`;
+      docTypeBadge.style.display = "inline-block";
+    }
+  };
+
+  // Remove any remaining skeletons when stream ends
+  window.clearRemainingSkeletons = function () {
+    if (fieldsContainer) {
+      const skeletons = fieldsContainer.querySelectorAll(".skeleton-field");
+      skeletons.forEach(s => s.remove());
+
+      if (currentExtractedFields.length === 0) {
+        fieldsContainer.innerHTML = `<div class="text-center py-4 text-secondary">No fields extracted.</div>`;
+        if (quickCopyPanel) quickCopyPanel.style.display = "none";
+      }
+    }
+  };
+
+  // Display results progressively (either directly or via simulated staggered timeout)
+  window.displayExtractionResultsProgressively = function (data, isAlreadyStreamed = false) {
     window.currentExtractionData = data;
     window.hasLoggedExtraction = false;
 
@@ -84,17 +259,14 @@
 
     // Set Document Type Badge
     if (docTypeBadge && data.document_type) {
-      docTypeBadge.textContent = `Type: ${data.document_type}`;
-      docTypeBadge.style.display = "inline-block";
+      window.revealDocumentType(data.document_type);
     }
 
-    // Load extracted fields
-    currentExtractedFields = [];
+    const fieldsToReveal = [];
     if (data.fields) {
       Object.keys(data.fields).forEach((key) => {
-        // Only include non-empty values
         if (data.fields[key]) {
-          currentExtractedFields.push({
+          fieldsToReveal.push({
             key: key,
             value: data.fields[key]
           });
@@ -102,8 +274,34 @@
       });
     }
 
-    // Render panels
-    renderFieldsList();
+    if (isAlreadyStreamed) {
+      // Direct stream has already called window.revealExtractedField for all fields.
+      // But make sure everything is in currentExtractedFields just in case
+      fieldsToReveal.forEach((field) => {
+        window.revealExtractedField(field.key, field.value);
+      });
+      completeExtraction(data);
+    } else {
+      // Simulated progressive reveal
+      let delay = 0;
+      if (fieldsToReveal.length === 0) {
+        completeExtraction(data);
+      } else {
+        fieldsToReveal.forEach((field, idx) => {
+          setTimeout(() => {
+            window.revealExtractedField(field.key, field.value);
+            if (idx === fieldsToReveal.length - 1) {
+              completeExtraction(data);
+            }
+          }, delay);
+          delay += 150; // Stagger by 150ms
+        });
+      }
+    }
+  };
+
+  function completeExtraction(data) {
+    window.clearRemainingSkeletons();
 
     // Load OCR panel if text exists
     if (data.ocr_text && ocrPanel && ocrTextarea) {
@@ -112,6 +310,11 @@
     } else if (ocrPanel) {
       ocrPanel.style.display = "none";
     }
+  }
+
+  // Display all results extracted by Gemini (Legacy entry point fallback)
+  window.displayExtractionResults = function (data) {
+    window.displayExtractionResultsProgressively(data, false);
   };
 
   // Render the extracted fields list and quick copy chips

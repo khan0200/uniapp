@@ -63,13 +63,13 @@ ${extraInstructions}
 Return JSON only. Do not explain anything. Output must be exactly in this JSON format:
 {
   "document_type": "...",
-  "ocr_text": "...",
   "fields": {
     // Generate appropriate fields here dynamically depending on document type.
     // For Passports: FULL_NAME, PASSPORT_NUMBER, DATE_OF_BIRTH, DATE_OF_ISSUE, DATE_OF_EXPIRATION, SEX.
     // For Diplomas/Certificates: NAME_OF_SCHOOL_OR_EDUCATIONAL_INSTITUTION, GRADUATION_DATE, YEAR_OF_ISSUE, MAJOR_OR_SPECIALTY, DEPARTMENT.
     // For Contact Info: EMAIL, PHONE_NUMBER_1, PHONE_NUMBER_2, ADDRESS.
-  }
+  },
+  "ocr_text": "..."
 }`;
 
     // Call Gemini API

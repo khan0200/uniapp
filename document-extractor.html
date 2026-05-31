@@ -294,6 +294,67 @@
             50% { width: 75%; }
             100% { width: 100%; }
         }
+
+        /* Skeleton placeholders */
+        .skeleton-field {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skeleton-field::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            transform: translateX(-100%);
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(167, 139, 250, 0.04) 20%,
+                rgba(167, 139, 250, 0.12) 60%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            animation: shimmer 1.6s infinite;
+        }
+
+        @keyframes shimmer {
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .skeleton-name {
+            width: 90px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            margin-bottom: 6px;
+        }
+
+        .skeleton-value {
+            width: 200px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .skeleton-btn-group {
+            display: flex;
+            gap: 0.35rem;
+        }
+
+        .skeleton-btn {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-sm);
+        }
+        
+        .skeleton-btn.save-to {
+            width: 90px;
+        }
     </style>
 </head>
 
@@ -448,10 +509,10 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Document Extractor Component Modules -->
-    <script src="js/document-extractor.js?v=1.0.8"></script>
-    <script src="js/document-upload.js?v=1.0.8"></script>
-    <script src="js/document-save.js?v=1.0.8"></script>
-    <script src="js/document-history.js?v=1.0.8"></script>
+    <script src="js/document-extractor.js?v=1.0.9"></script>
+    <script src="js/document-upload.js?v=1.0.9"></script>
+    <script src="js/document-save.js?v=1.0.9"></script>
+    <script src="js/document-history.js?v=1.0.9"></script>
 </body>
 
 </html>
