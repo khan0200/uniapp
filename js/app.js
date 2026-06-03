@@ -552,7 +552,12 @@ window.clearAllStudentColors = async function () {
     return;
   }
 
-  if (!confirm("Are you sure you want to clear colors for all students? This will clear colors in both the Students and Status tabs.")) {
+  const isManagement = window.location.pathname.includes("management.html");
+  const confirmMsg = isManagement 
+    ? "Are you sure you want to clear colors for all students? This will clear colors in both the Students and Status tabs."
+    : "Are you sure you want to clear colors for all students?";
+
+  if (!confirm(confirmMsg)) {
     return;
   }
 
