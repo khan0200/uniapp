@@ -766,6 +766,7 @@ function showTab(tabName) {
   }
   
   window.currentTab = tabName;
+  sessionStorage.setItem("uniapp_active_tab", tabName);
   
   const targetNav = document.getElementById(`nav-${tabName}`);
   if (targetNav) targetNav.classList.add("active");
@@ -875,6 +876,9 @@ function renderStudents() {
   applyFilters(false);
   // Keep status tab in sync whenever students data changes
   if (typeof applyStatusFilters === "function") applyStatusFilters(false);
+  // Keep documents and payments tabs in sync as well
+  if (typeof filterDocuments === "function") filterDocuments(false);
+  if (typeof filterPaymentStudents === "function") filterPaymentStudents(false);
   // Refresh tags filter dropdowns with all known custom tags
   if (typeof updateTagsDropdown === "function") updateTagsDropdown();
 }
@@ -6138,7 +6142,13 @@ function updateGroupDropdowns() {
   );
 
   groupSelects.forEach((select) => {
-    const currentValue = select.value;
+    let currentValues = Array.from(select.selectedOptions).map((o) => o.value);
+    let wasPending = false;
+    if (select._pendingValues) {
+      currentValues = select._pendingValues;
+      delete select._pendingValues;
+      wasPending = true;
+    }
 
     select.innerHTML = '<option value="">All Groups</option>';
 
@@ -6155,9 +6165,12 @@ function updateGroupDropdowns() {
       select.appendChild(option);
     });
 
-    // Restore previous selection if it still exists
-    if (currentValue) {
-      select.value = currentValue;
+    Array.from(select.options).forEach((opt) => {
+      opt.selected = currentValues.includes(opt.value);
+    });
+
+    if (wasPending) {
+      select.dispatchEvent(new Event('change', { bubbles: true }));
     }
   });
 }
@@ -6166,7 +6179,13 @@ function updateLeadByDropdowns() {
   const leadBySelects = document.querySelectorAll("#filterLeadBy");
 
   leadBySelects.forEach((select) => {
-    const currentValue = select.value;
+    let currentValues = Array.from(select.selectedOptions).map((o) => o.value);
+    let wasPending = false;
+    if (select._pendingValues) {
+      currentValues = select._pendingValues;
+      delete select._pendingValues;
+      wasPending = true;
+    }
 
     select.innerHTML = '<option value="">All Lead by</option>';
 
@@ -6182,8 +6201,12 @@ function updateLeadByDropdowns() {
       select.appendChild(option);
     });
 
-    if (currentValue) {
-      select.value = currentValue;
+    Array.from(select.options).forEach((opt) => {
+      opt.selected = currentValues.includes(opt.value);
+    });
+
+    if (wasPending) {
+      select.dispatchEvent(new Event('change', { bubbles: true }));
     }
   });
 }
@@ -6413,7 +6436,13 @@ function updateTariffDropdowns() {
   );
 
   tariffSelects.forEach((select) => {
-    const currentValue = select.value;
+    let currentValues = Array.from(select.selectedOptions).map((o) => o.value);
+    let wasPending = false;
+    if (select._pendingValues) {
+      currentValues = select._pendingValues;
+      delete select._pendingValues;
+      wasPending = true;
+    }
     const isFilter =
       select.id.includes("filter") || select.id.includes("Filter");
 
@@ -6431,7 +6460,13 @@ function updateTariffDropdowns() {
       select.innerHTML += '<option value="NO_TARIFF">No Tariff</option>';
     }
 
-    select.value = currentValue;
+    Array.from(select.options).forEach((opt) => {
+      opt.selected = currentValues.includes(opt.value);
+    });
+
+    if (wasPending) {
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
   });
 }
 
@@ -6441,7 +6476,13 @@ function updateLevelDropdowns() {
   );
 
   levelSelects.forEach((select) => {
-    const currentValue = select.value;
+    let currentValues = Array.from(select.selectedOptions).map((o) => o.value);
+    let wasPending = false;
+    if (select._pendingValues) {
+      currentValues = select._pendingValues;
+      delete select._pendingValues;
+      wasPending = true;
+    }
     const isFilter =
       select.id.includes("filter") || select.id.includes("Filter");
 
@@ -6463,7 +6504,13 @@ function updateLevelDropdowns() {
         '<option value="DELETED" style="font-style: italic; color: #e53e3e;">Deleted students</option>';
     }
 
-    select.value = currentValue;
+    Array.from(select.options).forEach((opt) => {
+      opt.selected = currentValues.includes(opt.value);
+    });
+
+    if (wasPending) {
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
   });
 }
 
@@ -6696,7 +6743,13 @@ function updateTagsDropdown() {
   const tagSelects = document.querySelectorAll('#filterTags, #excelTagsFilter');
   tagSelects.forEach(select => {
     if (!select) return;
-    const currentValues = Array.from(select.selectedOptions).map(o => o.value);
+    let currentValues = Array.from(select.selectedOptions).map(o => o.value);
+    let wasPending = false;
+    if (select._pendingValues) {
+      currentValues = select._pendingValues;
+      delete select._pendingValues;
+      wasPending = true;
+    }
     select.innerHTML = `
       <option value="">All Tasks/Tags</option>
       <option value="Call">📞 Call</option>
@@ -6710,6 +6763,10 @@ function updateTagsDropdown() {
       const opt = select.querySelector(`option[value="${val}"]`);
       if (opt) opt.selected = true;
     });
+
+    if (wasPending) {
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
   });
 }
 window.updateTagsDropdown = updateTagsDropdown;
@@ -7343,12 +7400,28 @@ function populateAdmissionsLevelFilter() {
 
   // Only populate if the dropdown exists and only has the default option
   if (levelFilter && levelFilter.options.length === 1 && window.levelsData) {
+    let currentValues = Array.from(levelFilter.selectedOptions).map((o) => o.value);
+    let wasPending = false;
+    if (levelFilter._pendingValues) {
+      currentValues = levelFilter._pendingValues;
+      delete levelFilter._pendingValues;
+      wasPending = true;
+    }
+
     window.levelsData.forEach(function (level) {
       var option = document.createElement("option");
       option.value = level.name;
       option.textContent = level.name;
       levelFilter.appendChild(option);
     });
+
+    Array.from(levelFilter.options).forEach((opt) => {
+      opt.selected = currentValues.includes(opt.value);
+    });
+
+    if (wasPending) {
+      levelFilter.dispatchEvent(new Event('change', { bubbles: true }));
+    }
   }
 }
 
@@ -9349,6 +9422,7 @@ function syncSearchInputs(source) {
   if (statusType && source !== 'status') statusType.value = activeType;
   
   handleGlobalSearch();
+  saveFiltersState();
 }
 
 function handleGlobalSearch() {
@@ -9383,6 +9457,20 @@ function initMultiSelect(selectId, placeholder) {
   // Make the select multiple
   select.multiple = true;
   select.style.display = 'none';
+
+  // If we have pending values restored from sessionStorage, apply them to options
+  if (select._pendingValues) {
+    const vals = select._pendingValues;
+    Array.from(select.options).forEach(opt => {
+      opt.selected = vals.includes(opt.value);
+    });
+
+    // If options are already loaded (options.length > 1), it's a static select; trigger filter immediately.
+    if (select.options.length > 1) {
+      delete select._pendingValues;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
 
   // Check if custom multiselect wrapper already exists
   const wrapperId = `multiselect-wrapper-${selectId}`;
@@ -9643,9 +9731,105 @@ document.addEventListener('click', () => {
   });
 });
 
+// Filter State Persistence System
+const filterElementIds = [
+  // Text & normal select inputs
+  'searchInput',
+  'headerSearchInput',
+  'mobileSearchInput',
+  'documentsSearchInput',
+  'statusSearchInput',
+  'paymentSearchInput',
+  'paymentHistorySearch',
+  'admissionsSearchInput',
+  'headerSearchType',
+  'mobileSearchType',
+  'statusSearchType',
+  'paymentSearchType',
+  'paymentHistorySearchType',
+  
+  // Multi-select dropdowns
+  'filterTariff',
+  'filterLevel',
+  'filterGroup',
+  'filterLanguageCertificate',
+  'filterTags',
+  'filterLeadBy',
+  'documentsFilterTariff',
+  'documentsFilterLevel',
+  'documentsFilterGroup',
+  'documentsFilterLanguageCertificate',
+  'filterMissingDocs',
+  'statusFilterTariff',
+  'statusFilterLevel',
+  'statusFilterGroup',
+  'statusFilterInvoice',
+  'statusFilterAdmission',
+  'paymentTariffFilter',
+  'paymentBalanceFilter',
+  'paymentGroupFilter',
+  'paymentMethodFilter',
+  'receivedByFilter',
+  'admissionsLevelFilter',
+  'excelTariffFilter',
+  'excelLevelFilter',
+  'excelGroupFilter',
+  'excelLanguageCertificateFilter',
+  'excelTagsFilter'
+];
+
+function saveFiltersState() {
+  const state = {};
+  filterElementIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.multiple) {
+      state[id] = Array.from(el.selectedOptions).map(opt => opt.value);
+    } else {
+      state[id] = el.value;
+    }
+  });
+  sessionStorage.setItem("uniapp_filters_state", JSON.stringify(state));
+}
+
+function restoreFiltersState() {
+  const saved = sessionStorage.getItem("uniapp_filters_state");
+  if (!saved) return;
+  try {
+    const state = JSON.parse(saved);
+    Object.keys(state).forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const value = state[id];
+      if (Array.isArray(value)) {
+        el._pendingValues = value;
+      } else {
+        el.value = value;
+      }
+    });
+  } catch (e) {
+    console.error("Error restoring filters state:", e);
+  }
+}
+
 // Run initialization on DOM Content Loaded
 document.addEventListener('DOMContentLoaded', () => {
+  restoreFiltersState();
   initAllMultiSelectFilters();
+
+  // Attach automatic save state listeners to all filter inputs
+  filterElementIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('change', saveFiltersState);
+    if (el.tagName === 'INPUT') {
+      el.addEventListener('input', saveFiltersState);
+    }
+  });
+
+  // Restore the active tab
+  const activeTab = sessionStorage.getItem("uniapp_active_tab") || "students";
+  showTab(activeTab);
 
   // Restore Student Details modal when Documents modal is closed
   const docsModalEl = document.getElementById("documentsModal");
