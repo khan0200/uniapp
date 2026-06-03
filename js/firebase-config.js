@@ -1633,6 +1633,7 @@ async function loadLeadByFromFirestore() {
         console.log('Firebase not available, using empty lead by list');
         window.leadByData = [];
         if (typeof renderLeadByList === 'function') renderLeadByList();
+        if (typeof updateLeadByDropdowns === 'function') updateLeadByDropdowns();
         return;
     }
 
@@ -1652,6 +1653,7 @@ async function loadLeadByFromFirestore() {
         console.log(`✅ Loaded ${window.leadByData.length} lead by options from Firestore`);
 
         if (typeof renderLeadByList === 'function') renderLeadByList();
+        if (typeof updateLeadByDropdowns === 'function') updateLeadByDropdowns();
     } catch (error) {
         console.error('❌ Error loading lead by options:', error);
     }
