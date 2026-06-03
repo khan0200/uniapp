@@ -2039,3 +2039,170 @@ h1, h2, h3, h4, h5, h6,
   border-color: var(--accent-danger) !important;
   color: #ffffff !important;
 }
+
+/* ============================================================
+  CUSTOM EDUCATION LEVEL & CERTIFICATE COLOR SYSTEM
+  ============================================================ */
+
+/* --- LANGUAGE CERTIFICATES --- */
+/* Default / Light Mode */
+.badge-cert-topik {
+  background-color: #ef4444 !important;
+}
+.badge-cert-ielts {
+  background-color: #10b981 !important;
+}
+.badge-cert-ska {
+  background-color: #f59e0b !important;
+}
+.badge-cert-toefl {
+  background-color: #3b82f6 !important;
+}
+.badge-cert-sat {
+  background-color: #8b5cf6 !important;
+}
+.badge-cert-cefr {
+  background-color: #06b6d4 !important;
+}
+
+/* Dark Mode */
+[data-bs-theme="dark"] .badge-cert-topik,
+[data-bs-theme="dark"] #viewStudentModal .badge-cert-topik {
+  background-color: #dc2626 !important;
+}
+[data-bs-theme="dark"] .badge-cert-ielts,
+[data-bs-theme="dark"] #viewStudentModal .badge-cert-ielts {
+  background-color: #059669 !important;
+}
+[data-bs-theme="dark"] .badge-cert-ska,
+[data-bs-theme="dark"] #viewStudentModal .badge-cert-ska {
+  background-color: #d97706 !important;
+}
+[data-bs-theme="dark"] .badge-cert-toefl,
+[data-bs-theme="dark"] #viewStudentModal .badge-cert-toefl {
+  background-color: #2563eb !important;
+}
+[data-bs-theme="dark"] .badge-cert-sat,
+[data-bs-theme="dark"] #viewStudentModal .badge-cert-sat {
+  background-color: #7c3aed !important;
+}
+[data-bs-theme="dark"] .badge-cert-cefr,
+[data-bs-theme="dark"] #viewStudentModal .badge-cert-cefr {
+  background-color: #0891b2 !important;
+}
+
+/* --- EDUCATION LEVELS --- */
+/* Default / Light Mode */
+/* COLLEGE (Indigo/Violet) */
+.pill-level-college {
+  background-color: #6366f1 !important;
+  border-color: #4f46e5 !important;
+}
+.badge-level-college {
+  background-color: #6366f1 !important;
+}
+
+/* BACHELOR (Blue/Sky) */
+.pill-level-bachelor {
+  background-color: #0ea5e9 !important;
+  border-color: #0284c7 !important;
+}
+.badge-level-bachelor {
+  background-color: #0ea5e9 !important;
+}
+
+/* MASTERS (Green) */
+.pill-level-masters {
+  background-color: #10b981 !important;
+  border-color: #059669 !important;
+}
+.badge-level-masters {
+  background-color: #10b981 !important;
+}
+
+/* MASTER NO CERTIFICATE (Teal) */
+.pill-level-master-no-certificate {
+  background-color: #0d9488 !important;
+  border-color: #0f766e !important;
+}
+.badge-level-master-no-certificate {
+  background-color: #0d9488 !important;
+}
+
+/* LANGUAGE COURSE (Amber/Orange) */
+.pill-level-language-course {
+  background-color: #f59e0b !important;
+  border-color: #d97706 !important;
+}
+.badge-level-language-course {
+  background-color: #f59e0b !important;
+}
+
+/* Default / No Level (Slate/Gray) */
+.pill-level-no-level,
+.pill-level- {
+  background-color: #6b7280 !important;
+  border-color: #4b5563 !important;
+}
+.badge-level-no-level,
+.badge-level- {
+  background-color: #6b7280 !important;
+}
+
+/* Dark Mode Overrides */
+/* COLLEGE */
+[data-bs-theme="dark"] .pill-level-college {
+  background-color: #4f46e5 !important;
+  border-color: #3730a3 !important;
+}
+[data-bs-theme="dark"] #viewStudentModal .badge-level-college {
+  background-color: #4f46e5 !important;
+}
+
+/* BACHELOR */
+[data-bs-theme="dark"] .pill-level-bachelor {
+  background-color: #0284c7 !important;
+  border-color: #0369a1 !important;
+}
+[data-bs-theme="dark"] #viewStudentModal .badge-level-bachelor {
+  background-color: #0284c7 !important;
+}
+
+/* MASTERS */
+[data-bs-theme="dark"] .pill-level-masters {
+  background-color: #059669 !important;
+  border-color: #047857 !important;
+}
+[data-bs-theme="dark"] #viewStudentModal .badge-level-masters {
+  background-color: #059669 !important;
+}
+
+/* MASTER NO CERTIFICATE */
+[data-bs-theme="dark"] .pill-level-master-no-certificate {
+  background-color: #0f766e !important;
+  border-color: #115e59 !important;
+}
+[data-bs-theme="dark"] #viewStudentModal .badge-level-master-no-certificate {
+  background-color: #0f766e !important;
+}
+
+/* LANGUAGE COURSE */
+[data-bs-theme="dark"] .pill-level-language-course {
+  background-color: #d97706 !important;
+  border-color: #b45309 !important;
+}
+[data-bs-theme="dark"] #viewStudentModal .badge-level-language-course {
+  background-color: #d97706 !important;
+}
+
+/* Default / No Level */
+[data-bs-theme="dark"] .pill-level-no-level,
+[data-bs-theme="dark"] .pill-level- {
+  background-color: #4b5563 !important;
+  border-color: #374151 !important;
+}
+[data-bs-theme="dark"] #viewStudentModal .badge-level-no-level,
+[data-bs-theme="dark"] #viewStudentModal .badge-level- {
+  background-color: #4b5563 !important;
+}
+

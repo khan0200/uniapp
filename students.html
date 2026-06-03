@@ -1582,6 +1582,26 @@
             color: var(--text-primary);
             border-color: var(--accent-primary);
         }
+
+        /* Custom Language Certificate Badge Colors */
+        .badge-cert-topik {
+            background: #ef4444 !important;
+        }
+        .badge-cert-ielts {
+            background: #10b981 !important;
+        }
+        .badge-cert-ska {
+            background: #f59e0b !important;
+        }
+        .badge-cert-toefl {
+            background: #3b82f6 !important;
+        }
+        .badge-cert-sat {
+            background: #8b5cf6 !important;
+        }
+        .badge-cert-cefr {
+            background: #06b6d4 !important;
+        }
     </style>
 </head>
 
@@ -2248,7 +2268,7 @@
             // Certificate
             let certText = student.languageCertificate || '-';
             if (certText && certText !== '-' && certText !== 'NO CERTIFICATE') {
-                let html = `<span class="badge-language">${certText}</span>`;
+                let html = `<span class="badge-language badge-cert-${certText.toLowerCase().replace(/\s+/g, '-')}">${certText}</span>`;
                 if (student.certificateScore) {
                     html += ` <span class="badge-score">Score: ${student.certificateScore}</span>`;
                 }
