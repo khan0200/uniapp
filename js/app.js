@@ -1065,6 +1065,12 @@ function filterDocuments(resetPage = true) {
         const hasNoCert = !s.languageCertificate || s.languageCertificate === "NO CERTIFICATE";
         if (hasNoCert) matchesLanguageCertificate = true;
       }
+      if (languageCertificateFilter.includes("EXPECTED")) {
+        const hasExpected = (s.certificateScore && s.certificateScore.toUpperCase() === "EXPECTED") ||
+                            (s.certificateScore2 && s.certificateScore2.toUpperCase() === "EXPECTED") ||
+                            (s.certificateScore3 && s.certificateScore3.toUpperCase() === "EXPECTED");
+        if (hasExpected) matchesLanguageCertificate = true;
+      }
       const hasAnySelected = [s.languageCertificate, s.languageCertificate2, s.languageCertificate3]
         .some(cert => cert && cert !== "NO CERTIFICATE" && languageCertificateFilter.includes(cert));
       if (hasAnySelected) matchesLanguageCertificate = true;
@@ -3086,6 +3092,12 @@ function applyFilters(resetPage = true) {
         const hasNoCert = !s.languageCertificate || s.languageCertificate === "NO CERTIFICATE";
         if (hasNoCert) matchesLanguageCertificate = true;
       }
+      if (languageCertificateFilter.includes("EXPECTED")) {
+        const hasExpected = (s.certificateScore && s.certificateScore.toUpperCase() === "EXPECTED") ||
+                            (s.certificateScore2 && s.certificateScore2.toUpperCase() === "EXPECTED") ||
+                            (s.certificateScore3 && s.certificateScore3.toUpperCase() === "EXPECTED");
+        if (hasExpected) matchesLanguageCertificate = true;
+      }
       const hasAnySelected = [s.languageCertificate, s.languageCertificate2, s.languageCertificate3]
         .some(cert => cert && cert !== "NO CERTIFICATE" && languageCertificateFilter.includes(cert));
       if (hasAnySelected) matchesLanguageCertificate = true;
@@ -4019,6 +4031,12 @@ function populateExcelModal() {
       if (languageCertificateFilter.includes("NO CERTIFICATE")) {
         const hasNoCert = !s.languageCertificate || s.languageCertificate === "NO CERTIFICATE";
         if (hasNoCert) matchesLanguageCertificate = true;
+      }
+      if (languageCertificateFilter.includes("EXPECTED")) {
+        const hasExpected = (s.certificateScore && s.certificateScore.toUpperCase() === "EXPECTED") ||
+                            (s.certificateScore2 && s.certificateScore2.toUpperCase() === "EXPECTED") ||
+                            (s.certificateScore3 && s.certificateScore3.toUpperCase() === "EXPECTED");
+        if (hasExpected) matchesLanguageCertificate = true;
       }
       const hasAnySelected = [s.languageCertificate, s.languageCertificate2, s.languageCertificate3]
         .some(cert => cert && cert !== "NO CERTIFICATE" && languageCertificateFilter.includes(cert));
