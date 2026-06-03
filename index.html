@@ -101,10 +101,29 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-link-apple" href="https://admissions-university.vercel.app/"
-                            id="nav-admissions" target="_blank">
+                        <a class="nav-link nav-link-apple" href="https://admissions-university.vercel.app/" id="nav-admissions" target="_blank">
                             <i class="bi bi-mortarboard-fill me-1"></i> ADMISSIONS
                         </a>
+                    </li>
+                    <!-- Add Student Button (shows in navbar) -->
+                    <li class="nav-item ms-2 d-flex align-items-center">
+                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3" data-bs-toggle="modal"
+                            data-bs-target="#addStudentModal" id="navAddStudentBtn"
+                            style="
+                                font-size: 0.78rem;
+                                font-weight: 700;
+                                letter-spacing: 0.05em;
+                                border-color: var(--accent-primary);
+                                color: var(--accent-primary);
+                                background: rgba(37,99,235,0.10);
+                                transition: all 0.2s ease;
+                                padding-top: 0.3rem;
+                                padding-bottom: 0.3rem;
+                            "
+                            onmouseover="this.style.background='var(--accent-primary)';this.style.color='#fff';"
+                            onmouseout="this.style.background='rgba(37,99,235,0.10)';this.style.color='var(--accent-primary)';">
+                            <i class="bi bi-plus-lg me-1"></i>ADD STUDENT
+                        </button>
                     </li>
                 </ul>
             </div>
@@ -149,6 +168,7 @@
                             <option value="VISA PLUS">VISA PLUS</option>
                             <option value="E-VISA">E-VISA</option>
                             <option value="REGIONAL VISA">REGIONAL VISA</option>
+                            <option value="NO_TARIFF">No Tariff</option>
                         </select>
                     </div>
 
@@ -163,6 +183,7 @@
                             <option value="MASTERS">MASTERS</option>
                             <option value="MASTER NO CERTIFICATE">MASTER NO CERTIFICATE</option>
                             <option value="LANGUAGE COURSE">LANGUAGE COURSE</option>
+                            <option value="NO_LEVEL">No Level</option>
                             <option value="DELETED" class="option-deleted">🗑️ Deleted students</option>
                         </select>
                     </div>
@@ -196,14 +217,23 @@
                     <!-- Task Tags Filter -->
                     <div class="filter-item tag-filter-item">
                         <i class="bi bi-bookmark-check filter-icon"></i>
-                        <select class="form-select filter-input" id="filterTags" onchange="applyFilters()"
-                            aria-label="Filter by task tags">
+                        <select class="form-select filter-input" id="filterTags" onchange="applyFilters()" aria-label="Filter by task tags">
                             <option value="">All Tasks/Tags</option>
                             <option value="Call">📞 Call</option>
                             <option value="Apply">🎓 Apply</option>
                             <option value="Documents">📄 Documents</option>
                             <option value="Payment">💰 Payment</option>
                             <option value="Custom">Custom Tags</option>
+                        </select>
+                    </div>
+
+                    <!-- Lead by Filter -->
+                    <div class="filter-item">
+                        <i class="bi bi-person-badge filter-icon" style="color:#5b8def;"></i>
+                        <select class="form-select filter-input" id="filterLeadBy" aria-label="Filter by lead by" onchange="applyFilters()">
+                            <option value="">All Lead by</option>
+                            <option value="NO_LEADBY">No Lead by</option>
+                            <!-- Lead by options populated dynamically -->
                         </select>
                     </div>
 
@@ -215,10 +245,6 @@
                         <button class="btn btn-filter-action" data-bs-toggle="modal"
                             data-bs-target="#downloadExcelModal" title="Export to Excel">
                             <i class="bi bi-file-earmark-excel"></i>
-                        </button>
-                        <button class="btn btn-primary-apple rounded-pill px-4" data-bs-toggle="modal"
-                            data-bs-target="#addStudentModal">
-                            <i class="bi bi-plus-circle me-2"></i>Add Student
                         </button>
                     </div>
                 </div>

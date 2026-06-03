@@ -969,6 +969,70 @@
  }
 }
 
+/* Mobile responsive styles for Student Details Modal */
+@media (max-width: 768px) {
+ #viewStudentModal .sd3-wrap .row > [class*="col-"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  flex: 0 0 100% !important;
+ }
+
+ #viewStudentModal [data-field^="university"] .detail-value {
+  white-space: normal !important;
+ }
+}
+
+@media (max-width: 576px) {
+ #viewStudentModal .student-details-dialog {
+  max-width: calc(100vw - 12px) !important;
+  margin: 6px auto !important;
+ }
+
+ #viewStudentModal .modal-content {
+  border-radius: 16px !important;
+ }
+
+ #viewStudentModal .modal-header {
+  padding: 0.75rem 0.75rem !important;
+ }
+
+ #viewStudentModal .modal-title {
+  font-size: 0.85rem !important;
+ }
+
+ #viewStudentModal .modal-body {
+  padding: 0.5rem !important;
+ }
+
+ .sd3-profile-head {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 0.5rem !important;
+  padding: 0.5rem 0.5rem 0.75rem !important;
+ }
+
+ .sd3-profile-title {
+  font-size: 1.15rem !important;
+  white-space: normal !important;
+ }
+
+ #viewStudentModal .modal-footer {
+  padding: 0.75rem 0.75rem !important;
+ }
+
+ #viewStudentModal .modal-footer > div {
+  flex-direction: column !important;
+  gap: 0.5rem !important;
+  width: 100% !important;
+ }
+
+ #viewStudentModal .modal-footer button {
+  width: 100% !important;
+  margin-left: 0 !important;
+ }
+}
+
+
 [data-bs-theme="dark"] #viewStudentModal .modal-content,
 [data-bs-theme="dark"] #viewStudentModal .modal-header,
 [data-bs-theme="dark"] #viewStudentModal .modal-footer,
