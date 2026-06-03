@@ -1748,20 +1748,19 @@ h1, h2, h3, h4, h5, h6,
 .custom-multiselect-btn::after {
   content: "";
   display: inline-block;
-  width: 0.4em;
-  height: 0.4em;
-  margin-left: 0.255em;
-  vertical-align: 0.255em;
-  border-top: 0.3em solid;
-  border-right: 0.3em solid transparent;
-  border-bottom: 0;
-  border-left: 0.3em solid transparent;
-  color: var(--text-tertiary);
-  transition: transform 0.15s ease;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid var(--text-secondary);
+  border-bottom: 1.5px solid var(--text-secondary);
+  transform: translateY(-65%) rotate(45deg);
+  transition: transform 0.2s ease-in-out;
+  position: absolute;
+  right: 1rem;
+  top: 50%;
 }
 
 .custom-multiselect.open .custom-multiselect-btn::after {
-  transform: rotate(180deg);
+  transform: translateY(-35%) rotate(-135deg);
 }
 
 .custom-multiselect-btn:focus {

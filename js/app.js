@@ -9696,6 +9696,7 @@ function initAllMultiSelectFilters() {
     { id: 'filterGroup', label: 'Groups' },
     { id: 'filterLanguageCertificate', label: 'Certificates' },
     { id: 'filterTags', label: 'Tasks/Tags' },
+    { id: 'filterLeadBy', label: 'Lead By' },
     { id: 'documentsFilterTariff', label: 'Tariffs' },
     { id: 'documentsFilterLevel', label: 'Levels' },
     { id: 'documentsFilterGroup', label: 'Groups' },
