@@ -133,6 +133,41 @@ let studentsSortOrder = 'asc';
 let statusSortOrder = 'asc';
 let documentsSortOrder = 'asc';
 
+function compareStudentIds(a, b, sortOrder = 'asc') {
+  const idA = a.id || "";
+  const idB = b.id || "";
+
+  const parseId = (idStr) => {
+    const str = idStr.trim();
+    const match = str.match(/^([A-Za-z\s_-]*)(\d*)$/);
+    if (match) {
+      return {
+        prefix: match[1] || "",
+        num: match[2] ? parseInt(match[2], 10) : null
+      };
+    }
+    return { prefix: str, num: null };
+  };
+
+  const valA = parseId(idA);
+  const valB = parseId(idB);
+
+  const prefixComp = valA.prefix.localeCompare(valB.prefix, undefined, { sensitivity: 'base' });
+  if (prefixComp !== 0) {
+    return sortOrder === 'asc' ? prefixComp : -prefixComp;
+  }
+
+  if (valA.num !== null && valB.num !== null) {
+    return sortOrder === 'asc' ? valA.num - valB.num : valB.num - valA.num;
+  } else if (valA.num !== null) {
+    return sortOrder === 'asc' ? 1 : -1;
+  } else if (valB.num !== null) {
+    return sortOrder === 'asc' ? -1 : 1;
+  }
+
+  return sortOrder === 'asc' ? idA.localeCompare(idB) : idB.localeCompare(idA);
+}
+
 window.toggleSortOrder = function(tab) {
   if (tab === 'students') {
     studentsSortOrder = studentsSortOrder === 'asc' ? 'desc' : 'asc';
@@ -1104,17 +1139,8 @@ function filterDocuments(resetPage = true) {
     }
   }
 
-  // Sort by numeric ID (F1 < F2 < F3 ... F-last) like the Students menu
-  filtered.sort((a, b) => {
-    const numA = parseInt((a.id || "").replace(/\D+/, ""), 10);
-    const numB = parseInt((b.id || "").replace(/\D+/, ""), 10);
-    if (!isNaN(numA) && !isNaN(numB)) {
-      return documentsSortOrder === 'asc' ? numA - numB : numB - numA;
-    }
-    return documentsSortOrder === 'asc' ? 
-      (a.id || "").localeCompare(b.id || "") : 
-      (b.id || "").localeCompare(a.id || "");
-  });
+  // Sort by ID
+  filtered.sort((a, b) => compareStudentIds(a, b, documentsSortOrder));
 
   const tbody = document.getElementById("documentsTableBody");
   if (!tbody) return;
@@ -3194,17 +3220,8 @@ function applyFilters(resetPage = true) {
     }
   }
 
-  // Sort by numeric ID (F1 < F2 < F3 ... F-last)
-  filtered.sort((a, b) => {
-    const numA = parseInt((a.id || "").replace(/\D+/, ""), 10);
-    const numB = parseInt((b.id || "").replace(/\D+/, ""), 10);
-    if (!isNaN(numA) && !isNaN(numB)) {
-      return studentsSortOrder === 'asc' ? numA - numB : numB - numA;
-    }
-    return studentsSortOrder === 'asc' ? 
-      (a.id || "").localeCompare(b.id || "") : 
-      (b.id || "").localeCompare(a.id || "");
-  });
+  // Sort by ID
+  filtered.sort((a, b) => compareStudentIds(a, b, studentsSortOrder));
 
   // Pagination Logic
   const totalItems = filtered.length;
@@ -3812,17 +3829,8 @@ function applyStatusFilters(resetPage = true) {
     }
   }
 
-  // Sort by numeric ID
-  filtered.sort((a, b) => {
-    const numA = parseInt((a.id || "").replace(/\D+/, ""), 10);
-    const numB = parseInt((b.id || "").replace(/\D+/, ""), 10);
-    if (!isNaN(numA) && !isNaN(numB)) {
-      return statusSortOrder === 'asc' ? numA - numB : numB - numA;
-    }
-    return statusSortOrder === 'asc' ? 
-      (a.id || "").localeCompare(b.id || "") : 
-      (b.id || "").localeCompare(a.id || "");
-  });
+  // Sort by ID
+  filtered.sort((a, b) => compareStudentIds(a, b, statusSortOrder));
 
   // Pagination
   const totalItems = filtered.length;
@@ -4126,17 +4134,8 @@ function populateExcelModal() {
     return matchesTags;
   });
 
-  // Sort by numeric ID (F1 < F2 < F3 ... F-last) using the same logic as students menu
-  students.sort((a, b) => {
-    const numA = parseInt((a.id || "").replace(/\D+/, ""), 10);
-    const numB = parseInt((b.id || "").replace(/\D+/, ""), 10);
-    if (!isNaN(numA) && !isNaN(numB)) {
-      return studentsSortOrder === 'asc' ? numA - numB : numB - numA;
-    }
-    return studentsSortOrder === 'asc' ? 
-      (a.id || "").localeCompare(b.id || "") : 
-      (b.id || "").localeCompare(a.id || "");
-  });
+  // Sort by ID using compareStudentIds helper
+  students.sort((a, b) => compareStudentIds(a, b, studentsSortOrder));
 
   if (students.length === 0) {
     container.innerHTML =
@@ -4567,8 +4566,8 @@ function renderPaymentStudents(filteredData = null) {
     }
   }
 
-  // Sort by ID
-  students.sort((a, b) => (a.id || "").localeCompare(b.id || ""));
+  // Sort by ID using compareStudentIds helper
+  students.sort((a, b) => compareStudentIds(a, b, 'asc'));
 
   // Pagination Logic
   const totalItems = students.length;
@@ -4908,7 +4907,7 @@ function populateStudentDropdown() {
   if (!dropdown) return;
 
   const students = window.studentsData.filter((s) => !s.deleted);
-  students.sort((a, b) => (a.id || "").localeCompare(b.id || ""));
+  students.sort((a, b) => compareStudentIds(a, b, 'asc'));
 
   dropdown.innerHTML =
     '<option value="">No student (General payment)</option>' +
@@ -5319,7 +5318,7 @@ function populateWithdrawStudentDropdown() {
   if (!dropdown) return;
 
   const students = window.studentsData.filter((s) => !s.deleted);
-  students.sort((a, b) => (a.id || "").localeCompare(b.id || ""));
+  students.sort((a, b) => compareStudentIds(a, b, 'asc'));
 
   dropdown.innerHTML =
     '<option value="">No student (General withdrawal)</option>' +
@@ -6821,6 +6820,7 @@ window.saveCustomTagEdit = function () {
   renderFlagsPopover();
   updateTagsDropdown();
   applyFilters(false);
+  if (typeof applyStatusFilters === "function") applyStatusFilters(false);
   if (typeof showNotification === 'function') showNotification('Custom tag updated!', 'success');
 };
 
@@ -6869,6 +6869,7 @@ window.deleteCustomTagGlobal = function () {
   renderFlagsPopover();
   updateTagsDropdown();
   applyFilters(false);
+  if (typeof applyStatusFilters === "function") applyStatusFilters(false);
   if (typeof showNotification === 'function') showNotification(`Tag "${tagName}" deleted from all students.`, 'success');
 };
 window.updateTagsDropdown = updateTagsDropdown;

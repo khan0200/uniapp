@@ -2212,6 +2212,8 @@ function loadCustomTagsFromFirestore() {
         window.customTagsRegistry = [...loaded, ...localOnly];
         console.log(`✅ Loaded ${loaded.length} custom tags from Firestore`);
         if (typeof updateTagsDropdown === 'function') updateTagsDropdown();
+        if (typeof applyFilters === 'function') applyFilters(false);
+        if (typeof applyStatusFilters === 'function') applyStatusFilters(false);
     }).catch(err => {
         // Collection may not exist yet — that's fine, it will be created on first save
         console.info('Custom tags collection not yet created:', err.message);
