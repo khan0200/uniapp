@@ -2957,14 +2957,58 @@ function styleWorksheet(ws, isStudentSingle = false) {
 }
 
 function showNotification(message, type = "success") {
+  let container = document.getElementById("toast-container-bottomright");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "toast-container-bottomright";
+    container.style.position = "fixed";
+    container.style.bottom = "24px";
+    container.style.right = "24px";
+    container.style.zIndex = "9999";
+    container.style.display = "flex";
+    container.style.flexDirection = "column";
+    container.style.gap = "10px";
+    container.style.pointerEvents = "none";
+    document.body.appendChild(container);
+  }
+
+  const activeToasts = container.querySelectorAll(".toast-notification");
+  if (activeToasts.length >= 2) {
+    const oldestToast = activeToasts[0];
+    oldestToast.remove();
+  }
+
   const n = document.createElement("div");
   n.className = "toast-notification";
-  n.innerHTML = `<div class="d-flex align-items-center"><i class="bi bi-${type === "success" ? "check-circle-fill" : "exclamation-circle-fill"} me-2 ${type}-state"></i><span>${message}</span></div>`;
-  document.body.appendChild(n);
+  n.style.position = "relative";
+  n.style.top = "auto";
+  n.style.right = "auto";
+  n.style.pointerEvents = "auto";
+  n.style.background = "#000000";
+  n.style.color = "#ffd700";
+  n.style.border = "1px solid #d4af37";
+  n.style.borderLeft = "3px solid #d4af37";
+  n.style.padding = "8px 16px";
+  n.style.minWidth = "auto";
+  n.style.width = "max-content";
+  n.style.maxWidth = "280px";
+  n.style.fontSize = "0.85rem";
+  n.style.borderRadius = "8px";
+  n.style.boxShadow = "0 8px 32px rgba(0, 0, 0, 0.5)";
+  n.innerHTML = `<div class="d-flex align-items-center"><i class="bi bi-${type === "success" ? "check-circle-fill" : "exclamation-circle-fill"} me-2" style="color: #ffd700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);"></i><span>${message}</span></div>`;
+  
+  container.appendChild(n);
+  
   setTimeout(() => {
-    n.style.animation = "slideInRight 0.3s ease-out reverse";
-    setTimeout(() => n.remove(), 300);
-  }, 3000);
+    if (n.parentNode) {
+      n.style.animation = "slideInRight 0.3s ease-out reverse";
+      setTimeout(() => {
+        if (n.parentNode) {
+          n.remove();
+        }
+      }, 300);
+    }
+  }, 2500);
 }
 
 // Copy to clipboard function

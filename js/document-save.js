@@ -40,28 +40,41 @@
     const container = document.getElementById("toastContainer");
     if (!container) return;
 
-    const toastEl = document.createElement("div");
-    // Bootstrap bg mapping
-    const bgClass = type === "danger" || type === "error" ? "bg-danger" : 
-                    type === "warning" ? "bg-warning" : 
-                    type === "info" ? "bg-info" : "bg-success";
+    const activeToasts = container.querySelectorAll(".toast");
+    if (activeToasts.length >= 2) {
+      const oldestToast = activeToasts[0];
+      oldestToast.remove();
+    }
 
-    toastEl.className = `toast align-items-center text-white ${bgClass} border-0 show mb-2`;
+    const toastEl = document.createElement("div");
+    toastEl.className = `toast align-items-center show mb-2`;
+    toastEl.style.background = "#000000";
+    toastEl.style.color = "#ffd700";
+    toastEl.style.border = "1px solid #d4af37";
+    toastEl.style.borderLeft = "3px solid #d4af37";
+    toastEl.style.padding = "6px 12px";
+    toastEl.style.minWidth = "auto";
+    toastEl.style.width = "max-content";
+    toastEl.style.maxWidth = "280px";
+    toastEl.style.fontSize = "0.82rem";
+    toastEl.style.borderRadius = "8px";
+    toastEl.style.boxShadow = "0 8px 32px rgba(0, 0, 0, 0.5)";
+
     toastEl.role = "alert";
     toastEl.ariaLive = "assertive";
     toastEl.ariaAtomic = "true";
 
     toastEl.innerHTML = `
       <div class="d-flex">
-        <div class="toast-body d-flex align-items-center gap-2">
+        <div class="toast-body d-flex align-items-center gap-2" style="padding: 0.25rem 0.5rem;">
           <i class="bi ${
             type === "success" ? "bi-check-circle-fill" : 
             type === "danger" || type === "error" ? "bi-exclamation-triangle-fill" : 
             "bi-info-circle-fill"
-          }"></i>
-          <span>${message}</span>
+          }" style="color: #ffd700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);"></i>
+          <span style="font-weight: 500;">${message}</span>
         </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" style="filter: invert(1) sepia(1) saturate(5) hue-rotate(10deg);"></button>
       </div>
     `;
 
@@ -69,9 +82,15 @@
 
     // Auto-remove toast
     setTimeout(() => {
-      toastEl.classList.remove("show");
-      setTimeout(() => toastEl.remove(), 300);
-    }, 4000);
+      if (toastEl.parentNode) {
+        toastEl.classList.remove("show");
+        setTimeout(() => {
+          if (toastEl.parentNode) {
+            toastEl.remove();
+          }
+        }, 300);
+      }
+    }, 2500);
   };
 
   // Show skeleton shimmer placeholders
