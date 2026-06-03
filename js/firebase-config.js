@@ -2197,7 +2197,14 @@ async function deleteVideoFromFirestore(firestoreId) {
 // ==========================================
 
 function loadCustomTagsFromFirestore() {
-    window.customTagsRegistry = window.customTagsRegistry || [];
+    if (!window.customTagsRegistry || window.customTagsRegistry.length === 0) {
+        try {
+            const cachedTags = localStorage.getItem('customTagsRegistry');
+            window.customTagsRegistry = cachedTags ? JSON.parse(cachedTags) : [];
+        } catch (e) {
+            window.customTagsRegistry = [];
+        }
+    }
     if (!firebaseInitialized) return;
 
     db.collection('customTags').orderBy('name').get().then(snapshot => {
@@ -2211,6 +2218,11 @@ function loadCustomTagsFromFirestore() {
         );
         window.customTagsRegistry = [...loaded, ...localOnly];
         console.log(`✅ Loaded ${loaded.length} custom tags from Firestore`);
+        try {
+            localStorage.setItem('customTagsRegistry', JSON.stringify(window.customTagsRegistry));
+        } catch (e) {
+            console.error(e);
+        }
         if (typeof updateTagsDropdown === 'function') updateTagsDropdown();
         if (typeof applyFilters === 'function') applyFilters(false);
         if (typeof applyStatusFilters === 'function') applyStatusFilters(false);

@@ -388,8 +388,13 @@ let _flagsWrapperEl = null; // Store trigger element
 let _tempTaskTags = [];
 let _tempRowColor = "";
 
-// Global registry for custom tag metadata (name + icon), synced with Firestore
-window.customTagsRegistry = window.customTagsRegistry || [];
+// Global registry for custom tag metadata (name + icon), synced with Firestore, loaded from cache initially
+try {
+  const cachedTags = localStorage.getItem('customTagsRegistry');
+  window.customTagsRegistry = cachedTags ? JSON.parse(cachedTags) : [];
+} catch (e) {
+  window.customTagsRegistry = [];
+}
 
 window.showFlagsPopover = function (wrapperEl, uniqueId, context) {
   const popup = document.getElementById("flagsPopover");
@@ -562,6 +567,11 @@ window.addCustomTaskTag = function () {
     if (!window.customTagsRegistry.some(t => t.name === tag)) {
       const newEntry = { name: tag, icon: '🏷️' };
       window.customTagsRegistry.push(newEntry);
+      try {
+        localStorage.setItem('customTagsRegistry', JSON.stringify(window.customTagsRegistry));
+      } catch (e) {
+        console.error(e);
+      }
       if (typeof saveCustomTagToFirestore === 'function') {
         saveCustomTagToFirestore(newEntry).then(id => { if (id) newEntry.firestoreId = id; });
       }
@@ -6814,6 +6824,12 @@ window.saveCustomTagEdit = function () {
       saveCustomTagToFirestore(ne).then(id => { if (id) ne.firestoreId = id; });
   }
 
+  try {
+    localStorage.setItem('customTagsRegistry', JSON.stringify(window.customTagsRegistry));
+  } catch (e) {
+    console.error(e);
+  }
+
   const modalEl = document.getElementById('customTagEditModal');
   if (modalEl) { const m = bootstrap.Modal.getInstance(modalEl); if (m) m.hide(); }
 
@@ -6861,6 +6877,11 @@ window.deleteCustomTagGlobal = function () {
   _tempTaskTags = _tempTaskTags.filter(t => t !== tagName);
   // Remove from registry
   window.customTagsRegistry = (window.customTagsRegistry || []).filter(t => t.name !== tagName);
+  try {
+    localStorage.setItem('customTagsRegistry', JSON.stringify(window.customTagsRegistry));
+  } catch (e) {
+    console.error(e);
+  }
   if (fsId && typeof deleteCustomTagFromFirestore === 'function') deleteCustomTagFromFirestore(fsId);
 
   const modalEl = document.getElementById('customTagEditModal');
