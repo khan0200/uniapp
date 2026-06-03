@@ -123,10 +123,10 @@ let currentStudentId = null;
 
 // Pagination State
 const ITEMS_PER_PAGE = 20;
-let studentsPage = 1;
-let statusPage = 1;
-let paymentStudentsPage = 1;
-let paymentHistoryPage = 1;
+let studentsPage = parseInt(sessionStorage.getItem("studentsPage")) || 1;
+let statusPage = parseInt(sessionStorage.getItem("statusPage")) || 1;
+let paymentStudentsPage = parseInt(sessionStorage.getItem("paymentStudentsPage")) || 1;
+let paymentHistoryPage = parseInt(sessionStorage.getItem("paymentHistoryPage")) || 1;
 
 // Sorting State
 let studentsSortOrder = 'asc';
@@ -315,21 +315,25 @@ function renderPaginationControls(
 // Helper: Change Page Wrappers
 function changeStudentsPage(page) {
   studentsPage = page;
+  sessionStorage.setItem("studentsPage", page);
   renderStudents(); // or applyFilters() if filters are active
 }
 
 function changePaymentStudentsPage(page) {
   paymentStudentsPage = page;
+  sessionStorage.setItem("paymentStudentsPage", page);
   filterPaymentStudents(false); // Pass false to prevent resetting to page 1
 }
 
 function changePaymentHistoryPage(page) {
   paymentHistoryPage = page;
+  sessionStorage.setItem("paymentHistoryPage", page);
   filterPaymentHistory(false);
 }
 
 function changeStatusPage(page) {
   statusPage = page;
+  sessionStorage.setItem("statusPage", page);
   applyStatusFilters(false);
 }
 
@@ -834,7 +838,7 @@ function renderStudents() {
 // DOCUMENTS TAB LOGIC
 // ==========================================
 
-let documentsPage = 1;
+let documentsPage = parseInt(sessionStorage.getItem("documentsPage")) || 1;
 
 function renderDocuments() {
   filterDocuments(false);
@@ -842,6 +846,7 @@ function renderDocuments() {
 
 function changeDocumentsPage(page) {
   documentsPage = page;
+  sessionStorage.setItem("documentsPage", page);
   filterDocuments(false);
 }
 
@@ -961,6 +966,7 @@ function getDocStatusHtml(s, docName) {
 function filterDocuments(resetPage = true) {
   if (resetPage === true || (resetPage && typeof resetPage === 'object')) {
     documentsPage = 1;
+    sessionStorage.setItem("documentsPage", 1);
   }
 
   const searchInput = document.getElementById("headerSearchInput") || document.getElementById("documentsSearchInput");
@@ -2987,6 +2993,7 @@ function applyFilters(resetPage = true) {
   // If called from an event listener, resetPage is the event object (truthy), so we reset page
   if (resetPage === true || (resetPage && typeof resetPage === 'object')) {
     studentsPage = 1;
+    sessionStorage.setItem("studentsPage", 1);
   }
 
   const searchInput = document.getElementById("headerSearchInput") || document.getElementById("searchInput");
@@ -3157,7 +3164,12 @@ function applyFilters(resetPage = true) {
 
   // Pagination Logic
   const totalItems = filtered.length;
-  const startIndex = (studentsPage - 1) * ITEMS_PER_PAGE;
+  let startIndex = (studentsPage - 1) * ITEMS_PER_PAGE;
+  if (totalItems > 0 && startIndex >= totalItems) {
+    studentsPage = 1;
+    sessionStorage.setItem("studentsPage", 1);
+    startIndex = 0;
+  }
   const paginatedData = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   // Render empty state
@@ -3625,7 +3637,10 @@ function clearStatusDropdown() {
 }
 
 function applyStatusFilters(resetPage = true) {
-  if (resetPage === true || (resetPage && typeof resetPage === 'object')) statusPage = 1;
+  if (resetPage === true || (resetPage && typeof resetPage === 'object')) {
+    statusPage = 1;
+    sessionStorage.setItem("statusPage", 1);
+  }
 
   const searchInput = document.getElementById("headerSearchInput") || document.getElementById("statusSearchInput");
   const searchQuery = searchInput ? searchInput.value.toLowerCase() : "";
@@ -3767,7 +3782,12 @@ function applyStatusFilters(resetPage = true) {
 
   // Pagination
   const totalItems = filtered.length;
-  const startIndex = (statusPage - 1) * ITEMS_PER_PAGE;
+  let startIndex = (statusPage - 1) * ITEMS_PER_PAGE;
+  if (totalItems > 0 && startIndex >= totalItems) {
+    statusPage = 1;
+    sessionStorage.setItem("statusPage", 1);
+    startIndex = 0;
+  }
   const paginatedData = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   // Empty state
@@ -4508,7 +4528,12 @@ function renderPaymentStudents(filteredData = null) {
 
   // Pagination Logic
   const totalItems = students.length;
-  const startIndex = (paymentStudentsPage - 1) * ITEMS_PER_PAGE;
+  let startIndex = (paymentStudentsPage - 1) * ITEMS_PER_PAGE;
+  if (totalItems > 0 && startIndex >= totalItems) {
+    paymentStudentsPage = 1;
+    sessionStorage.setItem("paymentStudentsPage", 1);
+    startIndex = 0;
+  }
   const paginatedData = students.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   if (!students || students.length === 0) {
@@ -4592,7 +4617,12 @@ function renderPaymentHistory(filteredData = null) {
 
   // Pagination Logic
   const totalItems = payments.length;
-  const startIndex = (paymentHistoryPage - 1) * ITEMS_PER_PAGE;
+  let startIndex = (paymentHistoryPage - 1) * ITEMS_PER_PAGE;
+  if (totalItems > 0 && startIndex >= totalItems) {
+    paymentHistoryPage = 1;
+    sessionStorage.setItem("paymentHistoryPage", 1);
+    startIndex = 0;
+  }
   const paginatedData = payments.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   if (!payments || payments.length === 0) {
@@ -4703,7 +4733,10 @@ function renderPaymentHistory(filteredData = null) {
 
 // Filter payment students
 function filterPaymentStudents(resetPage = true) {
-  if (resetPage === true || (resetPage && typeof resetPage === 'object')) paymentStudentsPage = 1;
+  if (resetPage === true || (resetPage && typeof resetPage === 'object')) {
+    paymentStudentsPage = 1;
+    sessionStorage.setItem("paymentStudentsPage", 1);
+  }
 
   const searchType = document.getElementById("paymentSearchType")
     ? document.getElementById("paymentSearchType").value
@@ -4782,7 +4815,10 @@ function filterPaymentStudents(resetPage = true) {
 
 // Filter payment history
 function filterPaymentHistory(resetPage = true) {
-  if (resetPage === true || (resetPage && typeof resetPage === 'object')) paymentHistoryPage = 1;
+  if (resetPage === true || (resetPage && typeof resetPage === 'object')) {
+    paymentHistoryPage = 1;
+    sessionStorage.setItem("paymentHistoryPage", 1);
+  }
 
   const searchType = document.getElementById("paymentHistorySearchType")
     ? document.getElementById("paymentHistorySearchType").value
