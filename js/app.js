@@ -2362,7 +2362,7 @@ function saveEdit(field) {
   }
 
   // Refresh the student list
-  applyFilters();
+  applyFilters(false);
 }
 
 const UNIVERSITY_STATUS_OPTIONS = [
@@ -2433,7 +2433,7 @@ function setUniStatus(field, value) {
   if (popup) popup.style.display = "none";
 
   viewStudentDetails(s.firestoreId || s.id);
-  applyFilters();
+  applyFilters(false);
   showNotification("University status updated!", "success");
 }
 
