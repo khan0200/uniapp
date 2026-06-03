@@ -928,7 +928,9 @@ function getEffectiveMissingDocs(s) {
     addIfMissing(!s.address || s.address === "-" || s.address.trim() === "", "Manzil");
     
     // 5. Education Level check -> "Edu-Level"
-    addIfMissing(!s.level || s.level === "-" || s.level.trim() === "", "Edu-Level");
+    const level1Empty = !s.level || s.level === "-" || s.level.trim() === "";
+    const level2Empty = !s.level2 || s.level2 === "-" || s.level2.trim() === "";
+    addIfMissing(level1Empty && level2Empty, "Edu-Level");
     
     return effectiveList;
 }
@@ -1087,10 +1089,13 @@ function filterDocuments(resetPage = true) {
     if (activeLevels.length === 0) {
       matchesLevel = true;
     } else {
-      if (activeLevels.includes("NO_LEVEL") && (!s.level || s.level === "")) {
+      if (activeLevels.includes("NO_LEVEL") && (!s.level || s.level === "") && (!s.level2 || s.level2 === "")) {
         matchesLevel = true;
       }
       if (s.level && activeLevels.includes(s.level)) {
+        matchesLevel = true;
+      }
+      if (s.level2 && activeLevels.includes(s.level2)) {
         matchesLevel = true;
       }
     }
@@ -1215,6 +1220,7 @@ function filterDocuments(resetPage = true) {
     if (s.id) ghostParts.push(s.id);
     if (s.tariff) ghostParts.push(s.tariff);
     if (s.level) ghostParts.push(s.level);
+    if (s.level2) ghostParts.push(s.level2);
     const ghostText = ghostParts.join(" | ");
 
     return `
@@ -1319,7 +1325,7 @@ function viewDocumentsModal(uniqueId) {
         </div>
         <div>
           <span class="d-block mb-1" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: #8e8e93; font-weight: 500;">Edu-Level</span>
-          <span class="fw-bold" style="font-size: 0.9rem; color: var(--text-primary);">${s.level || 'No Level'}</span>
+          <span class="fw-bold" style="font-size: 0.9rem; color: var(--text-primary);">${[s.level, s.level2].filter(Boolean).join(', ') || 'No Level'}</span>
         </div>
         <div>
           <span class="d-block mb-1" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: #8e8e93; font-weight: 500;">Office</span>
@@ -1689,7 +1695,9 @@ function updateAutoDocuments(s) {
   check(!s.address || s.address === "-" || s.address.trim() === "", "Manzil");
 
   // 5. Education Level check -> "Edu-Level"
-  check(!s.level || s.level === "-" || s.level.trim() === "", "Edu-Level");
+  const level1Empty = !s.level || s.level === "-" || s.level.trim() === "";
+  const level2Empty = !s.level2 || s.level2 === "-" || s.level2.trim() === "";
+  check(level1Empty && level2Empty, "Edu-Level");
 
   if (changed) {
     s.pickNeeded = missingDocs;
@@ -3150,10 +3158,13 @@ function applyFilters(resetPage = true) {
     if (activeLevels.length === 0) {
       matchesLevel = true;
     } else {
-      if (activeLevels.includes("NO_LEVEL") && (!s.level || s.level === "")) {
+      if (activeLevels.includes("NO_LEVEL") && (!s.level || s.level === "") && (!s.level2 || s.level2 === "")) {
         matchesLevel = true;
       }
       if (s.level && activeLevels.includes(s.level)) {
+        matchesLevel = true;
+      }
+      if (s.level2 && activeLevels.includes(s.level2)) {
         matchesLevel = true;
       }
     }
@@ -3327,7 +3338,9 @@ function applyFilters(resetPage = true) {
 
                 <!-- Level + Certificate ghost -->
                 <td class="table-level-cell">
-                    ${s.level ? `<span class="table-pill pill-level pill-level-${(s.level || "").toLowerCase().replace(/\s+/g, "-")}">${s.level}</span>` : '<span class="text-muted">\u2014</span>'}
+                    ${s.level ? `<span class="table-pill pill-level pill-level-${(s.level || "").toLowerCase().replace(/\s+/g, "-")}">${s.level}</span>` : ""}
+                    ${s.level2 ? `<span class="table-pill pill-level pill-level-${(s.level2 || "").toLowerCase().replace(/\s+/g, "-")} mt-1">${s.level2}</span>` : ""}
+                    ${!s.level && !s.level2 ? '<span class="text-muted">\u2014</span>' : ""}
                     ${certHtml}
                 </td>
 
@@ -3781,10 +3794,13 @@ function applyStatusFilters(resetPage = true) {
     if (activeLevels.length === 0) {
       matchesLevel = true;
     } else {
-      if (activeLevels.includes("NO_LEVEL") && (!s.level || s.level === "")) {
+      if (activeLevels.includes("NO_LEVEL") && (!s.level || s.level === "") && (!s.level2 || s.level2 === "")) {
         matchesLevel = true;
       }
       if (s.level && activeLevels.includes(s.level)) {
+        matchesLevel = true;
+      }
+      if (s.level2 && activeLevels.includes(s.level2)) {
         matchesLevel = true;
       }
     }
@@ -3931,7 +3947,9 @@ function applyStatusFilters(resetPage = true) {
             </td>
 
             <td class="table-level-cell">
-                ${s.level ? `<span class="table-pill pill-level pill-level-${(s.level || "").toLowerCase().replace(/\s+/g, "-")}">${s.level}</span>` : '<span class="text-muted">\u2014</span>'}
+                ${s.level ? `<span class="table-pill pill-level pill-level-${(s.level || "").toLowerCase().replace(/\s+/g, "-")}">${s.level}</span>` : ""}
+                ${s.level2 ? `<span class="table-pill pill-level pill-level-${(s.level2 || "").toLowerCase().replace(/\s+/g, "-")} mt-1">${s.level2}</span>` : ""}
+                ${!s.level && !s.level2 ? '<span class="text-muted">\u2014</span>' : ""}
                 ${certText ? `<span class="table-ghost-sub">${certText}</span>` : ""}
             </td>
 
@@ -4081,10 +4099,13 @@ function populateExcelModal() {
     if (levelFilter.length === 0) {
       matchesLevel = true;
     } else {
-      if (levelFilter.includes("NO_LEVEL") && (!s.level || s.level === "")) {
+      if (levelFilter.includes("NO_LEVEL") && (!s.level || s.level === "") && (!s.level2 || s.level2 === "")) {
         matchesLevel = true;
       }
       if (s.level && levelFilter.includes(s.level)) {
+        matchesLevel = true;
+      }
+      if (s.level2 && levelFilter.includes(s.level2)) {
         matchesLevel = true;
       }
     }
@@ -4202,7 +4223,9 @@ function populateExcelModal() {
                 ${s.tariff ? `<span class="table-tariff-ghost">${s.tariff}</span>` : ""}
             </td>
             <td class="table-level-cell">
-                ${s.level ? `<span class="table-pill pill-level pill-level-${(s.level || "").toLowerCase().replace(/\s+/g, "-")}">${s.level}</span>` : '<span class="text-muted">\u2014</span>'}
+                ${s.level ? `<span class="table-pill pill-level pill-level-${(s.level || "").toLowerCase().replace(/\s+/g, "-")}">${s.level}</span>` : ""}
+                ${s.level2 ? `<span class="table-pill pill-level pill-level-${(s.level2 || "").toLowerCase().replace(/\s+/g, "-")} mt-1">${s.level2}</span>` : ""}
+                ${!s.level && !s.level2 ? '<span class="text-muted">\u2014</span>' : ""}
                 ${certText ? `<span class="table-ghost-sub">${certText}</span>` : ""}
             </td>
             <td class="table-action-cell" onclick="event.stopPropagation()">
