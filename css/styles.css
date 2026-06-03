@@ -1965,3 +1965,13 @@ h1, h2, h3, h4, h5, h6,
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
 }
+
+/* Clear all student colors button styling */
+.btn-clear-colors {
+  color: var(--accent-danger) !important;
+}
+.btn-clear-colors:hover {
+  background: var(--accent-danger) !important;
+  border-color: var(--accent-danger) !important;
+  color: #ffffff !important;
+}

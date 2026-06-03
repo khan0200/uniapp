@@ -544,6 +544,65 @@ window.clearAllFlags = function () {
   renderFlagsPopover();
   saveFlags(false);
 };
+
+window.clearAllStudentColors = async function () {
+  const hasColors = window.studentsData.some(s => s.rowColor || s.statusRowColor);
+  if (!hasColors) {
+    showNotification("No student colors to clear.", "error");
+    return;
+  }
+
+  if (!confirm("Are you sure you want to clear colors for all students? This will clear colors in both the Students and Status tabs.")) {
+    return;
+  }
+
+  showNotification("Clearing all student colors...", "info");
+
+  let updatedCount = 0;
+  const promises = [];
+  
+  window.studentsData.forEach(s => {
+    let hasColor = false;
+    const updateObj = {};
+
+    if (s.rowColor) {
+      s.rowColor = "";
+      updateObj.rowColor = "";
+      hasColor = true;
+    }
+    if (s.statusRowColor) {
+      s.statusRowColor = "";
+      updateObj.statusRowColor = "";
+      hasColor = true;
+    }
+
+    if (hasColor) {
+      updatedCount++;
+      // Save to Firestore if available
+      if (typeof updateStudentInFirestore === "function") {
+        promises.push(updateStudentInFirestore(s.firestoreId || s.id, updateObj, true));
+      }
+    }
+  });
+
+  // Save to localStorage
+  localStorage.setItem("studentsData", JSON.stringify(window.studentsData));
+
+  // Wait for all Firestore updates to finish if any
+  if (promises.length > 0) {
+    try {
+      await Promise.all(promises);
+    } catch (e) {
+      console.error("Error updating Firestore:", e);
+    }
+  }
+
+  showNotification(`Successfully cleared colors for ${updatedCount} students.`, "success");
+
+  // Re-render UI
+  if (typeof applyFilters === "function") applyFilters(false);
+  if (typeof applyStatusFilters === "function") applyStatusFilters(false);
+};
 window.saveFlags = function (shouldHide = true) {
   const uniqueId = _flagsCurrentId;
   if (!uniqueId) return;
