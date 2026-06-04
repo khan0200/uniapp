@@ -793,6 +793,7 @@ function saveStudent() {
     university3Status: "Chosen",
     address: "",
     notes: "",
+    group: "",
     leadBy: "",
     balance: 0,
     discount: 0,
@@ -5713,9 +5714,9 @@ window.printPaymentCheque = printPaymentCheque;
 // ==========================================
 
 // Global settings data
-window.tariffsData = [];
-window.levelsData = [];
-window.universitiesData = [];
+window.tariffsData = window.tariffsData || [];
+window.levelsData = window.levelsData || [];
+window.universitiesData = window.universitiesData || [];
 
 // Pending delete state for settings confirmation
 let pendingSettingsDelete = null;
@@ -5987,7 +5988,7 @@ function confirmDeleteLevel(levelId) {
 // ==========================================
 
 // Global groups data
-window.groupsData = [];
+window.groupsData = window.groupsData || [];
 
 function renderGroupsList() {
   const container = document.getElementById("groupsListContainer");
@@ -6517,7 +6518,7 @@ window.updateGroupDropdowns = updateGroupDropdowns;
 // ==========================================
 
 // Global lead by data
-window.leadByData = [];
+window.leadByData = window.leadByData || [];
 
 function renderLeadByList() {
   const container = document.getElementById("leadByListContainer");
