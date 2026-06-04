@@ -321,7 +321,7 @@ async function savePaymentToFirestore(paymentData) {
 
         // Send Telegram Notification
         const safeName = paymentData.studentName ? paymentData.studentName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'Unknown';
-        const amountFormatted = new Intl.NumberFormat('uz-UZ').format(paymentData.amount) + ' UZS';
+        const amountFormatted = new Intl.NumberFormat('uz-UZ').format(Math.abs(paymentData.amount)) + ' UZS';
         const strId = paymentData.studentId || '-';
 
         // Get student's new balance to show
@@ -335,13 +335,14 @@ async function savePaymentToFirestore(paymentData) {
             }
         }
 
+        const curDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
         let notifMsg = '';
         if (paymentData.isWithdrawal) {
-            notifMsg = `🟥 <b>Withdrawal</b>\n\n👤 <b>Student:</b> ${safeName}\n💰 <b>Amount:</b> -${amountFormatted}\n📝 <b>Note:</b> ${paymentData.notes || 'None'}`;
+            notifMsg = `🟥 <b>Withdrawal</b>\n\n🆔 <b>Student ID:</b> ${strId}\n👤 <b>Student:</b> ${safeName}\n💰 <b>Amount:</b> -${amountFormatted}\n💼 <b>Balance:</b> ${finalBalanceStr}\n📝 <b>Note:</b> ${paymentData.notes || 'None'}\n\n📅 <b>Date:</b> ${curDate}`;
         } else if (paymentData.isDiscount) {
             notifMsg = `🟨 <b>Discount Added</b>\n\n🆔 <b>ID:</b> ${strId}\n👤 <b>Student:</b> ${safeName}\n💰 <b>Amount:</b> ${amountFormatted}\n📝 <b>Note:</b> ${paymentData.notes || 'None'}`;
         } else {
-            const curDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
             notifMsg = `🟩 <b>Payment Received</b>\n\n🆔 <b>ID:</b> ${strId}\n👤 <b>Name:</b> ${safeName}\n\n📰 <b>Tariff:</b> ${tariffName}\n💰 <b>Amount:</b> ${amountFormatted}\n💼 <b>Balance:</b> ${finalBalanceStr}\n💳 <b>Payment Type:</b> ${paymentData.method || '-'}\n🧾 <b>Received by:</b> ${paymentData.receivedBy || '-'}\n\n📝 <b>Note:</b> ${paymentData.notes || 'None'}\n\n📅 <b>Date:</b> ${curDate}`;
         }
 
