@@ -133,6 +133,41 @@ let studentsSortOrder = 'asc';
 let statusSortOrder = 'asc';
 let documentsSortOrder = 'asc';
 
+function compareStudentIds(a, b, sortOrder = 'asc') {
+  const idA = a.id || "";
+  const idB = b.id || "";
+
+  const parseId = (idStr) => {
+    const str = idStr.trim();
+    const match = str.match(/^([A-Za-z\s_-]*)(\d*)$/);
+    if (match) {
+      return {
+        prefix: match[1] || "",
+        num: match[2] ? parseInt(match[2], 10) : null
+      };
+    }
+    return { prefix: str, num: null };
+  };
+
+  const valA = parseId(idA);
+  const valB = parseId(idB);
+
+  const prefixComp = valA.prefix.localeCompare(valB.prefix, undefined, { sensitivity: 'base' });
+  if (prefixComp !== 0) {
+    return sortOrder === 'asc' ? prefixComp : -prefixComp;
+  }
+
+  if (valA.num !== null && valB.num !== null) {
+    return sortOrder === 'asc' ? valA.num - valB.num : valB.num - valA.num;
+  } else if (valA.num !== null) {
+    return sortOrder === 'asc' ? 1 : -1;
+  } else if (valB.num !== null) {
+    return sortOrder === 'asc' ? -1 : 1;
+  }
+
+  return sortOrder === 'asc' ? idA.localeCompare(idB) : idB.localeCompare(idA);
+}
+
 window.toggleSortOrder = function(tab) {
   if (tab === 'students') {
     studentsSortOrder = studentsSortOrder === 'asc' ? 'desc' : 'asc';
@@ -353,8 +388,13 @@ let _flagsWrapperEl = null; // Store trigger element
 let _tempTaskTags = [];
 let _tempRowColor = "";
 
-// Global registry for custom tag metadata (name + icon), synced with Firestore
-window.customTagsRegistry = window.customTagsRegistry || [];
+// Global registry for custom tag metadata (name + icon), synced with Firestore, loaded from cache initially
+try {
+  const cachedTags = localStorage.getItem('customTagsRegistry');
+  window.customTagsRegistry = cachedTags ? JSON.parse(cachedTags) : [];
+} catch (e) {
+  window.customTagsRegistry = [];
+}
 
 window.showFlagsPopover = function (wrapperEl, uniqueId, context) {
   const popup = document.getElementById("flagsPopover");
@@ -527,6 +567,11 @@ window.addCustomTaskTag = function () {
     if (!window.customTagsRegistry.some(t => t.name === tag)) {
       const newEntry = { name: tag, icon: '🏷️' };
       window.customTagsRegistry.push(newEntry);
+      try {
+        localStorage.setItem('customTagsRegistry', JSON.stringify(window.customTagsRegistry));
+      } catch (e) {
+        console.error(e);
+      }
       if (typeof saveCustomTagToFirestore === 'function') {
         saveCustomTagToFirestore(newEntry).then(id => { if (id) newEntry.firestoreId = id; });
       }
@@ -721,6 +766,7 @@ function showTab(tabName) {
   }
   
   window.currentTab = tabName;
+  sessionStorage.setItem("uniapp_active_tab", tabName);
   
   const targetNav = document.getElementById(`nav-${tabName}`);
   if (targetNav) targetNav.classList.add("active");
@@ -831,6 +877,9 @@ function renderStudents() {
   applyFilters(false);
   // Keep status tab in sync whenever students data changes
   if (typeof applyStatusFilters === "function") applyStatusFilters(false);
+  // Keep documents and payments tabs in sync as well
+  if (typeof filterDocuments === "function") filterDocuments(false);
+  if (typeof filterPaymentStudents === "function") filterPaymentStudents(false);
   // Refresh tags filter dropdowns with all known custom tags
   if (typeof updateTagsDropdown === "function") updateTagsDropdown();
 }
@@ -884,7 +933,9 @@ function getEffectiveMissingDocs(s) {
     addIfMissing(!s.address || s.address === "-" || s.address.trim() === "", "Manzil");
     
     // 5. Education Level check -> "Edu-Level"
-    addIfMissing(!s.level || s.level === "-" || s.level.trim() === "", "Edu-Level");
+    const level1Empty = !s.level || s.level === "-" || s.level.trim() === "";
+    const level2Empty = !s.level2 || s.level2 === "-" || s.level2.trim() === "";
+    addIfMissing(level1Empty && level2Empty, "Edu-Level");
     
     return effectiveList;
 }
@@ -1043,10 +1094,13 @@ function filterDocuments(resetPage = true) {
     if (activeLevels.length === 0) {
       matchesLevel = true;
     } else {
-      if (activeLevels.includes("NO_LEVEL") && (!s.level || s.level === "")) {
+      if (activeLevels.includes("NO_LEVEL") && (!s.level || s.level === "") && (!s.level2 || s.level2 === "")) {
         matchesLevel = true;
       }
       if (s.level && activeLevels.includes(s.level)) {
+        matchesLevel = true;
+      }
+      if (s.level2 && activeLevels.includes(s.level2)) {
         matchesLevel = true;
       }
     }
@@ -1105,17 +1159,8 @@ function filterDocuments(resetPage = true) {
     }
   }
 
-  // Sort by numeric ID (F1 < F2 < F3 ... F-last) like the Students menu
-  filtered.sort((a, b) => {
-    const numA = parseInt((a.id || "").replace(/\D+/, ""), 10);
-    const numB = parseInt((b.id || "").replace(/\D+/, ""), 10);
-    if (!isNaN(numA) && !isNaN(numB)) {
-      return documentsSortOrder === 'asc' ? numA - numB : numB - numA;
-    }
-    return documentsSortOrder === 'asc' ? 
-      (a.id || "").localeCompare(b.id || "") : 
-      (b.id || "").localeCompare(a.id || "");
-  });
+  // Sort by ID
+  filtered.sort((a, b) => compareStudentIds(a, b, documentsSortOrder));
 
   const tbody = document.getElementById("documentsTableBody");
   if (!tbody) return;
@@ -1180,6 +1225,7 @@ function filterDocuments(resetPage = true) {
     if (s.id) ghostParts.push(s.id);
     if (s.tariff) ghostParts.push(s.tariff);
     if (s.level) ghostParts.push(s.level);
+    if (s.level2) ghostParts.push(s.level2);
     const ghostText = ghostParts.join(" | ");
 
     return `
@@ -1284,7 +1330,7 @@ function viewDocumentsModal(uniqueId) {
         </div>
         <div>
           <span class="d-block mb-1" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: #8e8e93; font-weight: 500;">Edu-Level</span>
-          <span class="fw-bold" style="font-size: 0.9rem; color: var(--text-primary);">${s.level || 'No Level'}</span>
+          <span class="fw-bold" style="font-size: 0.9rem; color: var(--text-primary);">${[s.level, s.level2].filter(Boolean).join(', ') || 'No Level'}</span>
         </div>
         <div>
           <span class="d-block mb-1" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: #8e8e93; font-weight: 500;">Office</span>
@@ -1654,7 +1700,9 @@ function updateAutoDocuments(s) {
   check(!s.address || s.address === "-" || s.address.trim() === "", "Manzil");
 
   // 5. Education Level check -> "Edu-Level"
-  check(!s.level || s.level === "-" || s.level.trim() === "", "Edu-Level");
+  const level1Empty = !s.level || s.level === "-" || s.level.trim() === "";
+  const level2Empty = !s.level2 || s.level2 === "-" || s.level2.trim() === "";
+  check(level1Empty && level2Empty, "Edu-Level");
 
   if (changed) {
     s.pickNeeded = missingDocs;
@@ -3115,10 +3163,13 @@ function applyFilters(resetPage = true) {
     if (activeLevels.length === 0) {
       matchesLevel = true;
     } else {
-      if (activeLevels.includes("NO_LEVEL") && (!s.level || s.level === "")) {
+      if (activeLevels.includes("NO_LEVEL") && (!s.level || s.level === "") && (!s.level2 || s.level2 === "")) {
         matchesLevel = true;
       }
       if (s.level && activeLevels.includes(s.level)) {
+        matchesLevel = true;
+      }
+      if (s.level2 && activeLevels.includes(s.level2)) {
         matchesLevel = true;
       }
     }
@@ -3195,17 +3246,8 @@ function applyFilters(resetPage = true) {
     }
   }
 
-  // Sort by numeric ID (F1 < F2 < F3 ... F-last)
-  filtered.sort((a, b) => {
-    const numA = parseInt((a.id || "").replace(/\D+/, ""), 10);
-    const numB = parseInt((b.id || "").replace(/\D+/, ""), 10);
-    if (!isNaN(numA) && !isNaN(numB)) {
-      return studentsSortOrder === 'asc' ? numA - numB : numB - numA;
-    }
-    return studentsSortOrder === 'asc' ? 
-      (a.id || "").localeCompare(b.id || "") : 
-      (b.id || "").localeCompare(a.id || "");
-  });
+  // Sort by ID
+  filtered.sort((a, b) => compareStudentIds(a, b, studentsSortOrder));
 
   // Pagination Logic
   const totalItems = filtered.length;
@@ -3301,7 +3343,9 @@ function applyFilters(resetPage = true) {
 
                 <!-- Level + Certificate ghost -->
                 <td class="table-level-cell">
-                    ${s.level ? `<span class="table-pill pill-level pill-level-${(s.level || "").toLowerCase().replace(/\s+/g, "-")}">${s.level}</span>` : '<span class="text-muted">\u2014</span>'}
+                    ${s.level ? `<span class="table-pill pill-level pill-level-${(s.level || "").toLowerCase().replace(/\s+/g, "-")}">${s.level}</span>` : ""}
+                    ${s.level2 ? `<span class="table-pill pill-level pill-level-${(s.level2 || "").toLowerCase().replace(/\s+/g, "-")} mt-1">${s.level2}</span>` : ""}
+                    ${!s.level && !s.level2 ? '<span class="text-muted">\u2014</span>' : ""}
                     ${certHtml}
                 </td>
 
@@ -3755,10 +3799,13 @@ function applyStatusFilters(resetPage = true) {
     if (activeLevels.length === 0) {
       matchesLevel = true;
     } else {
-      if (activeLevels.includes("NO_LEVEL") && (!s.level || s.level === "")) {
+      if (activeLevels.includes("NO_LEVEL") && (!s.level || s.level === "") && (!s.level2 || s.level2 === "")) {
         matchesLevel = true;
       }
       if (s.level && activeLevels.includes(s.level)) {
+        matchesLevel = true;
+      }
+      if (s.level2 && activeLevels.includes(s.level2)) {
         matchesLevel = true;
       }
     }
@@ -3813,17 +3860,8 @@ function applyStatusFilters(resetPage = true) {
     }
   }
 
-  // Sort by numeric ID
-  filtered.sort((a, b) => {
-    const numA = parseInt((a.id || "").replace(/\D+/, ""), 10);
-    const numB = parseInt((b.id || "").replace(/\D+/, ""), 10);
-    if (!isNaN(numA) && !isNaN(numB)) {
-      return statusSortOrder === 'asc' ? numA - numB : numB - numA;
-    }
-    return statusSortOrder === 'asc' ? 
-      (a.id || "").localeCompare(b.id || "") : 
-      (b.id || "").localeCompare(a.id || "");
-  });
+  // Sort by ID
+  filtered.sort((a, b) => compareStudentIds(a, b, statusSortOrder));
 
   // Pagination
   const totalItems = filtered.length;
@@ -3914,7 +3952,9 @@ function applyStatusFilters(resetPage = true) {
             </td>
 
             <td class="table-level-cell">
-                ${s.level ? `<span class="table-pill pill-level pill-level-${(s.level || "").toLowerCase().replace(/\s+/g, "-")}">${s.level}</span>` : '<span class="text-muted">\u2014</span>'}
+                ${s.level ? `<span class="table-pill pill-level pill-level-${(s.level || "").toLowerCase().replace(/\s+/g, "-")}">${s.level}</span>` : ""}
+                ${s.level2 ? `<span class="table-pill pill-level pill-level-${(s.level2 || "").toLowerCase().replace(/\s+/g, "-")} mt-1">${s.level2}</span>` : ""}
+                ${!s.level && !s.level2 ? '<span class="text-muted">\u2014</span>' : ""}
                 ${certText ? `<span class="table-ghost-sub">${certText}</span>` : ""}
             </td>
 
@@ -4064,10 +4104,13 @@ function populateExcelModal() {
     if (levelFilter.length === 0) {
       matchesLevel = true;
     } else {
-      if (levelFilter.includes("NO_LEVEL") && (!s.level || s.level === "")) {
+      if (levelFilter.includes("NO_LEVEL") && (!s.level || s.level === "") && (!s.level2 || s.level2 === "")) {
         matchesLevel = true;
       }
       if (s.level && levelFilter.includes(s.level)) {
+        matchesLevel = true;
+      }
+      if (s.level2 && levelFilter.includes(s.level2)) {
         matchesLevel = true;
       }
     }
@@ -4127,17 +4170,8 @@ function populateExcelModal() {
     return matchesTags;
   });
 
-  // Sort by numeric ID (F1 < F2 < F3 ... F-last) using the same logic as students menu
-  students.sort((a, b) => {
-    const numA = parseInt((a.id || "").replace(/\D+/, ""), 10);
-    const numB = parseInt((b.id || "").replace(/\D+/, ""), 10);
-    if (!isNaN(numA) && !isNaN(numB)) {
-      return studentsSortOrder === 'asc' ? numA - numB : numB - numA;
-    }
-    return studentsSortOrder === 'asc' ? 
-      (a.id || "").localeCompare(b.id || "") : 
-      (b.id || "").localeCompare(a.id || "");
-  });
+  // Sort by ID using compareStudentIds helper
+  students.sort((a, b) => compareStudentIds(a, b, studentsSortOrder));
 
   if (students.length === 0) {
     container.innerHTML =
@@ -4194,7 +4228,9 @@ function populateExcelModal() {
                 ${s.tariff ? `<span class="table-tariff-ghost">${s.tariff}</span>` : ""}
             </td>
             <td class="table-level-cell">
-                ${s.level ? `<span class="table-pill pill-level pill-level-${(s.level || "").toLowerCase().replace(/\s+/g, "-")}">${s.level}</span>` : '<span class="text-muted">\u2014</span>'}
+                ${s.level ? `<span class="table-pill pill-level pill-level-${(s.level || "").toLowerCase().replace(/\s+/g, "-")}">${s.level}</span>` : ""}
+                ${s.level2 ? `<span class="table-pill pill-level pill-level-${(s.level2 || "").toLowerCase().replace(/\s+/g, "-")} mt-1">${s.level2}</span>` : ""}
+                ${!s.level && !s.level2 ? '<span class="text-muted">\u2014</span>' : ""}
                 ${certText ? `<span class="table-ghost-sub">${certText}</span>` : ""}
             </td>
             <td class="table-action-cell" onclick="event.stopPropagation()">
@@ -4568,8 +4604,8 @@ function renderPaymentStudents(filteredData = null) {
     }
   }
 
-  // Sort by ID
-  students.sort((a, b) => (a.id || "").localeCompare(b.id || ""));
+  // Sort by ID using compareStudentIds helper
+  students.sort((a, b) => compareStudentIds(a, b, 'asc'));
 
   // Pagination Logic
   const totalItems = students.length;
@@ -4909,7 +4945,7 @@ function populateStudentDropdown() {
   if (!dropdown) return;
 
   const students = window.studentsData.filter((s) => !s.deleted);
-  students.sort((a, b) => (a.id || "").localeCompare(b.id || ""));
+  students.sort((a, b) => compareStudentIds(a, b, 'asc'));
 
   dropdown.innerHTML =
     '<option value="">No student (General payment)</option>' +
@@ -5320,7 +5356,7 @@ function populateWithdrawStudentDropdown() {
   if (!dropdown) return;
 
   const students = window.studentsData.filter((s) => !s.deleted);
-  students.sort((a, b) => (a.id || "").localeCompare(b.id || ""));
+  students.sort((a, b) => compareStudentIds(a, b, 'asc'));
 
   dropdown.innerHTML =
     '<option value="">No student (General withdrawal)</option>' +
@@ -6107,7 +6143,13 @@ function updateGroupDropdowns() {
   );
 
   groupSelects.forEach((select) => {
-    const currentValue = select.value;
+    let currentValues = Array.from(select.selectedOptions).map((o) => o.value);
+    let wasPending = false;
+    if (select._pendingValues) {
+      currentValues = select._pendingValues;
+      delete select._pendingValues;
+      wasPending = true;
+    }
 
     select.innerHTML = '<option value="">All Groups</option>';
 
@@ -6124,9 +6166,12 @@ function updateGroupDropdowns() {
       select.appendChild(option);
     });
 
-    // Restore previous selection if it still exists
-    if (currentValue) {
-      select.value = currentValue;
+    Array.from(select.options).forEach((opt) => {
+      opt.selected = currentValues.includes(opt.value);
+    });
+
+    if (wasPending) {
+      select.dispatchEvent(new Event('change', { bubbles: true }));
     }
   });
 }
@@ -6135,7 +6180,13 @@ function updateLeadByDropdowns() {
   const leadBySelects = document.querySelectorAll("#filterLeadBy");
 
   leadBySelects.forEach((select) => {
-    const currentValue = select.value;
+    let currentValues = Array.from(select.selectedOptions).map((o) => o.value);
+    let wasPending = false;
+    if (select._pendingValues) {
+      currentValues = select._pendingValues;
+      delete select._pendingValues;
+      wasPending = true;
+    }
 
     select.innerHTML = '<option value="">All Lead by</option>';
 
@@ -6151,8 +6202,12 @@ function updateLeadByDropdowns() {
       select.appendChild(option);
     });
 
-    if (currentValue) {
-      select.value = currentValue;
+    Array.from(select.options).forEach((opt) => {
+      opt.selected = currentValues.includes(opt.value);
+    });
+
+    if (wasPending) {
+      select.dispatchEvent(new Event('change', { bubbles: true }));
     }
   });
 }
@@ -6382,7 +6437,13 @@ function updateTariffDropdowns() {
   );
 
   tariffSelects.forEach((select) => {
-    const currentValue = select.value;
+    let currentValues = Array.from(select.selectedOptions).map((o) => o.value);
+    let wasPending = false;
+    if (select._pendingValues) {
+      currentValues = select._pendingValues;
+      delete select._pendingValues;
+      wasPending = true;
+    }
     const isFilter =
       select.id.includes("filter") || select.id.includes("Filter");
 
@@ -6400,7 +6461,13 @@ function updateTariffDropdowns() {
       select.innerHTML += '<option value="NO_TARIFF">No Tariff</option>';
     }
 
-    select.value = currentValue;
+    Array.from(select.options).forEach((opt) => {
+      opt.selected = currentValues.includes(opt.value);
+    });
+
+    if (wasPending) {
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
   });
 }
 
@@ -6410,7 +6477,13 @@ function updateLevelDropdowns() {
   );
 
   levelSelects.forEach((select) => {
-    const currentValue = select.value;
+    let currentValues = Array.from(select.selectedOptions).map((o) => o.value);
+    let wasPending = false;
+    if (select._pendingValues) {
+      currentValues = select._pendingValues;
+      delete select._pendingValues;
+      wasPending = true;
+    }
     const isFilter =
       select.id.includes("filter") || select.id.includes("Filter");
 
@@ -6432,7 +6505,13 @@ function updateLevelDropdowns() {
         '<option value="DELETED" style="font-style: italic; color: #e53e3e;">Deleted students</option>';
     }
 
-    select.value = currentValue;
+    Array.from(select.options).forEach((opt) => {
+      opt.selected = currentValues.includes(opt.value);
+    });
+
+    if (wasPending) {
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
   });
 }
 
@@ -6665,7 +6744,13 @@ function updateTagsDropdown() {
   const tagSelects = document.querySelectorAll('#filterTags, #excelTagsFilter');
   tagSelects.forEach(select => {
     if (!select) return;
-    const currentValues = Array.from(select.selectedOptions).map(o => o.value);
+    let currentValues = Array.from(select.selectedOptions).map(o => o.value);
+    let wasPending = false;
+    if (select._pendingValues) {
+      currentValues = select._pendingValues;
+      delete select._pendingValues;
+      wasPending = true;
+    }
     select.innerHTML = `
       <option value="">All Tasks/Tags</option>
       <option value="Call">📞 Call</option>
@@ -6679,6 +6764,10 @@ function updateTagsDropdown() {
       const opt = select.querySelector(`option[value="${val}"]`);
       if (opt) opt.selected = true;
     });
+
+    if (wasPending) {
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
   });
 }
 window.updateTagsDropdown = updateTagsDropdown;
@@ -6816,12 +6905,19 @@ window.saveCustomTagEdit = function () {
       saveCustomTagToFirestore(ne).then(id => { if (id) ne.firestoreId = id; });
   }
 
+  try {
+    localStorage.setItem('customTagsRegistry', JSON.stringify(window.customTagsRegistry));
+  } catch (e) {
+    console.error(e);
+  }
+
   const modalEl = document.getElementById('customTagEditModal');
   if (modalEl) { const m = bootstrap.Modal.getInstance(modalEl); if (m) m.hide(); }
 
   renderFlagsPopover();
   updateTagsDropdown();
   applyFilters(false);
+  if (typeof applyStatusFilters === "function") applyStatusFilters(false);
   if (typeof showNotification === 'function') showNotification('Custom tag updated!', 'success');
 };
 
@@ -6862,6 +6958,11 @@ window.deleteCustomTagGlobal = function () {
   _tempTaskTags = _tempTaskTags.filter(t => t !== tagName);
   // Remove from registry
   window.customTagsRegistry = (window.customTagsRegistry || []).filter(t => t.name !== tagName);
+  try {
+    localStorage.setItem('customTagsRegistry', JSON.stringify(window.customTagsRegistry));
+  } catch (e) {
+    console.error(e);
+  }
   if (fsId && typeof deleteCustomTagFromFirestore === 'function') deleteCustomTagFromFirestore(fsId);
 
   const modalEl = document.getElementById('customTagEditModal');
@@ -6870,6 +6971,7 @@ window.deleteCustomTagGlobal = function () {
   renderFlagsPopover();
   updateTagsDropdown();
   applyFilters(false);
+  if (typeof applyStatusFilters === "function") applyStatusFilters(false);
   if (typeof showNotification === 'function') showNotification(`Tag "${tagName}" deleted from all students.`, 'success');
 };
 window.updateTagsDropdown = updateTagsDropdown;
@@ -7299,12 +7401,28 @@ function populateAdmissionsLevelFilter() {
 
   // Only populate if the dropdown exists and only has the default option
   if (levelFilter && levelFilter.options.length === 1 && window.levelsData) {
+    let currentValues = Array.from(levelFilter.selectedOptions).map((o) => o.value);
+    let wasPending = false;
+    if (levelFilter._pendingValues) {
+      currentValues = levelFilter._pendingValues;
+      delete levelFilter._pendingValues;
+      wasPending = true;
+    }
+
     window.levelsData.forEach(function (level) {
       var option = document.createElement("option");
       option.value = level.name;
       option.textContent = level.name;
       levelFilter.appendChild(option);
     });
+
+    Array.from(levelFilter.options).forEach((opt) => {
+      opt.selected = currentValues.includes(opt.value);
+    });
+
+    if (wasPending) {
+      levelFilter.dispatchEvent(new Event('change', { bubbles: true }));
+    }
   }
 }
 
@@ -9305,6 +9423,7 @@ function syncSearchInputs(source) {
   if (statusType && source !== 'status') statusType.value = activeType;
   
   handleGlobalSearch();
+  saveFiltersState();
 }
 
 function handleGlobalSearch() {
@@ -9339,6 +9458,20 @@ function initMultiSelect(selectId, placeholder) {
   // Make the select multiple
   select.multiple = true;
   select.style.display = 'none';
+
+  // If we have pending values restored from sessionStorage, apply them to options
+  if (select._pendingValues) {
+    const vals = select._pendingValues;
+    Array.from(select.options).forEach(opt => {
+      opt.selected = vals.includes(opt.value);
+    });
+
+    // If options are already loaded (options.length > 1), it's a static select; trigger filter immediately.
+    if (select.options.length > 1) {
+      delete select._pendingValues;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
 
   // Check if custom multiselect wrapper already exists
   const wrapperId = `multiselect-wrapper-${selectId}`;
@@ -9564,6 +9697,7 @@ function initAllMultiSelectFilters() {
     { id: 'filterGroup', label: 'Groups' },
     { id: 'filterLanguageCertificate', label: 'Certificates' },
     { id: 'filterTags', label: 'Tasks/Tags' },
+    { id: 'filterLeadBy', label: 'Lead By' },
     { id: 'documentsFilterTariff', label: 'Tariffs' },
     { id: 'documentsFilterLevel', label: 'Levels' },
     { id: 'documentsFilterGroup', label: 'Groups' },
@@ -9599,9 +9733,105 @@ document.addEventListener('click', () => {
   });
 });
 
+// Filter State Persistence System
+const filterElementIds = [
+  // Text & normal select inputs
+  'searchInput',
+  'headerSearchInput',
+  'mobileSearchInput',
+  'documentsSearchInput',
+  'statusSearchInput',
+  'paymentSearchInput',
+  'paymentHistorySearch',
+  'admissionsSearchInput',
+  'headerSearchType',
+  'mobileSearchType',
+  'statusSearchType',
+  'paymentSearchType',
+  'paymentHistorySearchType',
+  
+  // Multi-select dropdowns
+  'filterTariff',
+  'filterLevel',
+  'filterGroup',
+  'filterLanguageCertificate',
+  'filterTags',
+  'filterLeadBy',
+  'documentsFilterTariff',
+  'documentsFilterLevel',
+  'documentsFilterGroup',
+  'documentsFilterLanguageCertificate',
+  'filterMissingDocs',
+  'statusFilterTariff',
+  'statusFilterLevel',
+  'statusFilterGroup',
+  'statusFilterInvoice',
+  'statusFilterAdmission',
+  'paymentTariffFilter',
+  'paymentBalanceFilter',
+  'paymentGroupFilter',
+  'paymentMethodFilter',
+  'receivedByFilter',
+  'admissionsLevelFilter',
+  'excelTariffFilter',
+  'excelLevelFilter',
+  'excelGroupFilter',
+  'excelLanguageCertificateFilter',
+  'excelTagsFilter'
+];
+
+function saveFiltersState() {
+  const state = {};
+  filterElementIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.multiple) {
+      state[id] = Array.from(el.selectedOptions).map(opt => opt.value);
+    } else {
+      state[id] = el.value;
+    }
+  });
+  sessionStorage.setItem("uniapp_filters_state", JSON.stringify(state));
+}
+
+function restoreFiltersState() {
+  const saved = sessionStorage.getItem("uniapp_filters_state");
+  if (!saved) return;
+  try {
+    const state = JSON.parse(saved);
+    Object.keys(state).forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const value = state[id];
+      if (Array.isArray(value)) {
+        el._pendingValues = value;
+      } else {
+        el.value = value;
+      }
+    });
+  } catch (e) {
+    console.error("Error restoring filters state:", e);
+  }
+}
+
 // Run initialization on DOM Content Loaded
 document.addEventListener('DOMContentLoaded', () => {
+  restoreFiltersState();
   initAllMultiSelectFilters();
+
+  // Attach automatic save state listeners to all filter inputs
+  filterElementIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('change', saveFiltersState);
+    if (el.tagName === 'INPUT') {
+      el.addEventListener('input', saveFiltersState);
+    }
+  });
+
+  // Restore the active tab
+  const activeTab = sessionStorage.getItem("uniapp_active_tab") || "students";
+  showTab(activeTab);
 
   // Restore Student Details modal when Documents modal is closed
   const docsModalEl = document.getElementById("documentsModal");
