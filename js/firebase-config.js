@@ -341,7 +341,7 @@ async function savePaymentToFirestore(paymentData) {
         if (paymentData.isWithdrawal) {
             notifMsg = `🟥 <b>Withdrawal</b>\n\n🆔 <b>Student ID:</b> ${strId}\n👤 <b>Student:</b> ${safeName}\n💰 <b>Amount:</b> -${amountFormatted}\n💼 <b>Balance:</b> ${finalBalanceStr}\n📝 <b>Note:</b> ${paymentData.notes || 'None'}\n\n📅 <b>Date:</b> ${curDate}`;
         } else if (paymentData.isDiscount) {
-            notifMsg = `🟨 <b>Discount Added</b>\n\n🆔 <b>ID:</b> ${strId}\n👤 <b>Student:</b> ${safeName}\n💰 <b>Amount:</b> ${amountFormatted}\n📝 <b>Note:</b> ${paymentData.notes || 'None'}`;
+            notifMsg = `🟨 <b>Discount Added</b>\n\n🆔 <b>ID:</b> ${strId}\n👤 <b>Student:</b> ${safeName}\n💰 <b>Amount:</b> ${amountFormatted}\n💼 <b>Balance:</b> ${finalBalanceStr}\n📝 <b>Note:</b> ${paymentData.notes || 'None'}\n\n📅 <b>Date:</b> ${curDate}`;
         } else {
             notifMsg = `🟩 <b>Payment Received</b>\n\n🆔 <b>ID:</b> ${strId}\n👤 <b>Name:</b> ${safeName}\n\n📰 <b>Tariff:</b> ${tariffName}\n💰 <b>Amount:</b> ${amountFormatted}\n💼 <b>Balance:</b> ${finalBalanceStr}\n💳 <b>Payment Type:</b> ${paymentData.method || '-'}\n🧾 <b>Received by:</b> ${paymentData.receivedBy || '-'}\n\n📝 <b>Note:</b> ${paymentData.notes || 'None'}\n\n📅 <b>Date:</b> ${curDate}`;
         }
