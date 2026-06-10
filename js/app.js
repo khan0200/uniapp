@@ -4770,7 +4770,7 @@ function renderPaymentHistory(filteredData = null) {
         // Dark mode overrides inline (since this is dynamically generated, it's better to use classes instead of inline styles if we care about dark mode,
         // but we can add a general note-badge class and inline var if needed. Let's just create a generic notes badge or inline colors that look okay).
 
-        notesHtml = `<div class="mt-2 text-start"><span class="badge rounded-pill" style="${noteStyle} font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">${p.notes}</span></div>`;
+        notesHtml = `<div class="mt-2 text-start"><span class="badge rounded-pill text-wrap text-start" style="${noteStyle} font-size: 0.72rem; font-weight: 700; text-transform: uppercase; white-space: normal; word-break: break-word; display: inline-block; max-width: 100%;">${p.notes}</span></div>`;
       }
 
       return `
