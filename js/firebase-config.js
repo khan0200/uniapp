@@ -1113,8 +1113,28 @@ async function deleteTariffFromFirestore(firestoreId) {
     if (!firebaseInitialized || !firestoreId) return;
 
     try {
-        await db.collection('tariffs').doc(firestoreId).delete();
-        console.log('✅ Tariff deleted');
+        const tariff = window.tariffsData.find(t => t.firestoreId === firestoreId);
+        if (tariff) {
+            const normalizedName = normalizeSettingName(tariff.name);
+            const snapshot = await db.collection('tariffs').get();
+            const batch = db.batch();
+            let count = 0;
+            snapshot.forEach((doc) => {
+                const data = doc.data() || {};
+                if (normalizeSettingName(data.name) === normalizedName) {
+                    batch.delete(doc.ref);
+                    count++;
+                }
+            });
+            if (count > 0) {
+                await batch.commit();
+                console.log(`✅ Tariff(s) deleted: ${count} documents removed`);
+            } else {
+                await db.collection('tariffs').doc(firestoreId).delete();
+            }
+        } else {
+            await db.collection('tariffs').doc(firestoreId).delete();
+        }
         showNotification('Tariff deleted successfully!', 'success');
         await loadTariffsFromFirestore();
     } catch (error) {
@@ -1246,19 +1266,42 @@ async function deleteLevelFromFirestore(firestoreId) {
     if (!firebaseInitialized || !firestoreId) return;
 
     try {
-        // Also delete universities linked to this level
         const level = window.levelsData.find(l => l.firestoreId === firestoreId);
         if (level) {
-            const linkedUnis = await db.collection('universities')
-                .where('levelId', '==', firestoreId)
-                .get();
-
+            const normalizedName = normalizeSettingName(level.name);
+            const levelsSnapshot = await db.collection('levels').get();
             const batch = db.batch();
-            linkedUnis.forEach(doc => batch.delete(doc.ref));
-            batch.delete(db.collection('levels').doc(firestoreId));
-            await batch.commit();
+            let count = 0;
+            const levelIdsToDelete = [];
 
-            console.log(`✅ Level deleted with ${linkedUnis.size} linked universities`);
+            levelsSnapshot.forEach((doc) => {
+                const data = doc.data() || {};
+                if (normalizeSettingName(data.name) === normalizedName) {
+                    batch.delete(doc.ref);
+                    levelIdsToDelete.push(doc.id);
+                    count++;
+                }
+            });
+
+            // Delete universities linked to any of the deleted level IDs
+            let linkedUnisCount = 0;
+            for (const lid of levelIdsToDelete) {
+                // Check both potential collections 'listofuniversities' and 'universities' to clean up correctly
+                const snapshot1 = await db.collection('listofuniversities').where('levelId', '==', lid).get();
+                snapshot1.forEach(doc => {
+                    batch.delete(doc.ref);
+                    linkedUnisCount++;
+                });
+
+                const snapshot2 = await db.collection('universities').where('levelId', '==', lid).get();
+                snapshot2.forEach(doc => {
+                    batch.delete(doc.ref);
+                    linkedUnisCount++;
+                });
+            }
+
+            await batch.commit();
+            console.log(`✅ Level(s) deleted: ${count} documents removed along with ${linkedUnisCount} linked universities`);
         } else {
             await db.collection('levels').doc(firestoreId).delete();
         }
@@ -1385,9 +1428,34 @@ async function updateUniversityInFirestore(firestoreId, updatedData) {
 }
 
 async function deleteUniversityFromFirestore(firestoreId) {
-    if (!firebaseInitialized) return;
+    if (!firebaseInitialized || !firestoreId) return;
     try {
-        await db.collection('listofuniversities').doc(firestoreId).delete();
+        const uni = window.universitiesData.find(u => u.firestoreId === firestoreId);
+        if (uni) {
+            const normalizedName = normalizeSettingName(uni.name);
+            const levelId = (uni.levelId || 'GENERAL').trim().toUpperCase();
+            
+            const snapshot = await db.collection('listofuniversities').get();
+            const batch = db.batch();
+            let count = 0;
+            snapshot.forEach((doc) => {
+                const data = doc.data() || {};
+                const docName = normalizeSettingName(data.name);
+                const docLevelId = (data.levelId || 'GENERAL').trim().toUpperCase();
+                if (docName === normalizedName && docLevelId === levelId) {
+                    batch.delete(doc.ref);
+                    count++;
+                }
+            });
+            if (count > 0) {
+                await batch.commit();
+                console.log(`✅ Deleted university "${uni.name}" (${count} duplicate docs removed)`);
+            } else {
+                await db.collection('listofuniversities').doc(firestoreId).delete();
+            }
+        } else {
+            await db.collection('listofuniversities').doc(firestoreId).delete();
+        }
         showNotification('University deleted successfully!', 'success');
         loadUniversitiesFromFirestore();
     } catch (error) {
@@ -1481,7 +1549,28 @@ async function deleteGroupFromFirestore(firestoreId) {
     if (!firebaseInitialized || !firestoreId) return;
 
     try {
-        await db.collection('groups').doc(firestoreId).delete();
+        const group = window.groupsData.find(g => g.firestoreId === firestoreId);
+        if (group) {
+            const normalizedName = normalizeSettingName(group.name);
+            const snapshot = await db.collection('groups').get();
+            const batch = db.batch();
+            let count = 0;
+            snapshot.forEach((doc) => {
+                const data = doc.data() || {};
+                if (normalizeSettingName(data.name) === normalizedName) {
+                    batch.delete(doc.ref);
+                    count++;
+                }
+            });
+            if (count > 0) {
+                await batch.commit();
+                console.log(`✅ Deleted group "${group.name}" (${count} duplicate docs removed)`);
+            } else {
+                await db.collection('groups').doc(firestoreId).delete();
+            }
+        } else {
+            await db.collection('groups').doc(firestoreId).delete();
+        }
         console.log('✅ Group deleted');
         showNotification('Group deleted successfully!', 'success');
         await loadGroupsFromFirestore();
@@ -1679,7 +1768,28 @@ async function deleteLeadByFromFirestore(firestoreId) {
     if (!firebaseInitialized || !firestoreId) return;
 
     try {
-        await db.collection('leadby').doc(firestoreId).delete();
+        const leadBy = (window.leadByData || []).find(lb => lb.firestoreId === firestoreId);
+        if (leadBy) {
+            const normalizedName = normalizeSettingName(leadBy.name);
+            const snapshot = await db.collection('leadby').get();
+            const batch = db.batch();
+            let count = 0;
+            snapshot.forEach((doc) => {
+                const data = doc.data() || {};
+                if (normalizeSettingName(data.name) === normalizedName) {
+                    batch.delete(doc.ref);
+                    count++;
+                }
+            });
+            if (count > 0) {
+                await batch.commit();
+                console.log(`✅ Deleted leadby "${leadBy.name}" (${count} duplicate docs removed)`);
+            } else {
+                await db.collection('leadby').doc(firestoreId).delete();
+            }
+        } else {
+            await db.collection('leadby').doc(firestoreId).delete();
+        }
         console.log('✅ Lead by deleted');
         showNotification('Lead by option deleted successfully!', 'success');
         await loadLeadByFromFirestore();
