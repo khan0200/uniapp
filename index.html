@@ -1767,6 +1767,36 @@
         </div>
     </div>
 
+    <!-- View Payment Modal -->
+    <div class="modal fade" id="viewPaymentModal" tabindex="-1" aria-labelledby="viewPaymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-glass border border-secondary" style="border-radius: 24px; overflow: hidden; background: var(--mica-bg); backdrop-filter: var(--blur-intense); -webkit-backdrop-filter: var(--blur-intense);">
+                <div class="modal-header border-bottom border-secondary px-4 py-3">
+                    <h5 class="modal-title fw-bold" id="viewPaymentModalLabel">
+                        <i class="bi bi-receipt text-primary me-2"></i>Payment Information
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4" id="viewPaymentDetailsContent">
+                    <!-- Loaded dynamically -->
+                </div>
+                <div class="modal-footer border-top border-secondary px-4 py-3 d-flex justify-content-between gap-2">
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-primary rounded-pill px-3 py-2 fw-semibold" id="viewPaymentEditBtn" style="font-size: 0.85rem;">
+                            <i class="bi bi-pencil me-1"></i>Edit
+                        </button>
+                        <button type="button" class="btn btn-outline-danger rounded-pill px-3 py-2 fw-semibold" id="viewPaymentDeleteBtn" style="font-size: 0.85rem;">
+                            <i class="bi bi-trash me-1"></i>Delete
+                        </button>
+                    </div>
+                    <button type="button" class="btn btn-success rounded-pill px-4 py-2 fw-semibold" id="viewPaymentPrintBtn" style="font-size: 0.85rem;">
+                        <i class="bi bi-printer me-1"></i>Print Receipt
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Settings Delete Confirmation Modal -->
     <div class="modal fade confirm-modal" id="confirmSettingsDeleteModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-sm">
