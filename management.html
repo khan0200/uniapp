@@ -221,6 +221,14 @@
                             <option value="CEFR">CEFR</option>
                         </select>
                     </div>
+                    <!-- Certificate Score Sub-Filter (shown for TOPIK/IELTS) -->
+                    <div class="filter-item" id="filterCertScoreWrapper" style="display:none;">
+                        <i class="bi bi-123 filter-icon"></i>
+                        <select class="form-select filter-input" id="filterCertScore"
+                            aria-label="Filter by certificate score">
+                            <option value="">All Scores</option>
+                        </select>
+                    </div>
 
                     <!-- Task Tags Filter -->
                     <div class="filter-item tag-filter-item">
@@ -353,6 +361,14 @@
                             <option value="TOEFL">TOEFL</option>
                             <option value="SAT">SAT</option>
                             <option value="CEFR">CEFR</option>
+                        </select>
+                    </div>
+                    <!-- Certificate Score Sub-Filter (shown for TOPIK/IELTS) -->
+                    <div class="filter-item" id="documentsFilterCertScoreWrapper" style="display:none;">
+                        <i class="bi bi-123 filter-icon"></i>
+                        <select class="form-select filter-input" id="documentsFilterCertScore"
+                            aria-label="Filter by certificate score">
+                            <option value="">All Scores</option>
                         </select>
                     </div>
 
@@ -1359,7 +1375,7 @@
                             <!-- Language Certificate Filter -->
                             <div class="col-lg col-md-6 col-sm-6 excel-filter-col">
                                 <label class="form-label text-secondary small fw-bold mb-1">Language Certificate</label>
-                                <select class="form-select ios-input" id="excelLanguageCertificateFilter" onchange="filterExcelStudents()">
+                                <select class="form-select ios-input" id="excelLanguageCertificateFilter">
                                     <option value="">All Certificates</option>
                                     <option value="NO CERTIFICATE">NO CERTIFICATE</option>
                                     <option value="EXPECTED">EXPECTED</option>
@@ -1369,6 +1385,13 @@
                                     <option value="TOEFL">TOEFL</option>
                                     <option value="SAT">SAT</option>
                                     <option value="CEFR">CEFR</option>
+                                </select>
+                            </div>
+                            <!-- Certificate Score Sub-Filter (shown for TOPIK/IELTS) -->
+                            <div class="col-lg col-md-6 col-sm-6 excel-filter-col" id="excelCertScoreFilterWrapper" style="display:none;">
+                                <label class="form-label text-secondary small fw-bold mb-1">Score / Level</label>
+                                <select class="form-select ios-input" id="excelCertScoreFilter">
+                                    <option value="">All Scores</option>
                                 </select>
                             </div>
 

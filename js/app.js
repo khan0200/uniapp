@@ -1031,6 +1031,7 @@ function filterDocuments(resetPage = true) {
   const levelFilter = getSelectValues("documentsFilterLevel");
   const groupFilter = getSelectValues("documentsFilterGroup");
   const languageCertificateFilter = getSelectValues("documentsFilterLanguageCertificate");
+  const certScoreFilter = getSelectValues("documentsFilterCertScore"); // array, supports multi-select
   const missingDocsFilter = getSelectValues("filterMissingDocs");
 
   const filtered = (window.studentsData || []).filter((s) => {
@@ -1135,6 +1136,19 @@ function filterDocuments(resetPage = true) {
       const hasAnySelected = [s.languageCertificate, s.languageCertificate2, s.languageCertificate3]
         .some(cert => cert && cert !== "NO CERTIFICATE" && languageCertificateFilter.includes(cert));
       if (hasAnySelected) matchesLanguageCertificate = true;
+    }
+
+    // If a specific score sub-filter is also active, additionally check score
+    if (matchesLanguageCertificate && certScoreFilter.length > 0) {
+      const cert = languageCertificateFilter[0] || "";
+      const scores = [s.certificateScore, s.certificateScore2, s.certificateScore3];
+      const certs  = [s.languageCertificate, s.languageCertificate2, s.languageCertificate3];
+      matchesLanguageCertificate = certs.some((c, i) => {
+        if (!c || c === "NO CERTIFICATE") return false;
+        if (c.toUpperCase() !== cert.toUpperCase()) return false;
+        const score = (scores[i] || "").trim().toUpperCase();
+        return certScoreFilter.some(f => f.toUpperCase() === score);
+      });
     }
 
     // Missing Documents filter (OR logic: student has any of selected missing documents)
@@ -3089,6 +3103,69 @@ function copyToClipboard(text, btnElement) {
     });
 }
 
+// ==========================================
+// Certificate Score Sub-Filter Helper
+// ==========================================
+function updateCertScoreFilter(scoreSelectId) {
+  // Map from scoreSelectId → certFilterId
+  const certFilterMap = {
+    'filterCertScore': 'filterLanguageCertificate',
+    'documentsFilterCertScore': 'documentsFilterLanguageCertificate',
+    'excelCertScoreFilter': 'excelLanguageCertificateFilter'
+  };
+  const certFilterId = certFilterMap[scoreSelectId];
+  let certValue = '';
+  if (certFilterId) {
+    const selectedCerts = getSelectValues(certFilterId);
+    // Only show score sub-filter when exactly one cert (TOPIK or IELTS) is selected
+    certValue = selectedCerts.length === 1 ? selectedCerts[0] : '';
+  }
+
+  const wrapperId = scoreSelectId + 'Wrapper';
+  const wrapper = document.getElementById(wrapperId);
+  const scoreSelect = document.getElementById(scoreSelectId);
+  if (!scoreSelect) return;
+
+  // Save currently selected values so we can try to restore them
+  const prevSelected = Array.from(scoreSelect.selectedOptions)
+    .map(o => o.value).filter(v => v);
+
+  // Clear existing options
+  scoreSelect.innerHTML = '<option value="">All Scores</option>';
+
+  let newOptions = [];
+  if (certValue === 'TOPIK') {
+    if (wrapper) wrapper.style.display = '';
+    newOptions = ['EXPECTED','1','2','3','4','5','6'];
+    newOptions.forEach(level => {
+      const opt = document.createElement('option');
+      opt.value = level;
+      opt.textContent = level === 'EXPECTED' ? 'Expected' : 'TOPIK ' + level;
+      scoreSelect.appendChild(opt);
+    });
+  } else if (certValue === 'IELTS') {
+    if (wrapper) wrapper.style.display = '';
+    newOptions = ['EXPECTED','5.0','5.5','6.0','6.5','7.0','7.5','8.0','8.5','9.0'];
+    newOptions.forEach(band => {
+      const opt = document.createElement('option');
+      opt.value = band;
+      opt.textContent = band === 'EXPECTED' ? 'Expected' : 'IELTS ' + band;
+      scoreSelect.appendChild(opt);
+    });
+  } else {
+    if (wrapper) wrapper.style.display = 'none';
+    // Deselect all and reset
+    Array.from(scoreSelect.options).forEach(o => o.selected = false);
+    return;
+  }
+
+  // Restore previous selections that are still valid in the new option set
+  prevSelected.forEach(val => {
+    const opt = scoreSelect.querySelector(`option[value="${val}"]`);
+    if (opt) opt.selected = true;
+  });
+}
+
 // Filter and search functionality
 function applyFilters(resetPage = true) {
   // If called from an event listener, resetPage is the event object (truthy), so we reset page
@@ -3107,6 +3184,7 @@ function applyFilters(resetPage = true) {
   const levelFilter = getSelectValues("filterLevel");
   const groupFilter = getSelectValues("filterGroup");
   const languageCertificateFilter = getSelectValues("filterLanguageCertificate");
+  const certScoreFilter = getSelectValues("filterCertScore"); // array, supports multi-select
   const tagsFilter = getSelectValues("filterTags");
   const leadByFilter = getSelectValues("filterLeadBy");
 
@@ -3212,6 +3290,19 @@ function applyFilters(resetPage = true) {
       const hasAnySelected = [s.languageCertificate, s.languageCertificate2, s.languageCertificate3]
         .some(cert => cert && cert !== "NO CERTIFICATE" && languageCertificateFilter.includes(cert));
       if (hasAnySelected) matchesLanguageCertificate = true;
+    }
+
+    // If a specific score sub-filter is also active, additionally check score
+    if (matchesLanguageCertificate && certScoreFilter.length > 0) {
+      const cert = languageCertificateFilter[0] || "";
+      const scores = [s.certificateScore, s.certificateScore2, s.certificateScore3];
+      const certs  = [s.languageCertificate, s.languageCertificate2, s.languageCertificate3];
+      matchesLanguageCertificate = certs.some((c, i) => {
+        if (!c || c === "NO CERTIFICATE") return false;
+        if (c.toUpperCase() !== cert.toUpperCase()) return false;
+        const score = (scores[i] || "").trim().toUpperCase();
+        return certScoreFilter.some(f => f.toUpperCase() === score);
+      });
     }
 
     let matchesTags = false;
@@ -4049,6 +4140,7 @@ function populateExcelModal() {
   const levelFilter = getSelectValues("excelLevelFilter");
   const groupFilter = getSelectValues("excelGroupFilter");
   const languageCertificateFilter = getSelectValues("excelLanguageCertificateFilter");
+  const certScoreFilter = getSelectValues("excelCertScoreFilter"); // array, supports multi-select
   const tagsFilter = getSelectValues("excelTagsFilter");
 
   const container = document.getElementById("excelStudentList");
@@ -4157,6 +4249,19 @@ function populateExcelModal() {
       const hasAnySelected = [s.languageCertificate, s.languageCertificate2, s.languageCertificate3]
         .some(cert => cert && cert !== "NO CERTIFICATE" && languageCertificateFilter.includes(cert));
       if (hasAnySelected) matchesLanguageCertificate = true;
+    }
+
+    // If a specific score sub-filter is also active, additionally check score
+    if (matchesLanguageCertificate && certScoreFilter.length > 0) {
+      const cert = languageCertificateFilter[0] || "";
+      const scores = [s.certificateScore, s.certificateScore2, s.certificateScore3];
+      const certs  = [s.languageCertificate, s.languageCertificate2, s.languageCertificate3];
+      matchesLanguageCertificate = certs.some((c, i) => {
+        if (!c || c === "NO CERTIFICATE") return false;
+        if (c.toUpperCase() !== cert.toUpperCase()) return false;
+        const score = (scores[i] || "").trim().toUpperCase();
+        return certScoreFilter.some(f => f.toUpperCase() === score);
+      });
     }
 
     if (!matchesLanguageCertificate) return false;
@@ -9854,6 +9959,38 @@ function initAllMultiSelectFilters() {
   filtersToInit.forEach(f => {
     initMultiSelect(f.id, f.label);
   });
+
+  // Also initialize score sub-filter selects as multiselects
+  // (they start empty; MutationObserver in initMultiSelect will rebuild UI when options are added dynamically)
+  [
+    { id: 'filterCertScore',         label: 'Score' },
+    { id: 'documentsFilterCertScore', label: 'Score' },
+    { id: 'excelCertScoreFilter',    label: 'Score' }
+  ].forEach(f => {
+    if (document.getElementById(f.id)) initMultiSelect(f.id, f.label);
+  });
+
+  // Hook score sub-filter update into cert filter change events
+  // (must be done AFTER initMultiSelect, since it hides the native select
+  //  and re-dispatches change events from its own click handlers)
+  const certScorePairs = [
+    { certId: 'filterLanguageCertificate',             scoreId: 'filterCertScore',           filterFn: () => applyFilters() },
+    { certId: 'documentsFilterLanguageCertificate',    scoreId: 'documentsFilterCertScore',   filterFn: () => filterDocuments() },
+    { certId: 'excelLanguageCertificateFilter',        scoreId: 'excelCertScoreFilter',       filterFn: () => populateExcelModal() }
+  ];
+  certScorePairs.forEach(({ certId, scoreId, filterFn }) => {
+    const certEl = document.getElementById(certId);
+    if (!certEl) return;
+    certEl.addEventListener('change', () => {
+      updateCertScoreFilter(scoreId);
+      filterFn();
+    });
+    // Also hook the score dropdown itself
+    const scoreEl = document.getElementById(scoreId);
+    if (scoreEl) {
+      scoreEl.addEventListener('change', filterFn);
+    }
+  });
 }
 
 // Close dropdowns when clicking outside
@@ -9907,7 +10044,11 @@ const filterElementIds = [
   'excelLevelFilter',
   'excelGroupFilter',
   'excelLanguageCertificateFilter',
-  'excelTagsFilter'
+  'excelTagsFilter',
+  // Score sub-filters
+  'filterCertScore',
+  'documentsFilterCertScore',
+  'excelCertScoreFilter'
 ];
 
 function saveFiltersState() {
@@ -9937,6 +10078,26 @@ function restoreFiltersState() {
         el._pendingValues = value;
       } else {
         el.value = value;
+      }
+    });
+
+    // Re-populate score sub-filters if cert filters were restored
+    const certFilterPairs = [
+      { certId: 'filterLanguageCertificate', scoreId: 'filterCertScore' },
+      { certId: 'documentsFilterLanguageCertificate', scoreId: 'documentsFilterCertScore' },
+      { certId: 'excelLanguageCertificateFilter', scoreId: 'excelCertScoreFilter' }
+    ];
+    certFilterPairs.forEach(({ certId, scoreId }) => {
+      const certEl = document.getElementById(certId);
+      const certVal = certEl ? certEl.value : '';
+      if (certVal === 'TOPIK' || certVal === 'IELTS') {
+        updateCertScoreFilter(scoreId, certVal);
+        // Restore score value after populating options
+        const savedScore = state[scoreId];
+        if (savedScore) {
+          const scoreEl = document.getElementById(scoreId);
+          if (scoreEl) scoreEl.value = savedScore;
+        }
       }
     });
   } catch (e) {
