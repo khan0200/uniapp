@@ -1,9 +1,13 @@
 // JS Logic for AI Settings Management in UNIAPP
+// Supports Gemini and OpenAI providers
 (function() {
   // Default configurations
   const defaultSettings = {
+    provider: "gemini",
     apiKey: "",
+    openaiApiKey: "",
     model: "gemini-3.5-flash",
+    openaiModel: "gpt-4o-mini",
     normalizeDates: true,
     mergeNames: true,
     extractStructured: true,
@@ -15,7 +19,49 @@
   document.addEventListener("DOMContentLoaded", () => {
     loadAiSettings();
     initModelCustomToggle();
+    initProviderToggle();
   });
+
+  // Initialize AI Provider radio toggle
+  function initProviderToggle() {
+    const radios = document.querySelectorAll('input[name="aiProvider"]');
+    radios.forEach(radio => {
+      radio.addEventListener("change", () => {
+        switchProvider(radio.value);
+      });
+    });
+  }
+
+  // Switch UI based on selected provider
+  function switchProvider(provider) {
+    const isGemini = provider === "gemini";
+
+    // Show/hide API key fields
+    const geminiKeyGroup = document.getElementById("geminiApiKeyGroup");
+    const openaiKeyGroup = document.getElementById("openaiApiKeyGroup");
+    if (geminiKeyGroup) geminiKeyGroup.style.display = isGemini ? "" : "none";
+    if (openaiKeyGroup) openaiKeyGroup.style.display = isGemini ? "none" : "";
+
+    // Show/hide model selection fields
+    const geminiModelGroup = document.getElementById("geminiModelGroup");
+    const openaiModelGroup = document.getElementById("openaiModelGroup");
+    if (geminiModelGroup) geminiModelGroup.style.display = isGemini ? "" : "none";
+    if (openaiModelGroup) openaiModelGroup.style.display = isGemini ? "none" : "";
+
+    // Update title/description
+    const titleEl = document.getElementById("aiSettingsTitle");
+    const descEl = document.getElementById("aiSettingsDesc");
+    if (titleEl) {
+      titleEl.innerHTML = isGemini
+        ? '<i class="bi bi-cpu-fill me-2" style="color:#a78bfa;"></i>AI Settings (Gemini)'
+        : '<i class="bi bi-cpu-fill me-2" style="color:#10a37f;"></i>AI Settings (OpenAI)';
+    }
+    if (descEl) {
+      descEl.textContent = isGemini
+        ? "Configure Gemini API key and document extraction settings"
+        : "Configure OpenAI API key and document extraction settings";
+    }
+  }
 
   // Toggle custom model input visibility based on select dropdown value
   function initModelCustomToggle() {
@@ -23,35 +69,41 @@
     const customModelEl = document.getElementById("geminiModelCustom");
     if (modelEl && customModelEl) {
       modelEl.addEventListener("change", () => {
-        if (modelEl.value === "custom") {
-          customModelEl.style.display = "block";
-        } else {
-          customModelEl.style.display = "none";
-        }
+        customModelEl.style.display = modelEl.value === "custom" ? "block" : "none";
       });
     }
   }
 
-  // Toggle show/hide API key
+  // Toggle show/hide Gemini API key
   window.toggleApiKeyVisibility = function() {
     const keyInput = document.getElementById("geminiApiKey");
     const icon = document.getElementById("toggleApiKeyIcon");
     if (!keyInput || !icon) return;
-
     if (keyInput.type === "password") {
       keyInput.type = "text";
-      icon.classList.remove("bi-eye");
-      icon.classList.add("bi-eye-slash");
+      icon.classList.replace("bi-eye", "bi-eye-slash");
     } else {
       keyInput.type = "password";
-      icon.classList.remove("bi-eye-slash");
-      icon.classList.add("bi-eye");
+      icon.classList.replace("bi-eye-slash", "bi-eye");
+    }
+  };
+
+  // Toggle show/hide OpenAI API key
+  window.toggleOpenAIKeyVisibility = function() {
+    const keyInput = document.getElementById("openaiApiKey");
+    const icon = document.getElementById("toggleOpenAIKeyIcon");
+    if (!keyInput || !icon) return;
+    if (keyInput.type === "password") {
+      keyInput.type = "text";
+      icon.classList.replace("bi-eye", "bi-eye-slash");
+    } else {
+      keyInput.type = "password";
+      icon.classList.replace("bi-eye-slash", "bi-eye");
     }
   };
 
   // Fetch settings from Firestore and LocalStorage
   window.loadAiSettings = async function() {
-    // 1. Try to load from localStorage first for immediate rendering
     let localSettings = null;
     try {
       const stored = localStorage.getItem("ai_settings");
@@ -63,42 +115,46 @@
       console.warn("Failed to parse local AI settings:", e);
     }
 
-    // 2. Fetch from Firestore to ensure synchronization
     try {
       if (typeof db !== "undefined") {
         const doc = await db.collection("settings").doc("ai_settings").get();
         if (doc.exists) {
           const remoteSettings = doc.data();
-          // Merge with defaults to ensure all fields exist
           const merged = { ...defaultSettings, ...remoteSettings };
           localStorage.setItem("ai_settings", JSON.stringify(merged));
           applySettingsToUI(merged);
         } else if (!localSettings) {
-          // If no doc and no local settings, apply defaults
           applySettingsToUI(defaultSettings);
         }
       }
     } catch (error) {
       console.error("Error loading AI settings from Firestore:", error);
-      if (!localSettings) {
-        applySettingsToUI(defaultSettings);
-      }
+      if (!localSettings) applySettingsToUI(defaultSettings);
     }
   };
 
   // Update UI values
   function applySettingsToUI(settings) {
-    const apiKeyEl = document.getElementById("geminiApiKey");
+    const provider = settings.provider || "gemini";
+
+    // Set provider radio
+    const radio = document.querySelector(`input[name="aiProvider"][value="${provider}"]`);
+    if (radio) {
+      radio.checked = true;
+      switchProvider(provider);
+    }
+
+    // Gemini key
+    const geminiKeyEl = document.getElementById("geminiApiKey");
+    if (geminiKeyEl) geminiKeyEl.value = settings.apiKey || "";
+
+    // OpenAI key
+    const openaiKeyEl = document.getElementById("openaiApiKey");
+    if (openaiKeyEl) openaiKeyEl.value = settings.openaiApiKey || "";
+
+    // Gemini model
     const modelEl = document.getElementById("geminiModel");
     const customModelEl = document.getElementById("geminiModelCustom");
-    const normalizeDatesEl = document.getElementById("aiNormalizeDates");
-    const mergeNamesEl = document.getElementById("aiMergeNames");
-    const extractStructuredEl = document.getElementById("aiExtractStructured");
-    const includeOcrEl = document.getElementById("aiIncludeOcr");
-    const saveHistoryEl = document.getElementById("aiSaveHistory");
-
-    if (apiKeyEl) apiKeyEl.value = settings.apiKey || "";
-
     if (modelEl) {
       const knownModels = [
         "gemini-3.5-flash", "gemini-3.1-pro", "gemini-3.1-flash-lite",
@@ -106,34 +162,36 @@
         "gemini-1.5-pro", "gemini-1.5-flash", "gemini-2.5-flash-lite"
       ];
       const modelVal = settings.model || "gemini-3.5-flash";
-
       if (knownModels.includes(modelVal)) {
         modelEl.value = modelVal;
-        if (customModelEl) {
-          customModelEl.style.display = "none";
-          customModelEl.value = "";
-        }
+        if (customModelEl) { customModelEl.style.display = "none"; customModelEl.value = ""; }
       } else {
         modelEl.value = "custom";
-        if (customModelEl) {
-          customModelEl.style.display = "block";
-          customModelEl.value = modelVal;
-        }
+        if (customModelEl) { customModelEl.style.display = "block"; customModelEl.value = modelVal; }
       }
     }
 
-    if (normalizeDatesEl) normalizeDatesEl.checked = settings.normalizeDates !== false;
-    if (mergeNamesEl) mergeNamesEl.checked = settings.mergeNames !== false;
-    if (extractStructuredEl) extractStructuredEl.checked = settings.extractStructured !== false;
-    if (includeOcrEl) includeOcrEl.checked = settings.includeOcr !== false;
-    if (saveHistoryEl) saveHistoryEl.checked = settings.saveHistory !== false;
+    // OpenAI model
+    const openaiModelEl = document.getElementById("openaiModel");
+    if (openaiModelEl) openaiModelEl.value = settings.openaiModel || "gpt-4o";
+
+    // Extraction settings
+    const checks = { aiNormalizeDates: "normalizeDates", aiMergeNames: "mergeNames",
+      aiExtractStructured: "extractStructured", aiIncludeOcr: "includeOcr", aiSaveHistory: "saveHistory" };
+    for (const [id, key] of Object.entries(checks)) {
+      const el = document.getElementById(id);
+      if (el) el.checked = settings[key] !== false;
+    }
   }
 
   // Save Settings to Firestore & LocalStorage
   window.saveAiSettings = async function() {
+    const provider = document.querySelector('input[name="aiProvider"]:checked')?.value || "gemini";
     const apiKey = document.getElementById("geminiApiKey")?.value.trim() || "";
+    const openaiApiKey = document.getElementById("openaiApiKey")?.value.trim() || "";
     const modelEl = document.getElementById("geminiModel");
     const customModelEl = document.getElementById("geminiModelCustom");
+    const openaiModel = document.getElementById("openaiModel")?.value || "gpt-4o";
     const normalizeDates = document.getElementById("aiNormalizeDates")?.checked ?? true;
     const mergeNames = document.getElementById("aiMergeNames")?.checked ?? true;
     const extractStructured = document.getElementById("aiExtractStructured")?.checked ?? true;
@@ -142,28 +200,17 @@
 
     let model = "gemini-3.5-flash";
     if (modelEl) {
-      if (modelEl.value === "custom") {
-        model = customModelEl?.value.trim() || "gemini-3.5-flash";
-      } else {
-        model = modelEl.value;
-      }
+      model = modelEl.value === "custom" ? (customModelEl?.value.trim() || "gemini-3.5-flash") : modelEl.value;
     }
 
     const newSettings = {
-      apiKey,
-      model,
-      normalizeDates,
-      mergeNames,
-      extractStructured,
-      includeOcr,
-      saveHistory,
+      provider, apiKey, openaiApiKey, model, openaiModel,
+      normalizeDates, mergeNames, extractStructured, includeOcr, saveHistory,
       updatedAt: new Date().toISOString()
     };
 
-    // Save to LocalStorage
     localStorage.setItem("ai_settings", JSON.stringify(newSettings));
 
-    // Save to Firestore
     try {
       if (typeof db !== "undefined") {
         await db.collection("settings").doc("ai_settings").set(newSettings);
@@ -181,50 +228,76 @@
     }
   };
 
-  // Validate the Gemini API Key
+  // Unified validate — dispatches to the active provider
+  window.validateAiKey = async function() {
+    const provider = document.querySelector('input[name="aiProvider"]:checked')?.value || "gemini";
+    if (provider === "openai") {
+      await validateOpenAIKey();
+    } else {
+      await validateGeminiKey();
+    }
+  };
+
+  // Validate Gemini API Key
   window.validateGeminiKey = async function() {
     const apiKey = document.getElementById("geminiApiKey")?.value.trim();
     if (!apiKey) {
-      if (typeof showNotification === "function") {
-        showNotification("Please enter an API key first!", "error");
-      } else {
-        alert("Please enter an API key first!");
-      }
-      return;
+      _notify("Please enter a Gemini API key first!", "error"); return;
     }
-
-    // Show loading notification/alert
-    if (typeof showNotification === "function") {
-      showNotification("Validating API key...", "info");
-    }
-
+    _notify("Validating Gemini API key...", "info");
     try {
-      // Validate key by fetching the list of models
       const testUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
       const response = await fetch(testUrl);
       const data = await response.json();
-
       if (response.ok) {
-        if (typeof showNotification === "function") {
-          showNotification("API Key is valid!", "success");
-        } else {
-          alert("API Key is valid!");
-        }
+        _notify("Gemini API Key is valid! ✓", "success");
       } else {
-        const errorMsg = data.error?.message || "Invalid API key";
-        if (typeof showNotification === "function") {
-          showNotification(`Validation failed: ${errorMsg}`, "error");
-        } else {
-          alert(`Validation failed: ${errorMsg}`);
-        }
+        _notify(`Validation failed: ${data.error?.message || "Invalid key"}`, "error");
       }
     } catch (error) {
       console.error("Validation error:", error);
-      if (typeof showNotification === "function") {
-        showNotification("Network error validating key. Please check connection.", "error");
-      } else {
-        alert("Network error validating key.");
-      }
+      _notify("Network error validating Gemini key. Check connection.", "error");
     }
+  };
+
+  // Validate OpenAI API Key
+  async function validateOpenAIKey() {
+    const apiKey = document.getElementById("openaiApiKey")?.value.trim();
+    if (!apiKey) {
+      _notify("Please enter an OpenAI API key first!", "error"); return;
+    }
+    _notify("Validating OpenAI API key...", "info");
+    try {
+      const response = await fetch("https://api.openai.com/v1/models", {
+        headers: { "Authorization": `Bearer ${apiKey}` }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        _notify("OpenAI API Key is valid! ✓", "success");
+      } else {
+        _notify(`Validation failed: ${data.error?.message || "Invalid key"}`, "error");
+      }
+    } catch (error) {
+      console.error("OpenAI validation error:", error);
+      _notify("Network error validating OpenAI key. Check connection.", "error");
+    }
+  }
+
+  // Helper: show notification or alert
+  function _notify(msg, type) {
+    if (typeof showNotification === "function") {
+      showNotification(msg, type);
+    } else {
+      alert(msg);
+    }
+  }
+
+  // Expose getActiveAiSettings for document extractor and other modules
+  window.getActiveAiSettings = function() {
+    try {
+      const stored = localStorage.getItem("ai_settings");
+      if (stored) return { ...defaultSettings, ...JSON.parse(stored) };
+    } catch(e) {}
+    return { ...defaultSettings };
   };
 })();

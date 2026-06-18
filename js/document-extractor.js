@@ -69,7 +69,7 @@
     }
   }
 
-  // Load selected Gemini model name from local storage or Firestore
+  // Load selected AI provider + model from local storage
   async function initSettingsDisplay() {
     let settings = {};
     try {
@@ -81,30 +81,41 @@
 
     const modelBadge = document.getElementById("extractionModelBadge");
     if (modelBadge) {
-      // Map names to clean display
-      let displayModel = "Gemini 3.5 Flash";
-      if (settings.model === "gemini-3.5-flash") {
-        displayModel = "Gemini 3.5 Flash";
-      } else if (settings.model === "gemini-3.1-pro") {
-        displayModel = "Gemini 3.1 Pro";
-      } else if (settings.model === "gemini-3.1-flash-lite") {
-        displayModel = "Gemini 3.1 Flash Lite";
-      } else if (settings.model === "gemini-2.5-flash") {
-        displayModel = "Gemini 2.5 Flash";
-      } else if (settings.model === "gemini-2.5-pro") {
-        displayModel = "Gemini 2.5 Pro";
-      } else if (settings.model === "gemini-2.0-flash") {
-        displayModel = "Gemini 2.0 Flash";
-      } else if (settings.model === "gemini-1.5-pro") {
-        displayModel = "Gemini 1.5 Pro";
-      } else if (settings.model === "gemini-1.5-flash") {
-        displayModel = "Gemini 1.5 Flash";
-      } else if (settings.model === "gemini-2.5-flash-lite") {
-        displayModel = "Gemini Flash Lite";
-      } else if (settings.model) {
-        displayModel = settings.model;
+      const provider = settings.provider || "gemini";
+
+      if (provider === "openai") {
+        const openaiModelMap = {
+          "gpt-5.5": "GPT-5.5",
+          "gpt-5.4": "GPT-5.4",
+          "gpt-5.4-mini": "GPT-5.4-mini",
+          "gpt-4o": "GPT-4o",
+          "gpt-4o-mini": "GPT-4o Mini",
+          "gpt-4-turbo": "GPT-4 Turbo",
+          "gpt-4": "GPT-4",
+          "gpt-3.5-turbo": "GPT-3.5 Turbo",
+          "o1": "o1",
+          "o1-mini": "o1 Mini",
+          "o3-mini": "o3 Mini"
+        };
+        const modelName = openaiModelMap[settings.openaiModel] || settings.openaiModel || "GPT-4o";
+        modelBadge.textContent = `OpenAI · ${modelName}`;
+        modelBadge.style.color = "#10a37f";
+      } else {
+        const geminiModelMap = {
+          "gemini-3.5-flash": "Gemini 3.5 Flash",
+          "gemini-3.1-pro": "Gemini 3.1 Pro",
+          "gemini-3.1-flash-lite": "Gemini 3.1 Flash Lite",
+          "gemini-2.5-flash": "Gemini 2.5 Flash",
+          "gemini-2.5-pro": "Gemini 2.5 Pro",
+          "gemini-2.0-flash": "Gemini 2.0 Flash",
+          "gemini-1.5-pro": "Gemini 1.5 Pro",
+          "gemini-1.5-flash": "Gemini 1.5 Flash",
+          "gemini-2.5-flash-lite": "Gemini Flash Lite"
+        };
+        const modelName = geminiModelMap[settings.model] || settings.model || "Gemini 3.5 Flash";
+        modelBadge.textContent = `Gemini · ${modelName}`;
+        modelBadge.style.color = "#a78bfa";
       }
-      modelBadge.textContent = `Model: ${displayModel}`;
     }
   }
 })();

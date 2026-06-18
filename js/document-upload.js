@@ -190,7 +190,7 @@
     processDocumentWithAI(base64Data, mimeType, filename);
   };
 
-  // Call the serverless function to execute extraction using Gemini
+  // Call the serverless function to execute extraction using Gemini or OpenAI
   async function processDocumentWithAI(base64Image, mimeType, filename) {
     if (processingOverlay) {
       processingOverlay.classList.add("show");
@@ -210,11 +210,14 @@
       console.error("Failed to load stored AI config settings:", e);
     }
 
+    const provider = aiSettings.provider || "gemini";
+
     const payload = {
       image: base64Image,
       mimeType: mimeType,
-      apiKey: aiSettings.apiKey || "",
-      model: aiSettings.model || "gemini-3.5-flash",
+      provider: provider,
+      apiKey: provider === "openai" ? (aiSettings.openaiApiKey || "") : (aiSettings.apiKey || ""),
+      model: provider === "openai" ? (aiSettings.openaiModel || "gpt-4o") : (aiSettings.model || "gemini-3.5-flash"),
       settings: {
         normalizeDates: aiSettings.normalizeDates !== false,
         mergeNames: aiSettings.mergeNames !== false,
@@ -225,7 +228,7 @@
 
     try {
       let data;
-      // Skip local proxy API call if running on a static server port or local file protocol to prevent 405 Method Not Allowed red console errors
+      // Skip local proxy API call if running on a static server port or local file protocol
       const isStaticDevServer = window.location.protocol === "file:" || ["5500", "5501", "5502", "8000", "8080", "8081"].includes(window.location.port);
       let callDirectly = isStaticDevServer;
 
@@ -233,9 +236,7 @@
         try {
           const response = await fetch("/api/extract-document", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
           });
 
@@ -243,36 +244,31 @@
             callDirectly = true;
           } else {
             const text = await response.text();
-            try {
-              data = JSON.parse(text);
-            } catch (e) {
-              // HTML error page returned (e.g. 405 method not allowed HTML body)
-              callDirectly = true;
-            }
-
+            try { data = JSON.parse(text); } catch (e) { callDirectly = true; }
             if (!callDirectly && !response.ok) {
               throw new Error(data?.error || "Failed to extract document information.");
             }
           }
         } catch (err) {
-          console.warn("Local API proxy returned an error. Falling back to direct browser connection...", err);
+          console.warn("Local API proxy error, falling back to direct call...", err);
           callDirectly = true;
         }
       }
 
       if (callDirectly) {
-        console.log("Calling Gemini API directly from browser fallback...");
-        data = await callGeminiDirectlyFromBrowser(payload);
+        if (provider === "openai") {
+          console.log("Calling OpenAI API directly from browser...");
+          data = await callOpenAIDirectlyFromBrowser(payload);
+        } else {
+          console.log("Calling Gemini API directly from browser...");
+          data = await callGeminiDirectlyFromBrowser(payload);
+        }
       }
 
       // Successfully processed!
-      if (processingOverlay) {
-        processingOverlay.classList.remove("show");
-      }
-
+      if (processingOverlay) processingOverlay.classList.remove("show");
       window.showToast("Document analyzed successfully!", "success");
 
-      // Display results progressively
       if (window.displayExtractionResultsProgressively) {
         window.displayExtractionResultsProgressively(data, callDirectly);
       } else {
@@ -281,17 +277,155 @@
 
     } catch (error) {
       console.error("Extraction error:", error);
-      if (processingOverlay) {
-        processingOverlay.classList.remove("show");
-      }
-      // If failed, make sure we clear the skeletons
-      if (window.clearRemainingSkeletons) {
-        window.clearRemainingSkeletons();
-      }
+      if (processingOverlay) processingOverlay.classList.remove("show");
+      if (window.clearRemainingSkeletons) window.clearRemainingSkeletons();
       window.showToast(`Extraction failed: ${error.message}`, "danger");
     }
   }
 
+  // ─── OpenAI Vision Extractor ────────────────────────────────────────────────
+  async function callOpenAIDirectlyFromBrowser(payload) {
+    const { image, mimeType, apiKey, model, settings } = payload;
+    if (!apiKey) {
+      throw new Error("OpenAI API Key is not configured. Please configure it in AI Settings.");
+    }
+
+    let extraInstructions = "";
+    if (settings) {
+      if (settings.normalizeDates) {
+        extraInstructions += "- Normalize all extracted dates to YYYY-MM-DD format (e.g. '12 April 2006' -> '2006-04-12').\n";
+      }
+      if (settings.mergeNames) {
+        extraInstructions += "- Merge names (first name, given name, family name) into a single FULL NAME field where applicable.\n";
+      }
+    }
+
+    const promptText = `You are an OCR and document extraction assistant.
+Analyze the uploaded document image.
+
+Specific instructions:
+${extraInstructions}- Identify the document type automatically (e.g. Passport, ID Card, Diploma, Certificate, Visa, Transcript, Contact Info).
+- Generate ONLY necessary structured fields that are meaningful for the identified document type. Do not perform a general OCR of every text block, and do not extract design markings, watermarks, signatures, or noisy metadata.
+- If the document is a Passport or ID Card, extract ONLY these fields:
+  - "FULL_NAME": Concatenation of Surname + Given Names + Father's Name (patronymic / Otasining ismi) in that exact order (e.g. "ISAKJONOV MUKHAMMADIYOR NAVRUZBEK UGLI").
+  - "PASSPORT_NUMBER"
+  - "DATE_OF_BIRTH"
+  - "DATE_OF_ISSUE"
+  - "DATE_OF_EXPIRATION"
+  - "SEX" (value must be exactly "M" or "F")
+- If the document is a graduation/educational document (e.g. Shahodatnoma, Diploma, Certificate, Transcript):
+  - Generate ONLY the primary educational fields available on the document, such as: "GRADUATION_DATE", "YEAR_OF_ISSUE", "NAME_OF_SCHOOL_OR_EDUCATIONAL_INSTITUTION", "MAJOR_OR_SPECIALTY", "DEPARTMENT".
+  - The "NAME_OF_SCHOOL_OR_EDUCATIONAL_INSTITUTION" field MUST be translated into English and formatted in all UPPERCASE.
+- If the document contains contact information (e.g. a screenshot of a chat, message, or Telegram conversation showing an email, phone numbers, or address):
+  - Set document_type to "CONTACT INFO".
+  - Extract ONLY these fields if present: "EMAIL", "PHONE_NUMBER_1", "PHONE_NUMBER_2", "ADDRESS" (translated to English, ALL UPPERCASE).
+- If the document is of another type:
+  - Automatically detect and generate ONLY the key fields (maximum 5-6 core identifiers or dates).
+- Ignore watermarks, decorative branding, or irrelevant numbers.
+- Provide a full raw OCR text in the "ocr_text" property.
+
+Return JSON only. No explanation. Output must be exactly in this JSON format:
+{
+  "document_type": "...",
+  "fields": {
+    "FIELD_NAME": "value"
+  },
+  "ocr_text": "..."
+}`;
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: model,
+        stream: true,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: promptText },
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:${mimeType};base64,${image}`,
+                  detail: "high"
+                }
+              }
+            ]
+          }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error?.message || "Error communicating with OpenAI API");
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let accumulatedText = "";
+    let buffer = "";
+    const revealedFields = new Set();
+
+    function processOpenAIChunk(text) {
+      const fieldsIdx = text.indexOf('"fields"');
+      if (fieldsIdx === -1) return;
+      const fieldsSub = text.substring(fieldsIdx);
+      const regex = /"([^"\\]+(?:\\.[^"\\]*)*)"\s*:\s*"((?:[^"\\]|\\.)*)"/g;
+      let match;
+      while ((match = regex.exec(fieldsSub)) !== null) {
+        const key = match[1].trim();
+        const val = match[2];
+        if (key === "document_type" || key === "ocr_text" || key === "fields") continue;
+        if (!revealedFields.has(key)) {
+          revealedFields.add(key);
+          if (window.revealExtractedField) window.revealExtractedField(key, val);
+        }
+      }
+      const docTypeMatch = text.match(/"document_type"\s*:\s*"([^"\\]+(?:\\.[^"\\]*)*)"/);
+      if (docTypeMatch?.[1] && window.revealDocumentType) window.revealDocumentType(docTypeMatch[1]);
+    }
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop();
+      for (let line of lines) {
+        line = line.trim();
+        if (!line || !line.startsWith("data: ")) continue;
+        const jsonStr = line.slice(6).trim();
+        if (jsonStr === "[DONE]") continue;
+        try {
+          const chunk = JSON.parse(jsonStr);
+          const delta = chunk.choices?.[0]?.delta?.content || "";
+          accumulatedText += delta;
+          processOpenAIChunk(accumulatedText);
+        } catch (e) { /* partial chunk, ignore */ }
+      }
+    }
+
+    // Clean markdown fences if present
+    let cleanJson = accumulatedText.trim();
+    if (cleanJson.startsWith("```")) {
+      cleanJson = cleanJson.replace(/^```json/, "").replace(/^```/, "").replace(/```$/, "").trim();
+    }
+
+    try {
+      return JSON.parse(cleanJson);
+    } catch (parseErr) {
+      console.error("Failed to parse OpenAI JSON output:", cleanJson);
+      throw new Error("OpenAI output was not valid JSON");
+    }
+  }
+
+  // ─── Gemini Vision Extractor ─────────────────────────────────────────────────
   // Call Gemini API directly from browser if the serverless function is not running (e.g. static dev server)
   async function callGeminiDirectlyFromBrowser(payload) {
     const { image, mimeType, apiKey, model, settings } = payload;
